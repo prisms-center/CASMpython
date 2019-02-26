@@ -270,6 +270,7 @@ class Relax(object):
                       message=self.settings["message"],\
                       email=self.settings["email"],\
                       priority=self.settings["priority"],\
+                      constraint=self.settings["constraint"],\
                       command="python -c \"import casm.qewrapper; casm.qewrapper.Relax('" + self.configdir + "').run()\"",\
                       auto=self.auto)
 
@@ -325,7 +326,7 @@ class Relax(object):
         # load infilename and outfilename
         infilename=self.settings["infilename"]
         outfilename=self.settings["outfilename"]
-        
+
         # construct the Relax object
         relaxation = quantumespresso.Relax(self.calcdir, self.run_settings())
 
@@ -509,4 +510,3 @@ class Relax(object):
         output["relaxed_energy"] = qrun.total_energy * 13.605698066 #convert Ry to eV
 
         return output
-

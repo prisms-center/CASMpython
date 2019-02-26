@@ -307,6 +307,7 @@ class Relax(object):
                       message=self.settings["message"],\
                       email=self.settings["email"],\
                       priority=self.settings["priority"],\
+                      constraint=self.settings["constraint"],\
                       command=cmd,\
                       auto=self.auto)
 
@@ -590,5 +591,3 @@ class Relax(object):
         #     output.pop("relaxed_mag_basis", None)
 
         return output
-
-
