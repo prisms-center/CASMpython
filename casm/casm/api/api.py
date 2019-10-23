@@ -7,7 +7,7 @@ import json
 import os
 import six
 from distutils.spawn import find_executable
-from os.path import dirname, join
+from os.path import basename, dirname, join
 from sys import platform
 
 import sh

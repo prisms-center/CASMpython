@@ -30,6 +30,7 @@ def read_settings(filename):
         "account": account to submit job under (default None)
         "pmem": string for requested memory (default None)
         "priority": requested job priority (default "0")
+        "constraint": constraint. ex: ``"haswell"`` (default None)
         "message": when to send messages about jobs (ex. "abe", default "a")
         "email": where to send messages (ex. "me@fake.com", default None)
         "qos": quality of service, 'qos' option (ex. "fluxoe")
@@ -61,7 +62,7 @@ def read_settings(filename):
 
     required = ["queue", "ppn", "atom_per_proc", "walltime"]
 
-    optional = ["account","pmem","priority","message","email","qos",
+    optional = ["account","pmem","priority","constraint","message","email","qos",
                 "ncpus","run_cmd","run_limit","nrg_convergence", "encut", "kpoints",
                 "extra_input_files", "move", "copy", "remove", "compress", "backup", "initial",
                 "final", "strict_kpoints", "err_types", "preamble", "prop", "prop_start",
@@ -190,4 +191,3 @@ def quest_input_file_names(dir, configname, clex):
                                     project.")
 
     return (lcao_in, super_poscarfile, speciesfile)
-

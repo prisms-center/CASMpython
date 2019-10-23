@@ -664,7 +664,7 @@ class Converge(object):
 
                 print("  Constructing a job")
                 sys.stdout.flush()
-                
+
                 # construct a Job
                 job = Job(name=wrapper.jobname(self.configname) + "_" + '.'.join(propdir.split(os.sep)[-2:]),\
                               account=self.settings["account"],\
@@ -677,6 +677,7 @@ class Converge(object):
                               message=self.settings["message"],\
                               email=self.settings["email"],\
                               priority=self.settings["priority"],\
+                              constraint=self.settings["constraint"],\
                               command=cmd,\
                               auto=self.auto)
 

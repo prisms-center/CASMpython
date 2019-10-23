@@ -31,6 +31,7 @@ def read_settings(filename):
         "account": account to submit job under (default None)
         "pmem": string for requested memory (default None)
         "priority": requested job priority (default "0")
+        "constraint": constraint. ex: ``"haswell"`` (default None)
         "message": when to send messages about jobs (ex. "abe", default "a")
         "email": where to send messages (ex. "me@fake.com", default None)
         "qos": quality of service, 'qos' option (ex. "fluxoe")
@@ -72,7 +73,7 @@ def read_settings(filename):
 
     select_one = [["nodes", "atom_per_proc", "nodes_per_image"]]
 
-    optional = ["account","pmem","priority","message","email","qos","npar","ncore",
+    optional = ["account","pmem","priority","constraint","message","email","qos","npar","ncore",
                 "kpar", "ncpus","vasp_cmd","run_limit","nrg_convergence",
                 "encut", "kpoints","extra_input_files", "move", "copy", "remove",
                 "compress", "backup", "initial", "final", "strict_kpoints", "err_types",
@@ -226,4 +227,3 @@ def read_properties(filename):
             properties[key] = None
 
     return properties
-
