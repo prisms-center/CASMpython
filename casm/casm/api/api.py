@@ -563,9 +563,7 @@ def casm_capture(args, root=None, combine_output=False):
         ss_debug = ss
         ss_err = _api.ostringstream_new()
 
-    print("_api.capi begin")
     returncode = _api.capi(args, _api.primclex_null(), root, ss, ss_debug, ss_err)
-    print("_api.capi done")
 
     # copy strings and delete stringstreams
     stdout = _api.ostringstream_to_str(ss)
