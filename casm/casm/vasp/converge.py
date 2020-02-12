@@ -49,7 +49,7 @@ class Converge(object):
                 possible settings keys are:
                     used by casm.vasp.run() function:
                         "ncpus": number of ncpus to run mpi on
-			"npar" or "ncore": number of ways to parallelize
+                        "npar" or "ncore": number of ways to parallelize
                         "kpar": number of ways to parallelize k-points
                         "vasp_cmd": (default, see casm.vasp.run) shell command to execute vasp, or None to use default mpirun
                         "strict_kpoint": force strict copying of KPOINTS file, otherwise kpoints are scaled based on supercell size
@@ -297,7 +297,8 @@ class Converge(object):
                 self.add_errdir()
                 os.mkdir(self.rundir[-1])
                 # self.add_rundir()
-                err = result.itervalues().next()
+                err = next(iter(result.values()))
+                # err = result.itervalues().next()
 
                 print("\n++  status:", "error", "  next task:", "fix_error")
                 sys.stdout.flush()
