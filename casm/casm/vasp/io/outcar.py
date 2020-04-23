@@ -18,6 +18,7 @@ class Outcar(object):
            self.complete = True/False
            self.slowest_loop = float
            self.kpoints = list of int, or none
+           occupation_matrix = dict containing occupation matrices from last step (only available when LDAUPRINT = 1 or 2). Matrix elements for site i, if available, can be accessed as occupation_matrix[i][spin][m][m'], where spin = 0, 1 and i = 0...N-1. occupation_matrix has as keys the indices of only those sites for which an occupation matrix was printed.
     """
     def __init__(self,filename):
         self.filename = filename
@@ -32,6 +33,7 @@ class Outcar(object):
         self.ngz = None
         self.found_ngx = False
         self.forces = []
+        self.occupation_matrix = None
 
         self.read()
 
@@ -44,8 +46,10 @@ class Outcar(object):
                 lorbit (LORBIT value from INCAR)
                 ispin (ISPIN value from INCAR)
                 magnetization (if LORBIT = 1, 2, 11, 12)
+                occupation_matrix
         """
         self.kpts = None
+        self.occupation_matrix = dict()
         if os.path.isfile(self.filename):
             if self.filename.split(".")[-1].lower() == "gz":
                 f = gzip.open(self.filename)
@@ -129,6 +133,27 @@ class Outcar(object):
             except:
                 pass
 
-        f.close()
+            # TODO: will this work for single-spin channel?
+            try:
+                if re.search("atom = *[0-9]+ *type = * [0-9]+  *l = *[0-9]+",line):
+                    i = int(line.split()[2])
+                    l = int(line.split()[8])
+                    self.occupation_matrix[i-1] = [[],[]]
+                    for inner_line in f:
+                        try:
+                            s = [float(x) for x in inner_line.split()]
+                            if len(s) == 2*l+1:
+                                if len(self.occupation_matrix[i-1][0]) < 2*l+1:
+                                    self.occupation_matrix[i-1][0].append(s)
+                                else:
+                                    self.occupation_matrix[i-1][1].append(s)
+                        except:
+                            pass
 
+                        if len(self.occupation_matrix[i-1][1]) == 2*l+1:
+                            break
+            except:
+                pass
+
+        f.close()
 
