@@ -513,8 +513,8 @@ class Project(object):
       if os.path.exists(self.dir.composition_axes()):
           with open(self.dir.composition_axes(), 'r') as f:
               data = json.load(f)
-              if "standard_axes" in data:
-                  for key, val in six.iteritems(data["standard_axes"]):
+              if "possible_axes" in data:
+                  for key, val in six.iteritems(data["possible_axes"]):
                       self.all_composition_axes[key] = CompositionAxes(key, val)
               if "custom_axes" in data:
                   for key, val in six.iteritems(data["custom_axes"]):
@@ -818,9 +818,9 @@ class Prim(object):
         with open(self.proj.dir.composition_axes()) as f:
             raw_composition_axes = json.load(f)
 
-        self.components = raw_composition_axes['standard_axes']['0']['components']
+        self.components = raw_composition_axes['possible_axes']['0']['components']
         self.elements = self.components
-        self.n_independent_compositions = raw_composition_axes['standard_axes']['0']['independent_compositions']
+        self.n_independent_compositions = raw_composition_axes['possible_axes']['0']['independent_compositions']
         self.degrees_of_freedom = ['occupation']
 
 
