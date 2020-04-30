@@ -31,6 +31,7 @@ from casm.vasp.io.species import SpeciesError, SpeciesDict, IndividualSpecies,\
     species_settings, write_species_settings
 from casm.vasp.io.vaspio import VaspIO
 from casm.vasp.io.vasprun import VasprunError, Vasprun
+from casm.vasp.io.orbital_occupation import OrbitalOccupationError, OrbitalOccupation, write_occupations
 __all__ = [
     'VASP_INPUT_FILE_LIST',
     'DEFAULT_VASP_MOVE_LIST',
@@ -70,5 +71,8 @@ __all__ = [
     'write_species_settings',
     'VaspIO',
     'VasprunError',
-    'Vasprun']
+    'Vasprun',
+    'OrbitalOccupationError',
+    'OrbitalOccupation',
+    'write_occupations']
 
