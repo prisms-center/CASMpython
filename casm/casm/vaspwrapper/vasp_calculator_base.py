@@ -9,7 +9,6 @@ import numpy as np
 import os
 import pandas
 import sys
-import six
 
 try:
   from prisms_jobs import Job, JobDB, error_job, complete_job, JobsError, JobDBError, EligibilityError
