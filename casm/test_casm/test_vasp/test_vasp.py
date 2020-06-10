@@ -9,6 +9,7 @@ import json
 
 from casm import vasp
 from casm.misc.contexts import working_dir, captured_output, print_stringIO
+from casm.vasp.io import Poscar
 
 import test_casm
 from test_casm.test_vasp import CasmVaspTestCase, cp_input
@@ -36,5 +37,22 @@ class TestCasmVasp(CasmVaspTestCase):
             #print_stringIO(sout) # print stdout from captured_output context
             #print_stringIO(serr) # print stderr from captured_output context
             
+class TestCasmVaspReadStructureFromConfigJson(CasmVaspTestCase):
 
+    def setUp(self):
+        """Read test case data"""
+        with open(join(self.classdir, 'test_cases.json'), 'r') as f:
+            self.cases = json.load(f)['vasp']['read_structure_from_config_json']
+
+    def test_run(self):
+        """Test read_config_json function"""
+        for i,case in enumerate(self.cases[1:]):
+            test_poscar = Poscar(join(self.classdir, 'input_data', case['input_data'], 'config.json'))
+            self.assertTrue(test_poscar.lattice().tolist() == case['lattice'])
+            self.assertTrue(test_poscar.coord_mode == 'Cartesian')
+            self.assertTrue(test_poscar.scaling == 1.0)
+            self.assertTrue(test_poscar.type_atoms == case['type_atoms'])
+            self.assertTrue(test_poscar.num_atoms == case['num_atoms'])
+            for j,site in enumerate(test_poscar.basis):
+                self.assertTrue(site.position.tolist() == case['atom_coords'][j])
 

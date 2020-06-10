@@ -194,7 +194,8 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
     incarfile = dir.settings_path_crawl("INCAR", configname, clex)
     prim_kpointsfile = dir.settings_path_crawl("KPOINTS", configname, clex)
     prim_poscarfile = dir.settings_path_crawl("POSCAR", configname, clex)
-    super_poscarfile = dir.POS(configname, calc_subdir)
+#    super_poscarfile = dir.POS(configname, calc_subdir)
+    super_poscarfile = dir.config_json(configname, calc_subdir) #TODO: Should probably rename "super_poscarfile" if no longer using POSCAR-like file
     speciesfile = dir.settings_path_crawl("SPECIES", configname, clex)
 
     # Verify that required input files exist
