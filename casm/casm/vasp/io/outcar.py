@@ -1,12 +1,16 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
 from builtins import *
 
 from casm.vasp.io.orbital_occupation import OrbitalOccupation
 
-import os, re, gzip
+import os
+import re
+import gzip
+
 
 class OutcarError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
@@ -22,7 +26,8 @@ class Outcar(object):
            self.kpoints = list of int, or none
            self.orbital_occupations = dict of OrbitalOccupation objects, from last step (only available when LDAUPRINT = 1 or 2). Keys are indices of only those sites for which occupation was printed.
     """
-    def __init__(self,filename):
+
+    def __init__(self, filename):
         self.filename = filename
         self.complete = False
         self.slowest_loop = None
@@ -38,7 +43,6 @@ class Outcar(object):
         self.orbital_occupations = None
 
         self.read()
-
 
     def read(self):
         """Parse OUTCAR file.  Currently checks for:
@@ -65,18 +69,19 @@ class Outcar(object):
         for line in f:
             try:
                 if re.search("generate k-points for:", line):
-                    self.kpts = map(int, line.split()[-3:])
+                    self.kpts = list(map(int, line.split()[-3:]))
             except:
                 pass
 
             try:
-                if re.search("Total CPU time used",line):
+                if re.search("Total CPU time used", line):
                     self.complete = True
             except:
-                raise OutcarError("Error reading 'Total CPU time used' from line: '" + line + "'\nIn file: '" + self.filename + "'")
+                raise OutcarError("Error reading 'Total CPU time used' from line: '" +
+                                  line + "'\nIn file: '" + self.filename + "'")
 
             try:
-                if re.search("LOOP",line):
+                if re.search("LOOP", line):
                     t = float(line.split()[-1])
                     if self.slowest_loop is None:
                         self.slowest_loop = t
@@ -112,7 +117,8 @@ class Outcar(object):
                 pass
 
             try:
-                r = re.match(r"\s*dimension x,y,z\s*NGX\s*=\s*([0-9]*)\s*NGY\s*=\s*([0-9]*)\s*NGZ\s*=\s*([0-9]*)\s*", line)
+                r = re.match(
+                    r"\s*dimension x,y,z\s*NGX\s*=\s*([0-9]*)\s*NGY\s*=\s*([0-9]*)\s*NGZ\s*=\s*([0-9]*)\s*", line)
                 # if r:
                 if r and not self.found_ngx:
                     self.ngx = int(r.group(1))
@@ -126,7 +132,7 @@ class Outcar(object):
                 if '--' in line and len(self.forces) > 0:
                     force_index = False
                 elif '--' not in line:
-                    self.forces.append(map(float, line.split()[-3:]))
+                    self.forces.append(list(map(float, line.split()[-3:])))
 
             try:
                 if re.search("TOTAL-FORCE", line):

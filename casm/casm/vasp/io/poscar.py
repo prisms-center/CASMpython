@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
 from builtins import *
 
 import numpy as np
@@ -6,8 +7,9 @@ import math
 import os.path
 import json
 
+
 class PoscarError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
@@ -24,20 +26,21 @@ class Site:
             self.occ_alias = alias (POTCAR) name, empty string by default
             self.position = np.array coordinate
     """
-    def __init__(self, cart, position,  SD_FLAG = "", occupant = "", occ_alias = ""):
+
+    def __init__(self, cart, position,  SD_FLAG="", occupant="", occ_alias=""):
         """ Site constructor """
         self.cart = cart
         self.SD_FLAG = SD_FLAG
         self.occupant = occupant
         self.occ_alias = occ_alias
         if not isinstance(position, np.ndarray):
-            raise PoscarError("Attempting to construct a Site and 'position' is not a numpy ndarray")
+            raise PoscarError(
+                "Attempting to construct a Site and 'position' is not a numpy ndarray")
         self.position = position
-
 
     def write(self, file):
         """ Write this Site to a file """
-        np.savetxt(file,self.position,fmt='%.8f',newline = '    ')
+        np.savetxt(file, self.position, fmt='%.8f', newline='    ')
         file.write(self.SD_FLAG)
         file.write(self.occupant)
         file.write('\n')
@@ -58,6 +61,7 @@ class Poscar:
         self.basis: a list of Site objects
 
     """
+
     def __init__(self, filename, species=None, legacy_support=True):
         """ Construct a Poscar object from 'filename'
 
@@ -70,12 +74,11 @@ class Poscar:
         else:
             self.read(filename, species, legacy_support)
 
-
     def read(self, filename, species=None, legacy_support=True):
         """ Reads a POS/POSCAR from 'filename'"""
         self.basis = []
-        self._lattice = np.zeros((3,3))
-        self._reciprocal_lattice = np.zeros((3,3))
+        self._lattice = np.zeros((3, 3))
+        self._reciprocal_lattice = np.zeros((3, 3))
         self.coord_mode = ''
         self.SD_FLAG = False
         self.num_atoms = []
@@ -84,7 +87,7 @@ class Poscar:
         self.header = ""
         self.scaling = 0
         try:
-            file = open(filename,'r')
+            file = open(filename, 'r')
         except IOError:
             raise PoscarError("Could not read file: " + filename)
         self.header = file.readline().strip()
@@ -110,6 +113,7 @@ class Poscar:
         # set type alias
         if species != None:
             self.update(species)
+
 
     def read_config_json(self, filename, species=None):
         """
@@ -156,12 +160,12 @@ class Poscar:
             If 'sort' = True, sort basis sites to minimize number of POTCARs
         """
         try:
-            file = open(filename,'w')
+            file = open(filename, 'w')
         except IOError:
             raise PoscarError("Could not write: " + filename)
         file.write(str(self.header)+'\n')
         file.write(str(self.scaling)+'\n')
-        np.savetxt(file,self._lattice, newline = '\n', fmt='%.8f' )
+        np.savetxt(file, self._lattice, newline='\n', fmt='%.8f')
 
         if sort:
             type_line = ''
@@ -169,7 +173,7 @@ class Poscar:
             d = self.basis_dict()
             for atom in sorted(d.keys()):
                 type_line = type_line+'   '+atom
-                num_line = num_line + '   ' +str(len(d[atom]))
+                num_line = num_line + '   ' + str(len(d[atom]))
             if(self.SD_FLAG):
                 file.write('Selective Dynamics\n')
             file.write(type_line+'\n')
@@ -189,27 +193,23 @@ class Poscar:
 
         file.close()
 
-
-    def lattice(self, index = None):
+    def lattice(self, index=None):
         """ Returns the lattice, or lattice vector 'index', as numpy array"""
         if index != None:
-            return self._lattice[index,:]
+            return self._lattice[index, :]
         return self._lattice
 
-
-    def reciprocal_lattice(self, index = None):
+    def reciprocal_lattice(self, index=None):
         """ Returns the reciprocal lattice vector 'index', as numpy array"""
         if index != None:
-            return self._reciprocal_lattice[index,:]
+            return self._reciprocal_lattice[index, :]
         return self._reciprocal_lattice
-
 
     def volume(self, lattice=None):
         """ Returns scalar triple product of lattice vectors """
         if lattice is None:
             lattice = self._lattice
-        return np.inner(lattice[0,:], np.cross(lattice[1,:],lattice[2,:]))
-
+        return np.inner(lattice[0, :], np.cross(lattice[1, :], lattice[2, :]))
 
     def reciprocal_volume(self, reciprocal_lattice=None):
         """ Returns scalar triple product of reciprocal lattice vector """
@@ -217,11 +217,10 @@ class Poscar:
             reciprocal_lattice = self._reciprocal_lattice
         return self.volume(reciprocal_lattice)
 
-
     def basis_dict(self):
         """ Return a dictionary where keys are unique specie 'alias' and values are lists of atoms."""
         basis_dict = dict()
-        for i,atom in enumerate(self.type_atoms_alias):
+        for i, atom in enumerate(self.type_atoms_alias):
             start = sum(self.num_atoms[0:(i)])
             end = start + self.num_atoms[i]
             if atom not in basis_dict.keys():
@@ -229,7 +228,6 @@ class Poscar:
             else:
                 basis_dict[atom] += self.basis[start:end]
         return basis_dict
-
 
     def unsort_dict(self):
         """ Return a dict to unsort atom order.
@@ -244,13 +242,13 @@ class Poscar:
 
         # create basis_dict, but with initial position in POSCAR instead of coordinate
         basis_dict = dict()
-        for i,atom in enumerate(self.type_atoms_alias):
+        for i, atom in enumerate(self.type_atoms_alias):
             start = sum(self.num_atoms[0:(i)])
             end = start + self.num_atoms[i]
             if atom not in basis_dict.keys():
-                basis_dict[atom] = range(start,end)
+                basis_dict[atom] = range(start, end)
             else:
-                basis_dict[atom] += range(start,end)
+                basis_dict[atom] += range(start, end)
 
         # print(basis_dict)
 
@@ -260,7 +258,7 @@ class Poscar:
 
         # print(orig_pos)
 
-        new_pos = range(0,len(self.basis))
+        new_pos = range(0, len(self.basis))
 
         return dict(zip(new_pos, orig_pos))
 
@@ -283,20 +281,20 @@ class Poscar:
             self.scaling = float(line)
         except ValueError:
             raise PoscarError("Could not read lattice scaling: '" + line + "'")
-        lat=[]
+        lat = []
         for i in range(3):
             line = file.readline()
             try:
                 lat.append([float(x) for x in line.split()])
             except ValueError:
-                raise PoscarError("Could not read lattice vector: '" + line + "'")
+                raise PoscarError(
+                    "Could not read lattice vector: '" + line + "'")
         self._lattice = self.scaling*np.array(lat)
         if self._lattice.shape!=(3,3):
             raise PoscarError("Lattice shape error: " + np.array_str(self._lattice))
         self._compute_reciprocal_lattice()
         self.scaling=1.0
         return
-
 
     def _read_atominfo(self, file):
         """ Called by self.read() to read the 2 lines that correspond to the num_atoms and type_atoms
@@ -312,16 +310,17 @@ class Poscar:
         typeline = file.readline().strip()
         numline = file.readline().strip()
         self.type_atoms = typeline.split()
-        if len(self.type_atoms)==0:
+        if len(self.type_atoms) == 0:
             raise PoscarError("No atom names found: '" + typeline + "'")
         try:
             self.num_atoms = [int(n) for n in numline.split()]
         except ValueError:
-            raise PoscarError("Could not read number of each atom type: '" + numline + "'")
-        if len(self.num_atoms)!=len(self.type_atoms):
-            raise PoscarError("Atom type and number lists are not the same length: \n'" + typeline + "'\n" + "'" + numline + "'")
+            raise PoscarError(
+                "Could not read number of each atom type: '" + numline + "'")
+        if len(self.num_atoms) != len(self.type_atoms):
+            raise PoscarError("Atom type and number lists are not the same length: \n'" +
+                              typeline + "'\n" + "'" + numline + "'")
         self.type_atoms_alias = list(self.type_atoms)
-
 
     def _read_atominfo_legacy(self, file):
         """ Called by self.read() to read the lines that correspond to the num_atoms and type_atoms
@@ -338,12 +337,12 @@ class Poscar:
         try:
             self.num_atoms = [int(n) for n in numline.split()]
         except ValueError:
-            raise PoscarError("Could not read number of each atom type: '" + numline + "'")
-        self.type_atoms = map(int, range(len(self.num_atoms)))
+            raise PoscarError(
+                "Could not read number of each atom type: '" + numline + "'")
+        self.type_atoms = list(map(int, range(len(self.num_atoms))))
         self.type_atoms_alias = list(self.type_atoms)
 
-
-    def _read_flags(self,file):
+    def _read_flags(self, file):
         """ Called by self.read() to read POSCAR flags: Selective Dynamics, and Coord Mode
 
             Args:
@@ -353,22 +352,24 @@ class Poscar:
             self.coord_mode = Contains the coordinate mode text, with whitespace stripped from beginning and end
         """
         line = file.readline().strip()
-        if len(line)==0:
-            raise PoscarError("Could not read Select Dynamics or Coord Mode line")
-        if(line[0].lower()=='s'):
+        if len(line) == 0:
+            raise PoscarError(
+                "Could not read Select Dynamics or Coord Mode line")
+        if(line[0].lower() == 's'):
             self.SD_FLAG = True
             self.coord_mode = file.readline()
-            if len(line)==0:
-                raise PoscarError("Read Select Dynamics, but could not read Coord Mode line")
+            if len(line) == 0:
+                raise PoscarError(
+                    "Read Select Dynamics, but could not read Coord Mode line")
         else:
             self.SD_FLAG = False
             self.coord_mode = line
 
-        if self.coord_mode[0].lower() not in ['c','d','k']:
-            raise PoscarError("Read invalid coord mode: '" + self.coord_mode + "'")
+        if self.coord_mode[0].lower() not in ['c', 'd', 'k']:
+            raise PoscarError("Read invalid coord mode: '" +
+                              self.coord_mode + "'")
 
-
-    def _read_basis(self,file):
+    def _read_basis(self, file):
         """ Called by self.read() to read basis of POSCAR file into self.basis
 
             Args:
@@ -377,28 +378,31 @@ class Poscar:
             self.basis is a list of Site objects
         """
         self.basis = []
-        cart = not(self.coord_mode[0].lower()=='d')
+        cart = not(self.coord_mode[0].lower() == 'd')
         for i in range(len(self.num_atoms)):
             for j in range(self.num_atoms[i]):
                 line = file.readline().strip()
-                if len(line)==0:
-                    raise PoscarError("Error reading basis: insufficient number of atoms")
+                if len(line) == 0:
+                    raise PoscarError(
+                        "Error reading basis: insufficient number of atoms")
                 words = line.split()
                 pos = []
                 if (self.SD_FLAG):
                     if len(words) < 6:
-                        raise PoscarError("Error reading basis: insufficient number of SD tags")
+                        raise PoscarError(
+                            "Error reading basis: insufficient number of SD tags")
                     SD_FLAG = words[3]+' '+words[4]+' '+words[5]
                 else:
                     SD_FLAG = ''
                 try:
                     pos = [float(x) for x in words[0:3]]
                 except ValueError:
-                    raise PoscarError("Error reading basis coordinate: '" + line + "'")
-                self.basis.append(Site(cart, np.array(pos), SD_FLAG, self.type_atoms[i], self.type_atoms[i]))
+                    raise PoscarError(
+                        "Error reading basis coordinate: '" + line + "'")
+                self.basis.append(
+                    Site(cart, np.array(pos), SD_FLAG, self.type_atoms[i], self.type_atoms[i]))
 
-
-    def _read_basis_legacy(self,file):
+    def _read_basis_legacy(self, file):
         """ Called by self.read() to read basis of VASP4  POSCAR file into self.basis
 
             Args:
@@ -407,44 +411,47 @@ class Poscar:
             self.basis is a list of Site objects
         """
         self.basis = []
-        cart = not(self.coord_mode[0].lower()=='d')
+        cart = not(self.coord_mode[0].lower() == 'd')
         for i in range(len(self.num_atoms)):
             for j in range(self.num_atoms[i]):
                 line = file.readline().strip()
-                if len(line)==0:
-                    raise PoscarError("Error reading basis: insufficient number of atoms")
+                if len(line) == 0:
+                    raise PoscarError(
+                        "Error reading basis: insufficient number of atoms")
                 words = line.split()
                 pos = []
                 if (self.SD_FLAG):
                     if len(words) < 6:
-                        raise PoscarError("Error reading basis: insufficient number of SD tags")
+                        raise PoscarError(
+                            "Error reading basis: insufficient number of SD tags")
                     SD_FLAG = words[3]+' '+words[4]+' '+words[5]
                 else:
                     SD_FLAG = ''
                 try:
                     pos = [float(x) for x in words[0:3]]
                 except ValueError:
-                    raise PoscarError("Error reading basis coordinate: '" + line + "'")
+                    raise PoscarError(
+                        "Error reading basis coordinate: '" + line + "'")
                 if len(words) == 7 or len(words) == 4:
                     atom_type = words[-1]
                     if j > 0:
                         if self.type_atoms[i] != atom_type:
-                            raise PoscarError("Error reading basis: mismatch between type count in header and types in basis")
+                            raise PoscarError(
+                                "Error reading basis: mismatch between type count in header and types in basis")
                     else:
                         self.type_atoms[i] = atom_type
                         self.type_atoms_alias[i] = atom_type
                 else:
                     atom_type = self.type_atoms[i]
-                self.basis.append(Site(cart, np.array(pos), SD_FLAG, atom_type, atom_type))
-
-
+                self.basis.append(
+                    Site(cart, np.array(pos), SD_FLAG, atom_type, atom_type))
 
     def update(self, species):
         """ Set self.type_atoms_alias and self.basis[x].alias according to Species dict.
 
             Warning: Not sure we want to check equivalence regardless of atom name case
         """
-        for i,atom in enumerate(self.type_atoms):
+        for i, atom in enumerate(self.type_atoms):
             for s in species:
                 if s == atom:
                     self.type_atoms_alias[i] = species[s].alias
@@ -461,9 +468,7 @@ class Poscar:
 
         return
 
-    def apply_deformation(self, deformation = np.ones((3,3))):
+    def apply_deformation(self, deformation=np.ones((3, 3))):
         """ applies a deformation which is array of size 3 X 3
         """
         self._lattice = np.dot(self._lattice, np.array(deformation).T)
-
-
