@@ -60,9 +60,6 @@ class TestCasmVaspReadOccupationMatrix(CasmVaspTestCase):
             self.assertTrue(test_outcar.complete)
             for site in case['site_occupation_matrices']:
                 for spin_channel, occupation_matrix in enumerate(site['occupation_matrices']):
-                    print("site noomber "+str(site["site_index"]))
-                    print(occupation_matrix)
-                    print(test_outcar.orbital_occupations[site["site_index"]].matrices[spin_channel].tolist())
                     self.assertTrue(test_outcar.orbital_occupations[site['site_index']].matrices[spin_channel].tolist() == occupation_matrix)
 
 

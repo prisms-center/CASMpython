@@ -1,4 +1,5 @@
 import numpy as np
+from casm.misc import matrix
 
 class OrbitalOccupationError(Exception):
     def __init__(self,message):
@@ -19,7 +20,7 @@ class OrbitalOccupation(object):
         """
         self.spin_polarized = False
         occupation_matrix_a = np.array(occupation_matrix_a)
-        ma,na = np.shape(occupation_matrix_a)
+        ma,na = occupation_matrix_a.shape
         if (ma == na and na % 2 == 1):
             self.l_quantum_number = int((na - 1)/2)
             self.matrices = [occupation_matrix_a]
@@ -28,7 +29,7 @@ class OrbitalOccupation(object):
         if occupation_matrix_b is not None:
             occupation_matrix_b = np.array(occupation_matrix_b)
             self.spin_polarized = True
-            mb,nb = np.shape(occupation_matrix_b)
+            mb,nb = occupation_matrix_b.shape
             if (mb == nb and nb == na):
                 self.matrices.append(occupation_matrix_b)
             else:
@@ -49,6 +50,15 @@ class OrbitalOccupation(object):
             output_string += matrix_to_string(self.matrices[1])+'\n'
         output_string += '\n'
         return output_string
+
+    def to_vector(self):
+        """Return a vector of the unrolled occupation matrix/matrices that can be read as a CASM attribute.
+            In the spin-polarized case, the vectors corresponding to the up/down occupation matrices are concatenated.
+        """
+        vector = []
+        for occupation_matrix in self.matrices:
+            vector += matrix.unroll_symmetric_matrix(occupation_matrix)
+        return vector
 
 def write_occupations(filename, occupations):
     """Write a dict of occupations out to an OCCMATRIX-like file
