@@ -114,7 +114,6 @@ class Poscar:
         if species != None:
             self.update(species)
 
-
     def read_config_json(self, filename, species=None):
         """
             Reads a structure from config.json file 'filename'
@@ -122,7 +121,7 @@ class Poscar:
         """
         self.header = ""
         try:
-            file = open(filename,'r')
+            file = open(filename, 'r')
         except IOError:
             raise PoscarError("Could not read file: " + filename)
         config_data = json.loads(file.read())
@@ -137,7 +136,7 @@ class Poscar:
         self.SD_FLAG = False
         self.coord_mode = config_data['coord_mode']
         self.basis = []
-        cart = self.coord_mode[0].lower()=='c'
+        cart = self.coord_mode[0].lower() == 'c'
         self.num_atoms = []
         self.type_atoms = []
         for i, pos in enumerate(config_data['atom_coords']):
@@ -146,13 +145,13 @@ class Poscar:
                 self.type_atoms.append(atom_name)
                 self.num_atoms.append(0)
             self.num_atoms[-1] += 1
-            self.basis.append(Site(cart, np.array(pos), '', atom_name, atom_name))
+            self.basis.append(
+                Site(cart, np.array(pos), '', atom_name, atom_name))
         self.type_atoms_alias = list(self.type_atoms)
 
         # set type alias
         if species != None:
             self.update(species)
-
 
     def write(self, filename, sort=True):
         """ Write Poscar to 'filename'.
@@ -262,13 +261,13 @@ class Poscar:
 
         return dict(zip(new_pos, orig_pos))
 
-
     def _compute_reciprocal_lattice(self):
         """ Compute the reciprocal lattice based on the current lattice and store it"""
-        self._reciprocal_lattice = 2.0*math.pi*np.linalg.inv(np.transpose(self._lattice))
+        self._reciprocal_lattice = 2.0*math.pi * \
+            np.linalg.inv(np.transpose(self._lattice))
         return
 
-    def _read_lattice(self,file):
+    def _read_lattice(self, file):
         """ Called by self.read() to read the lattice into self._lattice
 
             Args:
@@ -290,10 +289,11 @@ class Poscar:
                 raise PoscarError(
                     "Could not read lattice vector: '" + line + "'")
         self._lattice = self.scaling*np.array(lat)
-        if self._lattice.shape!=(3,3):
-            raise PoscarError("Lattice shape error: " + np.array_str(self._lattice))
+        if self._lattice.shape != (3, 3):
+            raise PoscarError("Lattice shape error: " +
+                              np.array_str(self._lattice))
         self._compute_reciprocal_lattice()
-        self.scaling=1.0
+        self.scaling = 1.0
         return
 
     def _read_atominfo(self, file):

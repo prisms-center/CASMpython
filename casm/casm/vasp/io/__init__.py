@@ -32,6 +32,7 @@ from casm.vasp.io.species import SpeciesError, SpeciesDict, IndividualSpecies,\
 from casm.vasp.io.vaspio import VaspIO
 from casm.vasp.io.vasprun import VasprunError, Vasprun
 from casm.vasp.io.orbital_occupation import OrbitalOccupationError, OrbitalOccupation, write_occupations
+from casm.vasp.io.attribute_classes import CmagspinAttr
 __all__ = [
     'VASP_INPUT_FILE_LIST',
     'DEFAULT_VASP_MOVE_LIST',
@@ -54,7 +55,7 @@ __all__ = [
     'VASP_TAG_STRING_LIST',
     'VASP_TAG_LIST',
     'IncarError',
-    'Incar', 
+    'Incar',
     'KpointsError',
     'Kpoints',
     'OutcarError',
@@ -74,5 +75,5 @@ __all__ = [
     'Vasprun',
     'OrbitalOccupationError',
     'OrbitalOccupation',
-    'write_occupations']
-
+    'write_occupations',
+    'CmagspinAttr']
