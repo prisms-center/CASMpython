@@ -91,16 +91,12 @@ class CmagspinAttr:
         if sort is True:
             self.atom_props.sort(key=lambda x: x["atom"])
 
-        print(self.atom_props)
         permutation_vector_to_unsort = [
             x["site_index"] for x in self.atom_props]
 
-        print(permutation_vector_to_unsort)
-        print(outcar.mag)
         output = {}
         output["Cmagspin"] = {}
         output["Cmagspin"]["values"] = [[mag]
                                         for site_index, mag in sorted(zip(permutation_vector_to_unsort, outcar.mag))]
 
-        print(output)
         return output
