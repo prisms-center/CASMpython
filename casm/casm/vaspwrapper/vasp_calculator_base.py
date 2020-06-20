@@ -17,7 +17,8 @@ except ImportError:
   from pbs import Job, JobDB, error_job, complete_job, JobDBError, EligibilityError
   from pbs import PBSError as JobsError
 
-from casm.project import Project, Selection
+from casm.project import Project, Selection, attribute_info
+from casm.vasp.io import attribute_classes
 from casm import vasp
 from casm.misc import noindent
 from casm.vaspwrapper import VaspWrapperError, read_settings, write_settings, \
@@ -610,7 +611,11 @@ class VaspCalculatorBase(object):
                                                                 config_data["name"],
                                                                 self.clex,
                                                                 self.calc_subdir)
+        #Making super_poscarfile a config.json file
+        super_poscarfile = self.casm_directories.config_json(
+            config_data["name"])
         output = self.properties(vaspdir, super_poscarfile, speciesfile)
+
         outputfile = os.path.join(
             config_data["calcdir"], "properties.calc.json")
         with open(outputfile, 'w') as file:
@@ -623,6 +628,7 @@ class VaspCalculatorBase(object):
     @staticmethod
     def properties(vaspdir, super_poscarfile=None, speciesfile=None):
         """ return a dict of output form a vasp directory"""
+        dof_info = attribute_info.AttributeInfo(super_poscarfile)
 
         output = dict()
         # load the OSZICAR and OUTCAR
@@ -647,34 +653,67 @@ class VaspCalculatorBase(object):
         #   unsorted_dict[sorted_index] == orig_index
         #   For example:
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
-
-        output["atom_type"] = super_poscar.type_atoms
-        output["atoms_per_type"] = super_poscar.num_atoms
+        output["atom_type"] = super_poscar.atom_type
+        #output["atoms_per_type"] = super_poscar.num_atoms
         output["coord_mode"] = super_poscar.coord_mode
 
         # as lists
-        output["relaxed_forces"] = [None for i in range(len(ocar.forces))]
-        for i, force in enumerate(ocar.forces):
-            output["relaxed_forces"][unsort_dict[i]] = noindent.NoIndent(force)
-
-        output["relaxed_lattice"] = [noindent.NoIndent(
+        output["lattice"] = [noindent.NoIndent(
             list(v)) for v in super_contcar.lattice()]
-        output["relaxed_basis"] = [
+        output["atom_coords"] = [
             None for i in range(len(super_contcar.basis))]
         for i, ba in enumerate(super_contcar.basis):
-            output["relaxed_basis"][unsort_dict[i]
-                                    ] = noindent.NoIndent(list(ba.position))
+            output["atom_coords"][unsort_dict[i]
+                                  ] = noindent.NoIndent(list(ba.position))
 
-        output["relaxed_energy"] = zcar.E[-1]
+        output["atom_vals"] = {}
+        output["atom_vals"]["forces"] = {}
+        output["atom_vals"]["forces"]["value"] = [
+            None for i in range(len(ocar.forces))]
+        for i, force in enumerate(ocar.forces):
+            output["atom_vals"]["forces"]["value"][unsort_dict[i]
+                                                   ] = noindent.NoIndent(force)
 
-        if ocar.ispin == 2:
-            output["relaxed_magmom"] = zcar.mag[-1]
-            if ocar.lorbit in [1, 2, 11, 12]:
-                output["relaxed_mag_basis"] = [
-                    None for i in range(len(super_contcar.basis))]
-                for i, v in enumerate(super_contcar.basis):
-                    output["relaxed_mag_basis"][unsort_dict[i]
-                                                ] = noindent.NoIndent(ocar.mag[i])
+        output["global_vals"] = {}
+        output["global_vals"]["energy"] = {}
+        output["global_vals"]["energy"]["value"] = zcar.E[-1]
+        output["global_vals"]["magmom"] = {}
+
+        if dof_info.atom_dofs is not None:
+            if "Cmagspin" in list(dof_info.atom_dofs.keys()):
+                cmagspin_specific_output = attribute_classes.CmagspinAttr(
+                    dof_info).vasp_output_dictionary(ocar)
+                output["atom_vals"].update(cmagspin_specific_output)
+                #TODO: Need a better way to write global magmom. I don't like what I did here
+                output["global_vals"]["magmom"]["value"] = zcar.mag[-1]
+
+            #TODO: When you don't have Cmagspin but have magnetic calculations. This part can be removed if you runall magnetic calculations as Cmagspin calculations.
+            #TODO: Need a better way of doing this. Some code duplication here.
+            else:
+                if ocar.ispin == 2:
+                    output["global_vals"]["magmom"]["value"] = zcar.mag[-1]
+                    if ocar.lorbit in [1, 2, 11, 12]:
+                        output["atom_vals"]["magmom"] = {}
+                        output["atom_vals"]["magmom"]["value"] = [
+                            None for i in range(len(super_contcar.basis))]
+
+                        for i, v in enumerate(super_contcar.basis):
+                            output["atom_vals"]["magmom"]["value"][unsort_dict[i]
+                                                                   ] = [noindent.NoIndent(ocar.mag[i])]
+
+        #TODO: Code duplication here. If you have a magnetic calculation without dofs, you still need to write magmom values. This can be removed if you run all the magnetic calculations as Cmagspin dof calculations.
+        #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
+        else:
+            if ocar.ispin == 2:
+                output["global_vals"]["magmom"]["value"] = zcar.mag[-1]
+                if ocar.lorbit in [1, 2, 11, 12]:
+                    output["atom_vals"]["magmom"] = {}
+                    output["atom_vals"]["magmom"]["value"] = [
+                        None for i in range(len(super_contcar.basis))]
+
+                    for i, v in enumerate(super_contcar.basis):
+                        output["atom_vals"]["magmom"]["value"][unsort_dict[i]] = [
+                            noindent.NoIndent(ocar.mag[i])]
 
         return output
 

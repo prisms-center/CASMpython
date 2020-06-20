@@ -23,12 +23,10 @@ class CmagspinAttr:
        which digests its information.
 
        self.atom_props: List[Dict] - Contains the list of atom properites (with atom name and it's value)
-       self.mol_props: List[Dict] - Contains the list of molecule properties (with mol name and it's value)
        Look at the example below for detailed description of object properties
 
        Consider the example of NaFeO2 with Fe having a +5 magnetic moment and rest all being 0
-       self.atom_props: [{"atom": "Na", "value":0},{"atom":"Fe", "value":5},{"atom":"O","value":0},{"atom":"O","value":0}]
-       self.mol_props: [{"mol": "Na", "value":0},{"mol":"Fe", "value":0},{"mol":"O","value":0},{"mol":"O","value":0}]"""
+       self.atom_props: [{"site_index":0, "atom": "Na", "value":0},{"site_index":1,"atom":"Fe", "value":5},{"site_index":2, "atom":"O","value":0},{"site_index":3, "atom":"O","value":0}]"""
 
     def __init__(self, dof_info):
         """Constructs the CmagspinAttr object from AttributeInfo object
@@ -39,11 +37,8 @@ class CmagspinAttr:
 
         """
         try:
-            self.atom_props = [{"atom": dof_info.atom_type[x], "value": dof_info.atom_dofs["Cmagspin"]
+            self.atom_props = [{"site_index": x, "atom": dof_info.atom_type[x], "value": dof_info.atom_dofs["Cmagspin"]
                                 ["value"][x]} for x in range(0, len(dof_info.atom_type))]
-
-            self.mol_props = [{"mol": dof_info.mol_type[x], "value": dof_info.mol_dofs["Cmagspin"]
-                               ["value"][x]} for x in range(0, len(dof_info.mol_type))]
         except:
             raise DofClassError(
                 "Could not construct CmagspinAttr class!! Check if you're dealing with Cmagspin dof calculations")
@@ -51,17 +46,21 @@ class CmagspinAttr:
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of VASP input tags specific to collinear magnetic spin calculations.
         The collinear magnetic spin specific tags are as follows:
-        MAGMOM
+            
+        MAGMOM, ISPIN
 
         Parameters
         ----------
-        sort: bool (This should match the sort used to write POSCAR file)
+        sort: bool (This should match the sort used to write POSCAR file (whether the basis atoms are sorted))
 
         Returns
         -------
         dict{"vasp_input_tag": "value"}
 
         """
+        #TODO: Group together atoms of same MAGMOM together
+        #TODO: Also add ISPIN default tag which is required if missed in INCAR.base
+
         if sort is True:
             self.atom_props.sort(key=lambda x: x["atom"])
 
@@ -72,3 +71,36 @@ class CmagspinAttr:
         tags = dict()
         tags["MAGMOM"] = magmom_value
         return tags
+
+    def vasp_output_dictionary(self, outcar, sort=True):
+        """Returns the attribute specific vasp output dictionary which can be updated
+        to the whole output dictionary which will be printed as properties.calc.json.
+
+        For Cmagspin, this will be magnetic moment of each individual species
+
+        Parameters
+        ----------
+        outcar : casm.vasp.io.outcar (Class containing information about magmom of individual species from OUTCAR)
+        sort : bool (This should be the same sort used while writing POSCAR)
+
+        Returns
+        -------
+        dict{"Cmagspin":{"value":[list]}}
+
+        """
+        if sort is True:
+            self.atom_props.sort(key=lambda x: x["atom"])
+
+        print(self.atom_props)
+        permutation_vector_to_unsort = [
+            x["site_index"] for x in self.atom_props]
+
+        print(permutation_vector_to_unsort)
+        print(outcar.mag)
+        output = {}
+        output["Cmagspin"] = {}
+        output["Cmagspin"]["values"] = [[mag]
+                                        for site_index, mag in sorted(zip(permutation_vector_to_unsort, outcar.mag))]
+
+        print(output)
+        return output

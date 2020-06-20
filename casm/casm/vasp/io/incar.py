@@ -5,13 +5,6 @@ from builtins import *
 import re
 from casm.wrapper.misc import remove_chars
 from casm.vasp.io import attribute_classes
-###----Just for testing (Remove later)--------#######
-#from casm.project import attribute_info
-#from casm.vasp.io import poscar
-#from casm.vasp.io import species
-#import attribute_classes
-###-----XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX--------##########
-
 
 # List of tags in VASP sorted by the data type associated with it
 VASP_TAG_INT_LIST = ['ialgo', 'ibrion', 'icharg', 'images', 'ismear', 'ispin',
@@ -157,11 +150,11 @@ class Incar(object):
     def update(self, species, poscar, sort=True, dof_info=None):
         """ Update Incar object to reflect Species settings """
 
-        #TODO: Currently only works for one dof like Cmagspin or NCmagspin, etc.
-        #TODO: Need a way to deal if there are more than one dofs
+        #TODO: Need a way to deal with conflicting dof setups. There won't be an issue if user isn't stupid.
+        #TODO: Need a better update function, it's very construed and difficult to understand. Apologies!
 
         if dof_info is not None and dof_info.atom_dofs is not None:
-            if list(dof_info.atom_dofs.keys())[0] == "Cmagspin":
+            if "Cmagspin" in list(dof_info.atom_dofs.keys()):
                 vasp_input_tags_to_append = attribute_classes.CmagspinAttr(
                     dof_info).vasp_input_tags()
                 self.tags.update(vasp_input_tags_to_append)
@@ -243,12 +236,3 @@ class Incar(object):
                     incar_write.write('{} = {}\n'.format(
                         tag.upper(), self.tags[tag]))
         incar_write.close()
-
-
-#dof_information = attribute_info.AttributeInfo("test_files/config.json")
-#spec = species.species_settings("test_files/SPECIES")
-#poscar = poscar.Poscar("test_files/config.json", spec)
-#incar = Incar("test_files/INCAR", spec, poscar,
-#              sort=True, dof_info=dof_information)
-#incar.write("test.incar")
-#poscar.write("test.poscar")

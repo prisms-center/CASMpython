@@ -153,6 +153,9 @@ class Poscar:
         if species != None:
             self.update(species)
 
+        # Storing the atom_type as listed in config.json which can be used while printing out
+        self.atom_type = config_data['atom_type']
+
     def write(self, filename, sort=True):
         """ Write Poscar to 'filename'.
 
