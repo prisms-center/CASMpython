@@ -96,7 +96,7 @@ class CmagspinAttr:
 
         output = {}
         output["Cmagspin"] = {}
-        output["Cmagspin"]["values"] = [[mag]
-                                        for site_index, mag in sorted(zip(permutation_vector_to_unsort, outcar.mag))]
+        output["Cmagspin"]["value"] = [[mag]
+                                       for site_index, mag in sorted(zip(permutation_vector_to_unsort, outcar.mag))]
 
         return output

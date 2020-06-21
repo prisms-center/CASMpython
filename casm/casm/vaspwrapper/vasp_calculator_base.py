@@ -602,7 +602,7 @@ class VaspCalculatorBase(object):
             except:
                 print("Unable to report properties for directory {}.\n"
                       "Please verify that it contains a completed VASP calculation.".format(config_data["configdir"]))
-                raise
+                #raise
 
     def finalize(self, config_data, super_poscarfile=None):
         # write properties.calc.json
@@ -655,7 +655,7 @@ class VaspCalculatorBase(object):
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
         output["atom_type"] = super_poscar.atom_type
         #output["atoms_per_type"] = super_poscar.num_atoms
-        output["coord_mode"] = super_poscar.coord_mode
+        output["coord_mode"] = super_contcar.coord_mode
 
         # as lists
         output["lattice"] = [noindent.NoIndent(
