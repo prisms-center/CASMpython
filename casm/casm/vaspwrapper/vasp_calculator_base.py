@@ -602,7 +602,7 @@ class VaspCalculatorBase(object):
             except:
                 print("Unable to report properties for directory {}.\n"
                       "Please verify that it contains a completed VASP calculation.".format(config_data["configdir"]))
-                #raise
+                raise
 
     def finalize(self, config_data, super_poscarfile=None):
         # write properties.calc.json
@@ -629,7 +629,6 @@ class VaspCalculatorBase(object):
     def properties(vaspdir, super_poscarfile=None, speciesfile=None):
         """ return a dict of output form a vasp directory"""
         dof_info = attribute_info.AttributeInfo(super_poscarfile)
-
         output = dict()
         # load the OSZICAR and OUTCAR
         zcar = vasp.io.Oszicar(os.path.join(vaspdir, "OSZICAR"))
@@ -705,14 +704,14 @@ class VaspCalculatorBase(object):
         #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
         else:
             if ocar.ispin == 2:
-                output["global_vals"]["magmom"]["value"] = zcar.mag[-1]
+                output["global_vals"]["Cmagmom"]["value"] = zcar.mag[-1]
                 if ocar.lorbit in [1, 2, 11, 12]:
-                    output["atom_vals"]["magmom"] = {}
-                    output["atom_vals"]["magmom"]["value"] = [
+                    output["atom_vals"]["Cmagmom"] = {}
+                    output["atom_vals"]["Cmagmom"]["value"] = [
                         None for i in range(len(super_contcar.basis))]
 
                     for i, v in enumerate(super_contcar.basis):
-                        output["atom_vals"]["magmom"]["value"][unsort_dict[i]] = [
+                        output["atom_vals"]["Cmagmom"]["value"][unsort_dict[i]] = [
                             noindent.NoIndent(ocar.mag[i])]
 
         return output

@@ -69,4 +69,8 @@ class AttributeInfo:
             self.mol_type = config_data["mol_type"]
 
         except:
+            self.atom_dofs = None
+            self.atom_type = None
+            self.mol_dofs = None
+            self.mol_type = None
             print("No dof information found in " + filename)
