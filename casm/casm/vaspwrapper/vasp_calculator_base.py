@@ -549,7 +549,7 @@ class VaspCalculatorBase(object):
 
         outputfile = os.path.join(calcdir, "status.json")
         with open(outputfile, 'w') as file:
-            file.write(json.dumps(output, file, cls=noindent.NoIndentEncoder, indent=4, sort_keys=True))
+            file.write(json.dumps(output, cls=noindent.NoIndentEncoder, indent=4, sort_keys=True))
         print("Wrote " + outputfile)
         sys.stdout.flush()
 
@@ -582,7 +582,7 @@ class VaspCalculatorBase(object):
         output = self.properties(vaspdir, super_poscarfile, speciesfile)
         outputfile = os.path.join(config_data["calcdir"], "properties.calc.json")
         with open(outputfile, 'w') as file:
-            file.write(json.dumps(output, file, cls=noindent.NoIndentEncoder,
+            file.write(json.dumps(output, cls=noindent.NoIndentEncoder,
                                   indent=4, sort_keys=True))
         print("Wrote " + outputfile)
         sys.stdout.flush()

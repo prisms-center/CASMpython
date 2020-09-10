@@ -60,7 +60,7 @@ class Outcar(object):
         for line in f:
             try:
                 if re.search("generate k-points for:", line):
-                    self.kpts = map(int, line.split()[-3:])
+                    self.kpts = list(map(int, line.split()[-3:]))
             except:
                 pass
 
@@ -121,7 +121,7 @@ class Outcar(object):
                 if '--' in line and len(self.forces) > 0:
                     force_index = False
                 elif '--' not in line:
-                    self.forces.append(map(float, line.split()[-3:]))
+                    self.forces.append(list(map(float, line.split()[-3:])))
 
             try:
                 if re.search("TOTAL-FORCE", line):

@@ -1,9 +1,11 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 from builtins import *
 
+from casm import vasp
 import os, shutil, six, re, subprocess, json
 import warnings
 import casm.vasp.io
+
 
 class VaspWrapperError(Exception):
     def __init__(self,msg):

@@ -291,7 +291,7 @@ class Poscar:
             self.num_atoms = [int(n) for n in numline.split()]
         except ValueError:
             raise PoscarError("Could not read number of each atom type: '" + numline + "'")
-        self.type_atoms = map(int, range(len(self.num_atoms)))
+        self.type_atoms = list(map(int, range(len(self.num_atoms))))
         self.type_atoms_alias = list(self.type_atoms)
 
 
