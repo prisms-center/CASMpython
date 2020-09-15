@@ -20,22 +20,8 @@ from casm.vasp.run import \
 from casm.vasp.relax import Relax
 from casm.vasp.converge import Converge
 __all__ = [
-    'io',
-    'VaspError',
-    'VaspWarning',
-    'continue_job',
-    'IbzkptError',
-    'FEXCFError',
-    'SubSpaceMatrixError',
-    'InisymError',
-    'SgrconError',
-    'WavecarError',
-    'NbandsError',
-    'NoConvergeError',
-    'FreezeError',
-    'error_check',
-    'crash_check',
-    'complete_job',
-    'run',
-    'Relax',
-    'Converge']
+    'io', 'VaspError', 'VaspWarning', 'continue_job', 'IbzkptError',
+    'FEXCFError', 'SubSpaceMatrixError', 'InisymError', 'SgrconError',
+    'WavecarError', 'NbandsError', 'NoConvergeError', 'FreezeError',
+    'error_check', 'crash_check', 'complete_job', 'run', 'Relax', 'Converge'
+]

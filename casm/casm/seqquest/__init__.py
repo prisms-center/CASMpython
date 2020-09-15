@@ -9,10 +9,6 @@ from casm.seqquest.seqquest import \
 from casm.seqquest.relax import RelaxError, Relax
 
 __all__ = [
-    'RelaxError',
-    'Relax',
-    'SeqQuestError',
-    'SeqQuestWarning',
-    'continue_job',
-    'complete_job',
-    'run']
+    'RelaxError', 'Relax', 'SeqQuestError', 'SeqQuestWarning', 'continue_job',
+    'complete_job', 'run'
+]

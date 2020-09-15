@@ -1,11 +1,13 @@
 """Setup and helpers for Setup block from lcao.in"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import re
 import os
 from ..geom import Cell, Geom
 from ..seq_exceptions import LcaoError
+
 
 class Setup(dict):  #pylint: disable=too-many-public-methods
     """ Special structure for setup options commands in lcao.in """
@@ -14,24 +16,27 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
     __start_str = "setup data"
     __end_str = "end setup phase data"
 
-    __functional_keys = (
-        "functional",
-        )
+    __functional_keys = ("functional", )
 
     __functional_values = (
-        "CAPZ", "CAPZSP",
-        "LDA", "LDA-SP",
-        "PBE", "PBE-SP",
-        "GGA", "GGA-SP",
-        "PW91", "PW91SP",
-        "BLYP", "BLYPSP",
-        "AM05", "AM05SP",
+        "CAPZ",
+        "CAPZSP",
+        "LDA",
+        "LDA-SP",
+        "PBE",
+        "PBE-SP",
+        "GGA",
+        "GGA-SP",
+        "PW91",
+        "PW91SP",
+        "BLYP",
+        "BLYPSP",
+        "AM05",
+        "AM05SP",
         None,
-        )
+    )
 
-    __vdw_keys = (
-        "vdw_potential",
-        )
+    __vdw_keys = ("vdw_potential", )
 
     __vdw_values = (
         "OFF",
@@ -40,32 +45,26 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
         "ULG12",
         "ULG",
         None,
-        )
+    )
 
-    __ndim_keys = (
-        "dimension",
-        )
+    __ndim_keys = ("dimension", )
 
     __ndim_values = (
         0,
         1,
         2,
         3,
-        )
+    )
 
-    __coord_keys = (
-        "coordinate",
-        )
+    __coord_keys = ("coordinate", )
 
     __coord_values = (
         "LATTICE",
         "CARTESIAN",
         None,
-        )
+    )
 
-    __ionopt_keys = (
-        "ionopt",
-        )
+    __ionopt_keys = ("ionopt", )
 
     __ionopt_values = (
         None,
@@ -74,77 +73,57 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
         1,
         2,
         3,
-        )
+    )
 
-    __geom_keys = (
-        "atom, type",
-        )
+    __geom_keys = ("atom, type", )
 
-    __cell_keys = (
-        "primitive",
-        )
+    __cell_keys = ("primitive", )
 
-    __notes_keys = (
-        "notes",
-        )
+    __notes_keys = ("notes", )
 
-    __atom_file_keys = (
-        "atom file",
-        )
+    __atom_file_keys = ("atom file", )
 
-    __vdw_data_keys = (
-        "vdw_data",
-        )
+    __vdw_data_keys = ("vdw_data", )
 
     __int_num_keys = (
         "atom types",
         "number",
-        )
+    )
 
     __float_num_keys = (
         "spin",
         "dielectric",
-        "scale", "scaleu",
-        "scalex", "scaley", "scalez",
+        "scale",
+        "scaleu",
+        "scalex",
+        "scaley",
+        "scalez",
         "strfac",
         "charge",
-        )
+    )
 
     __int_vec_keys = (
         "grid",
         "kgrid",
-        )
+    )
 
     __float_list_keys = (
         "masses",
         "energies",
-        )
+    )
 
     __float_vec_keys = (
         "efield",
         "location",
-        )
+    )
 
-    __float_mat_keys = (
-        "strain",
-        )
+    __float_mat_keys = ("strain", )
 
-    __all_keys = set(__functional_keys +
-                     __vdw_keys +
-                     __ndim_keys +
-                     __coord_keys +
-                     __ionopt_keys +
-                     __geom_keys +
-                     __cell_keys +
-                     __int_num_keys +
-                     __float_num_keys +
-                     __int_vec_keys +
-                     __float_list_keys +
-                     __float_vec_keys +
-                     __float_mat_keys +
-                     __notes_keys +
-                     __atom_file_keys +
-                     __vdw_data_keys)
+    __all_keys = set(__functional_keys + __vdw_keys + __ndim_keys +
+                     __coord_keys + __ionopt_keys + __geom_keys + __cell_keys +
+                     __int_num_keys + __float_num_keys + __int_vec_keys +
+                     __float_list_keys + __float_vec_keys + __float_mat_keys +
+                     __notes_keys + __atom_file_keys + __vdw_data_keys)
 
     @property
     def start_str(self):
@@ -266,13 +245,15 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
         # check if we're 1. frozen, and 2. if the attr already exists
         if self.__is_frozen and not self.__contains__(key):
             raise TypeError(
-                "%r could not be added: %r is frozen to adding new keys" % (key, self))
+                "%r could not be added: %r is frozen to adding new keys" %
+                (key, self))
         else:
             if key in self.__functional_keys:
                 if not value in self.__functional_values:
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
-                        % (key, self.__class__, value, self.__functional_values))
+                        %
+                        (key, self.__class__, value, self.__functional_values))
             elif key in self.__vdw_keys:
                 if not value in self.__vdw_values:
                     raise TypeError(
@@ -324,9 +305,9 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "int 3-vecs"))
-                elif (not isinstance(value[0], int) or
-                      not isinstance(value[1], int) or
-                      not isinstance(value[2], int)):
+                elif (not isinstance(value[0], int)
+                      or not isinstance(value[1], int)
+                      or not isinstance(value[2], int)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "int 3-vecs"))
@@ -341,9 +322,9 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3-vecs"))
-                elif (not isinstance(value[0], float) or
-                      not isinstance(value[1], float) or
-                      not isinstance(value[2], float)):
+                elif (not isinstance(value[0], float)
+                      or not isinstance(value[1], float)
+                      or not isinstance(value[2], float)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3-vecs"))
@@ -371,22 +352,25 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3x3-matrices"))
-                elif (not isinstance(value[0], list) or
-                      not isinstance(value[1], list) or
-                      not isinstance(value[2], list)):
+                elif (not isinstance(value[0], list)
+                      or not isinstance(value[1], list)
+                      or not isinstance(value[2], list)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3x3-matrices"))
-                elif (not len(value[0]) != 3 or
-                      not len(value[1]) != 3 or
-                      not len(value[2]) != 3):
+                elif (not len(value[0]) != 3 or not len(value[1]) != 3
+                      or not len(value[2]) != 3):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3x3-matrices"))
-                elif (not isinstance(value[0][0], float) or not isinstance(value[0][1], float) or   #pylint: disable=too-many-boolean-expressions
-                      not isinstance(value[0][2], float) or not isinstance(value[1][0], float) or
-                      not isinstance(value[1][1], float) or not isinstance(value[1][2], float) or
-                      not isinstance(value[2][0], float) or not isinstance(value[2][1], float) or
+                elif (not isinstance(value[0][0], float)
+                      or not isinstance(value[0][1], float) or  #pylint: disable=too-many-boolean-expressions
+                      not isinstance(value[0][2], float) or
+                      not isinstance(value[1][0], float) or
+                      not isinstance(value[1][1], float) or
+                      not isinstance(value[1][2], float) or
+                      not isinstance(value[2][0], float) or
+                      not isinstance(value[2][1], float) or
                       not isinstance(value[2][2], float)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
@@ -408,58 +392,69 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
 
     def read_stream(self, stream):  #pylint: disable=too-many-branches, too-many-statements
         """ Parse StringIO from lcao.in to _Setup object """
-        while True: #pylint: disable=too-many-nested-blocks
+        while True:  #pylint: disable=too-many-nested-blocks
             unparsed = True
             line = stream.readline()
             if line == "":
                 return
         # for line in stream:
-            # End of setup block
+        # End of setup block
             elif re.search(r"end\s*setup", line, re.IGNORECASE):
                 break
             else:
                 for key in self.functional_keys + self.vdw_keys + self.coord_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = stream.readline().strip()
                         unparsed = False
                 for key in self.ndim_keys + self.int_num_keys + self.ionopt_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = int(stream.readline().strip())
                         unparsed = False
                 for key in self.float_num_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = float(stream.readline().strip())
                         unparsed = False
                 for key in self.int_vec_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
-                        self[key] = [int(x) for x in stream.readline().strip().split()[:3]]
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
+                        self[key] = [
+                            int(x)
+                            for x in stream.readline().strip().split()[:3]
+                        ]
                         unparsed = False
                 for key in self.float_vec_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
-                        self[key] = [float(x) for x in stream.readline().strip().split()[:3]]
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
+                        self[key] = [
+                            float(x)
+                            for x in stream.readline().strip().split()[:3]
+                        ]
                         unparsed = False
                 for key in self.float_list_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         if self["atom types"] is None:
-                            raise LcaoError("'atom types' must be specified before %s!" % key)
+                            raise LcaoError(
+                                "'atom types' must be specified before %s!" %
+                                key)
                         self[key] = []
                         for _ in range(self["atom types"]):
-                            self[key].append(float(stream.readline().strip().split()[0]))
+                            self[key].append(
+                                float(stream.readline().strip().split()[0]))
                         unparsed = False
                 for key in self.float_mat_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         for _ in range(3):
-                            self[key].append(float(stream.readline().strip().split()[:3]))
+                            self[key].append(
+                                float(stream.readline().strip().split()[:3]))
                         unparsed = False
                 for key in self.geom_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self.geom = Geom.seq(stream)
                         self[key] = self.geom
                         unparsed = False
                     if re.search(r"^\s*geomfile", line, re.IGNORECASE):
                         # We need to figure out where lcao.in came from
                         if hasattr(stream, 'name'):
-                            geom_loc = os.path.join(os.path.dirname(stream.name), "lcao.geom_in")
+                            geom_loc = os.path.join(
+                                os.path.dirname(stream.name), "lcao.geom_in")
                         # Otherwise, guess
                         else:
                             geom_loc = "lcao.geom_in"
@@ -467,12 +462,12 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
                         self[key] = self.geom
                         unparsed = False
                 for key in self.cell_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self.cell = Cell.seq(stream)
                         self[key] = self.cell
                         unparsed = False
                 for key in self.notes_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = []
                         while True:
                             line = stream.readline().strip()
@@ -482,16 +477,18 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
                                 self[key].append(line)
                         unparsed = False
                 for key in self.atom_file_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         if self["atom types"] is None:
-                            raise LcaoError("'atom types' must be specified before %s!" % key)
+                            raise LcaoError(
+                                "'atom types' must be specified before %s!" %
+                                key)
                         self[key] = [stream.readline().strip()]
                         for _ in range(self["atom types"] - 1):
                             stream.readline()
                             self[key].append(stream.readline().strip())
                         unparsed = False
                 for key in self.vdw_data_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = []
                         while True:
                             line = stream.readline().strip()
@@ -508,7 +505,7 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
         # Update default values, scales, etc
         self._update_defaults()
 
-    def _update_defaults(self): #pylint: disable=too-many-branches, too-many-statements
+    def _update_defaults(self):  #pylint: disable=too-many-branches, too-many-statements
         """ Applies lcao.in defaults to settings, and applies scale parameters """
         # Functional defaults to PBE
         if self["functional"] is None:
@@ -576,7 +573,7 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
                 raise LcaoError("'kgrid' must be specified in lcao.in file!\
                     (automatic grid scaling not yet supported...)")
 
-    def construct_args(self, geom_in_file=False):   #pylint: disable=too-many-branches, too-many-statements
+    def construct_args(self, geom_in_file=False):  #pylint: disable=too-many-branches, too-many-statements
         """ Constructs and returns the setup block in a lcao.in file """
         arg_string = "setup data:\n"
         if self['notes'] is not None:
@@ -630,7 +627,8 @@ class Setup(dict):  #pylint: disable=too-many-public-methods
         if self.cell is not None:
             arg_string += "primitive lattice vectors\n"
             for i in range(3):
-                arg_string += "  %.8f %.8f %.8f\n" % tuple(self.cell.lattice[i])
+                arg_string += "  %.8f %.8f %.8f\n" % tuple(
+                    self.cell.lattice[i])
         if self['grid'] is not None:
             arg_string += "grid dimensions\n  "
             arg_string += "%i %i %i\n" % tuple(self['grid'])

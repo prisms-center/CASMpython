@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
@@ -10,6 +11,7 @@ if six.PY2:
     from mock import patch
 else:
     from unittest.mock import patch
+
 
 @contextmanager
 def working_dir(wd):
@@ -31,6 +33,7 @@ def working_dir(wd):
         yield
     finally:
         os.chdir(orig_wd)
+
 
 @contextmanager
 def captured_output(wd=None):
@@ -58,6 +61,6 @@ def captured_output(wd=None):
         finally:
             sys.stdout, sys.stderr = old_out, old_err
 
+
 def print_stringIO(strio):
     print("\n----\n", strio.getvalue(), "\n----")
-

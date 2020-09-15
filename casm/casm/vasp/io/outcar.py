@@ -1,10 +1,12 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os, re, gzip
 
+
 class OutcarError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
@@ -19,7 +21,7 @@ class Outcar(object):
            self.slowest_loop = float
            self.kpoints = list of int, or none
     """
-    def __init__(self,filename):
+    def __init__(self, filename):
         self.filename = filename
         self.complete = False
         self.slowest_loop = None
@@ -34,7 +36,6 @@ class Outcar(object):
         self.forces = []
 
         self.read()
-
 
     def read(self):
         """Parse OUTCAR file.  Currently checks for:
@@ -51,8 +52,8 @@ class Outcar(object):
                 f = gzip.open(self.filename)
             else:
                 f = open(self.filename)
-        elif os.path.isfile(self.filename+".gz"):
-            f = gzip.open(self.filename+".gz")
+        elif os.path.isfile(self.filename + ".gz"):
+            f = gzip.open(self.filename + ".gz")
         else:
             raise OutcarError("file not found: " + self.filename)
 
@@ -65,13 +66,15 @@ class Outcar(object):
                 pass
 
             try:
-                if re.search("Total CPU time used",line):
+                if re.search("Total CPU time used", line):
                     self.complete = True
             except:
-                raise OutcarError("Error reading 'Total CPU time used' from line: '" + line + "'\nIn file: '" + self.filename + "'")
+                raise OutcarError(
+                    "Error reading 'Total CPU time used' from line: '" + line +
+                    "'\nIn file: '" + self.filename + "'")
 
             try:
-                if re.search("LOOP",line):
+                if re.search("LOOP", line):
                     t = float(line.split()[-1])
                     if self.slowest_loop is None:
                         self.slowest_loop = t
@@ -107,7 +110,9 @@ class Outcar(object):
                 pass
 
             try:
-                r = re.match(r"\s*dimension x,y,z\s*NGX\s*=\s*([0-9]*)\s*NGY\s*=\s*([0-9]*)\s*NGZ\s*=\s*([0-9]*)\s*", line)
+                r = re.match(
+                    r"\s*dimension x,y,z\s*NGX\s*=\s*([0-9]*)\s*NGY\s*=\s*([0-9]*)\s*NGZ\s*=\s*([0-9]*)\s*",
+                    line)
                 # if r:
                 if r and not self.found_ngx:
                     self.ngx = int(r.group(1))
@@ -130,5 +135,3 @@ class Outcar(object):
                 pass
 
         f.close()
-
-

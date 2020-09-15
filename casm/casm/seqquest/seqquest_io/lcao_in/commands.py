@@ -1,16 +1,16 @@
 """Setup and helpers for Commands block from lcao.in"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import re
+
 
 class Commands(dict):
     """ Special structure for command options commands in lcao.in """
     # __*_keys are tuples because ORDER IS IMPORTANT and these are
     # iterated over later
-    __output_keys = (
-        "output",
-        )
+    __output_keys = ("output", )
     __output_values = (
         0,
         1,
@@ -19,11 +19,9 @@ class Commands(dict):
         4,
         5,
         None,
-        )
+    )
 
-    __record_keys = (
-        "set",
-        )
+    __record_keys = ("set", )
 
     __do_keys = (
         "setup",
@@ -36,18 +34,18 @@ class Commands(dict):
         "neb",
         "spinopt",
         "bands",
-        )
+    )
 
     __do_values = (
         "do",
         "no",
         None,
-        )
+    )
 
     __bool_keys = (
         "keepsym",
         "redusym",
-        )
+    )
 
     __all_keys = set(__output_keys + __record_keys + __do_keys + __bool_keys)
 
@@ -86,7 +84,8 @@ class Commands(dict):
         # check if we're 1. frozen, and 2. if the attr already exists
         if self.__is_frozen and not self.__contains__(key):
             raise TypeError(
-                "%r could not be added: %r is frozen to adding new keys" % (key, self))
+                "%r could not be added: %r is frozen to adding new keys" %
+                (key, self))
         else:
             if key in self.__do_keys:
                 if not value in self.__do_values:
@@ -128,7 +127,7 @@ class Commands(dict):
             if line == "":
                 return
         # for line in stream:
-            # End of commands block
+        # End of commands block
             if re.search(r"setup\s*data", line, re.IGNORECASE):
                 return
             # Parse the line
@@ -139,10 +138,10 @@ class Commands(dict):
                     self[s_args[1]] = s_args[0]
                     unparsed = False
                 for key in self.bool_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = True
                         unparsed = False
-                    elif re.search(r"^\s*~"+key, line, re.IGNORECASE):
+                    elif re.search(r"^\s*~" + key, line, re.IGNORECASE):
                         self[key] = False
                         unparsed = False
                 if s_args[0] in self.output_keys:

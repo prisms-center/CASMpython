@@ -1,5 +1,6 @@
 """ Relax class """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
@@ -10,9 +11,11 @@ import shutil
 from . import seqquest
 from . import seqquest_io
 
+
 class RelaxError(Exception):
     """ Relax-specific errors """
     pass
+
 
 class Relax(object):
     """The Relax class contains functions for setting up, executing, and parsing a seqquest calc.
@@ -33,7 +36,6 @@ class Relax(object):
             self.rundir    (list of .../relax/run.i)
             self.finaldir (.../relax/run.final)
     """
-
     def __init__(self, relaxdir=None, settings=None):
         """
         Construct a seqquest relaxation job object.
@@ -93,29 +95,28 @@ class Relax(object):
         print("SeqQuest Relax object constructed\n")
         sys.stdout.flush()
 
-
     def add_rundir(self):
         """Make a new run.i directory"""
         os.mkdir(os.path.join(self.relaxdir, "run." + str(len(self.rundir))))
         self.update_rundir()
         self.update_errdir()
 
-
     def update_rundir(self):
         """Find all .../config/calctype.CALC/relax/run.i directories, store paths in
             self.rundir list"""
         self.rundir = []
         run_index = len(self.rundir)
-        while os.path.isdir(os.path.join(self.relaxdir, "run." + str(run_index))):
-            self.rundir.append(os.path.join(self.relaxdir, "run." + str(run_index)))
+        while os.path.isdir(
+                os.path.join(self.relaxdir, "run." + str(run_index))):
+            self.rundir.append(
+                os.path.join(self.relaxdir, "run." + str(run_index)))
             run_index += 1
-
 
     def add_errdir(self):
         """Move run.i to run.i_err.j directory"""
-        os.rename(self.rundir[-1], self.rundir[-1] + "_err." + str(len(self.errdir)))
+        os.rename(self.rundir[-1],
+                  self.rundir[-1] + "_err." + str(len(self.errdir)))
         self.update_errdir()
-
 
     def update_errdir(self):
         """Find all .../config/calctype.CALC/relax/run.i_err.j directories, store paths in
@@ -129,23 +130,27 @@ class Relax(object):
                 self.errdir.append(self.rundir[-1] + "_err." + str(err_index))
                 err_index += 1
 
-
     def setup(self, initdir, _):
         """ mv all files and directories (besides initdir) into initdir """
 
         print("Moving files into initial run directory:", initdir)
         initdir = os.path.abspath(initdir)
         for ifile in os.listdir(self.relaxdir):
-            if ((ifile in seqquest_io.QUEST_INPUT_FILE_LIST + self.settings["extra_input_files"])
+            if ((ifile in seqquest_io.QUEST_INPUT_FILE_LIST +
+                 self.settings["extra_input_files"])
                     and (os.path.join(self.relaxdir, ifile) != initdir)):
-                os.rename(os.path.join(self.relaxdir, ifile), os.path.join(initdir, ifile))
+                os.rename(os.path.join(self.relaxdir, ifile),
+                          os.path.join(initdir, ifile))
             elif re.search(r".*\.atm", ifile):
                 if os.path.islink(os.path.join(self.relaxdir, ifile)):
-                    os.symlink(os.readlink(os.path.join(self.relaxdir, ifile)), os.path.join(initdir, ifile))
+                    os.symlink(os.readlink(os.path.join(self.relaxdir, ifile)),
+                               os.path.join(initdir, ifile))
                 else:
-                    shutil.copy(os.path.join(self.relaxdir, ifile), os.path.join(initdir, ifile))
+                    shutil.copy(os.path.join(self.relaxdir, ifile),
+                                os.path.join(initdir, ifile))
             elif ifile == "lcao.geom_in":
-                os.rename(os.path.join(self.relaxdir, ifile), os.path.join(initdir, ifile))
+                os.rename(os.path.join(self.relaxdir, ifile),
+                          os.path.join(initdir, ifile))
 
         print("")
         sys.stdout.flush()
@@ -156,7 +161,8 @@ class Relax(object):
 
         # Initial lcao.in files are NOT yet supported!
         if self.settings["initial"] != None:
-            raise RelaxError("the 'initial' keyword in relax/converge.json is not yet supported for\
+            raise RelaxError(
+                "the 'initial' keyword in relax/converge.json is not yet supported for\
                              SeqQuest!")
 
         # # If an initial incar is called for, copy it in and set the appropriate flag
@@ -181,7 +187,7 @@ class Relax(object):
         return True
 
     def converged(self):
-    # def converged(self):
+        # def converged(self):
         """Check if configuration is relaxed.
 
            For now, this always returns True, as SeqQuest doesn't have the anisotropic basis
@@ -190,12 +196,12 @@ class Relax(object):
         outfile = os.path.join(self.rundir[-1], "lcao.out")
         return seqquest_io.LcaoOUT(outfile).complete
 
-           # This is called when self.rundir[-1] is complete and not a constant volume job.
+        # This is called when self.rundir[-1] is complete and not a constant volume job.
 
-           # Convergence criteria is: at least 2 relaxation jobs are complete, and:
-           #                          1) the last job completed with <= 3 ionic steps
-           #                          or 2) the last two jobs had final E0 differ by less than
-           #                                self.settings["nrg_convergence"]
+        # Convergence criteria is: at least 2 relaxation jobs are complete, and:
+        #                          1) the last job completed with <= 3 ionic steps
+        #                          or 2) the last two jobs had final E0 differ by less than
+        #                                self.settings["nrg_convergence"]
         #"""
         # if len(self.rundir) >= 2:
         #     if io.ionic_steps(self.rundir[-1]) <= 3:
@@ -208,7 +214,6 @@ class Relax(object):
         #                 return True
 
         # return False
-
 
     def not_converging(self):
         """Check if configuration is not converging.
@@ -225,7 +230,6 @@ class Relax(object):
             # This indicates that we have an electronic step problem, which, for now, we do NOT know how to solve
             return True
         return False
-
 
     def run(self):  #pylint: disable=too-many-branches, too-many-statements
         """ Perform a seqquest jobs to relax a structure. Then performs a final run, using settings
@@ -247,19 +251,22 @@ class Relax(object):
 
             elif task == "relax":
                 self.add_rundir()
-                seqquest.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                seqquest.continue_job(self.rundir[-2], self.rundir[-1],
+                                      self.settings)
                 shutil.copyfile(os.path.join(self.relaxdir, "lcao.in.base"),
                                 os.path.join(self.rundir[-1], "lcao.in"))
 
             elif task == "constant":
                 self.add_rundir()
-                seqquest.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                seqquest.continue_job(self.rundir[-2], self.rundir[-1],
+                                      self.settings)
 
                 # set INCAR to ISIF = 2, ISMEAR = -5, NSW = 0, IBRION = -1
                 # Implement final settings, if present
                 # Final settings not yet implemented for seqquest!!!
                 if self.settings["final"] != None:
-                    raise RelaxError("the 'final' keyword in relax/converge.json is not yet\
+                    raise RelaxError(
+                        "the 'final' keyword in relax/converge.json is not yet\
                                      supported for SeqQuest!")
                 else:
                     new_values = dict()
@@ -272,13 +279,15 @@ class Relax(object):
                 #     new_values = {"ISIF":2, "ISMEAR":-5, "NSW":0, "IBRION":-1}
 
                 # set lcao.in notes system tag to denote 'final'
-                final_lcao = seqquest_io.LcaoIN(os.path.join(self.rundir[-1], "lcao.in"))
+                final_lcao = seqquest_io.LcaoIN(
+                    os.path.join(self.rundir[-1], "lcao.in"))
                 # notes_value = seqquest_io.get_lcao_tag(['setup', 'notes'], self.rundir[-1])
                 if final_lcao.get(['setup', 'notes']) is None:
                     final_lcao.set(['setup', 'notes'], ["final"])
                 else:
-                    final_lcao.set(['setup', 'notes'], final_lcao.get(['setup', 'notes'])
-                                   + ["final"])
+                    final_lcao.set(['setup', 'notes'],
+                                   final_lcao.get(['setup', 'notes']) +
+                                   ["final"])
                 new_values[('setup', 'notes')] = ["final"]
 
                 final_lcao.write(os.path.join(self.rundir[-1], "lcao.in"))
@@ -289,15 +298,18 @@ class Relax(object):
             else:
                 # probably hit walltime
                 self.add_rundir()
-                seqquest.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                seqquest.continue_job(self.rundir[-2], self.rundir[-1],
+                                      self.settings)
 
             while True:
                 # run vasp
                 # result = seqquest.run(self.rundir[-1], command=self.settings["run_cmd"],
                 #           ncpus=self.settings["ncpus"],err_types=self.settings["err_types"])
-                result = seqquest.run(self.rundir[-1], command=self.settings["run_cmd"],    #pylint: disable=assignment-from-none
-                                      ncpus=self.settings["ncpus"],
-                                      err_types=self.settings["err_types"])
+                result = seqquest.run(
+                    self.rundir[-1],
+                    command=self.settings["run_cmd"],  #pylint: disable=assignment-from-none
+                    ncpus=self.settings["ncpus"],
+                    err_types=self.settings["err_types"])
 
                 # if no errors, continue
                 if result is None or self.not_converging():
@@ -319,7 +331,8 @@ class Relax(object):
 
                 # backup files are NOT yet supported!
                 if self.settings["backup"] != None:
-                    raise RelaxError("the 'backup' keyword in relax/converge.json is not yet\
+                    raise RelaxError(
+                        "the 'backup' keyword in relax/converge.json is not yet\
                                       supported for SeqQuest!")
                 # if (self.settings["backup"] != None) and len(self.rundir) > 1:
                 #     print "Restoring from backups:"
@@ -340,7 +353,8 @@ class Relax(object):
         if status == "complete":
             if not os.path.isdir(self.finaldir):
                 # mv final results to relax.final
-                print("mv", os.path.basename(self.rundir[-1]), os.path.basename(self.finaldir))
+                print("mv", os.path.basename(self.rundir[-1]),
+                      os.path.basename(self.finaldir))
                 sys.stdout.flush()
                 os.rename(self.rundir[-1], self.finaldir)
                 self.rundir.pop()
@@ -348,8 +362,7 @@ class Relax(object):
 
         return (status, task)
 
-
-    def status(self):   #pylint: disable=too-many-return-statements
+    def status(self):  #pylint: disable=too-many-return-statements
         """ Determine the status of a quest relaxation series of runs. Individual runs in the series
             are in directories labeled "run.0", "run.1", etc.
 
@@ -378,7 +391,8 @@ class Relax(object):
         if seqquest_io.job_complete(self.rundir[-1]):
 
             # if it is a final constant volume run
-            final_lcao = seqquest_io.LcaoIN(os.path.join(self.rundir[-1], "lcao.in"))
+            final_lcao = seqquest_io.LcaoIN(
+                os.path.join(self.rundir[-1], "lcao.in"))
             # notes_value = seqquest_io.get_lcao_tag(['setup', 'notes'], self.rundir[-1])
             if final_lcao.get(['setup', 'notes']) is None:
                 pass
@@ -404,4 +418,3 @@ class Relax(object):
 
         # else if the latest run is not complete, continue running it
         return ("incomplete", self.rundir[-1])
-

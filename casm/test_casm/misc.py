@@ -1,20 +1,28 @@
 """test_casm/misc.py"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import inspect
 from os.path import abspath, basename, exists, dirname, join
 import unittest
 
+
 def check_skip_all(test):
-    skipfile = join(test.classdir,'skip')
+    skipfile = join(test.classdir, 'skip')
     if exists(skipfile):
-        raise unittest.SkipTest("'" + basename(skipfile) + "' file found. Skipping " + test.__class__.__name__)
+        raise unittest.SkipTest("'" + basename(skipfile) +
+                                "' file found. Skipping " +
+                                test.__class__.__name__)
+
 
 def check_skip_one(test):
-    skipfile = join(test.classdir,'skip_' + test.__class__.__name__)
+    skipfile = join(test.classdir, 'skip_' + test.__class__.__name__)
     if exists(skipfile):
-        raise unittest.SkipTest("'" + basename(skipfile) + "' file found. Skipping " + test.__class__.__name__)
+        raise unittest.SkipTest("'" + basename(skipfile) +
+                                "' file found. Skipping " +
+                                test.__class__.__name__)
+
 
 def casm_setup(self):
     """Implements common setup for casm tests
@@ -22,12 +30,13 @@ def casm_setup(self):
     
     Notes:
         Standalone implementation to allow easier use by subpackages
-    """  
+    """
     self.classfile = abspath(inspect.getfile(self.__class__))
     self.classdir = dirname(self.classfile)
-    
+
     check_skip_all(self)
     check_skip_one(self)
+
 
 class CasmTestCase(unittest.TestCase):
     """CASM base unittest class
@@ -41,9 +50,11 @@ class CasmTestCase(unittest.TestCase):
         # Inspired via http://stackoverflow.com/questions/1323455/python-unit-test-with-base-and-sub-class/17696807#17696807
         if cls is not CasmTestCase and cls.setUp is not CasmTestCase.setUp:
             orig_setUp = cls.setUp
+
             def setUpOverride(self, *args, **kwargs):
                 CasmTestCase.setUp(self)
                 return orig_setUp(self, *args, **kwargs)
+
             cls.setUp = setUpOverride
 
     def setUp(self):
@@ -51,5 +62,3 @@ class CasmTestCase(unittest.TestCase):
             - check for 'skip' or 'skip_MyTestCase' files
         """
         casm_setup(self)
-        
-        

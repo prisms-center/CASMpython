@@ -8,6 +8,7 @@ import uuid
 # answer: http://stackoverflow.com/a/25935321
 # code by: http://stackoverflow.com/users/247623/erik-allik
 
+
 class NoIndent(object):
     def __init__(self, value):
         self.value = value
@@ -24,13 +25,15 @@ class NoIndentEncoder(json.JSONEncoder):
         if isinstance(o, NoIndent):
             key = uuid.uuid4().hex
             self._replacement_map[key] = json.dumps(o.value, **self.kwargs)
-            return "@@%s@@" % (key,)
+            return "@@%s@@" % (key, )
         else:
             return super(NoIndentEncoder, self).default(o)
 
     def encode(self, o):
         result = super(NoIndentEncoder, self).encode(o)
         for k, v in six.iteritems(self._replacement_map):
-            result = result.replace('"@@%s@@"' % (k,), v)
+            result = result.replace('"@@%s@@"' % (k, ), v)
         return result
+
+
 # ---------------------------------------------------

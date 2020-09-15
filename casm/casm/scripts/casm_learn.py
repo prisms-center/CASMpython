@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import argparse
@@ -10,133 +11,214 @@ import sys
 
 import casm.learn
 from casm.project import Project, Selection, write_eci
-  
 
-def main(argv = None):
-  if argv is None:
-    argv = sys.argv[1:]
-  parser = argparse.ArgumentParser(description = 'Fit cluster expansion coefficients (ECI)')
-  parser.add_argument('--desc', help='Print extended usage description', action="store_true")
-  parser.add_argument('-s', '--settings', nargs=1, help='Settings input filename', type=str)
-  parser.add_argument('--format', help='Hall of fame print format. Options are "details", "json", or "csv".', type=str, default=None)
-  #parser.add_argument('--path', help='Path to CASM project. Default assumes the current directory is in the CASM project.', type=str, default=os.getcwd())
-  parser.add_argument('--settings-format', help='Print input file description', action="store_true")
-  parser.add_argument('--exLasso', help='Print example input file using Lasso', action="store_true")
-  parser.add_argument('--exLassoCV', help='Print example input file using LassoCV', action="store_true")
-  parser.add_argument('--exRFE', help='Print example input file using Recursive Feature Elimination (RFE)', action="store_true")
-  parser.add_argument('--exGeneticAlgorithm', help='Print example input file using GeneticAlgorithm', action="store_true")
-  parser.add_argument('--exIndividualBestFirst', help='Print example input file using IndividualBestFirst', action="store_true")
-  parser.add_argument('--exPopulationBestFirst', help='Print example input file using PopulationBestFirst', action="store_true")
-  parser.add_argument('--exDirectSelection', help='Print example input file using DirectSelection', action="store_true")
-  parser.add_argument('--hall', help='Print hall of fame summary', action="store_true")
-  parser.add_argument('--indiv', nargs='+', help='Specify particular individuals by index in hall of fame', type=int)
-  parser.add_argument('--select', nargs=1, help='Select individual to use', type=int)
-  parser.add_argument('--checkhull', help='Check convex hull properties using the provided selection', action="store_true", default=False)
-  parser.add_argument('--checkspecs', help='Output data and cv files containing the current problem specs', action="store_true", default=False)
-  parser.add_argument('-q','--quiet', help='Quiet output', action="store_true", default=False)
-  args = parser.parse_args(argv)
-  
-  args.verbose = not args.quiet
-  
-  if args.settings_format:
-    casm.learn.print_input_help()
-    return
-  
-  if args.exLasso:
-    print(six.u(json.dumps(casm.learn.example_input_Lasso(), indent=2)))
-    return
-  elif args.exLassoCV:
-    print(six.u(json.dumps(casm.learn.example_input_LassoCV(), indent=2)))
-    return
-  elif args.exRFE:
-    print(six.u(json.dumps(casm.learn.example_input_RFE(), indent=2)))
-    return
-  elif args.exGeneticAlgorithm:
-    print(six.u(json.dumps(casm.learn.example_input_GeneticAlgorithm(), indent=2)))
-    return
-  elif args.exIndividualBestFirst:
-    print(six.u(json.dumps(casm.learn.example_input_IndividualBestFirst(), indent=2)))
-    return
-  elif args.exPopulationBestFirst:
-    print(six.u(json.dumps(casm.learn.example_input_PopulationBestFirst(), indent=2)))
-    return
-  elif args.exDirectSelection:
-    print(six.u(json.dumps(casm.learn.example_input_DirectSelection(), indent=2, cls=casm.NoIndentEncoder)))
-    return
-  
-  if args.settings:
-    
-    if args.verbose:
-      print("Loading", args.settings[0])
-    
-    input = casm.learn.open_input(args.settings[0])
-    
-    if args.hall:
-      
-      halloffame_filename = input["halloffame_filename"]
-      # print Hall of Fame summary
-      existing_hall = casm.learn.open_halloffame(halloffame_filename, args.verbose)
-      
-      if args.indiv:
-        casm.learn.print_individual(existing_hall, args.indiv, format=args.format)
-      elif args.hall:
-        casm.learn.print_halloffame(existing_hall, format=args.format)
-      
-    elif args.checkhull:
-      
-      halloffame_filename = input["halloffame_filename"]
-      # print Hall of Fame summary
-      existing_hall = casm.learn.open_halloffame(halloffame_filename, args.verbose)
-      
-      casm.learn.fit.checkhull(input, existing_hall, indices=args.indiv, verbose=args.verbose)
-      
-      # pickle hall of fame
-      casm.learn.save_halloffame(existing_hall, halloffame_filename, args.verbose)
-      
-    elif args.select:
-      
-      specs = input["problem_specs"]
-      halloffame_filename = input["halloffame_filename"]
-      # print Hall of Fame summary
-      existing_hall = casm.learn.open_halloffame(halloffame_filename, args.verbose)
-      
-      proj = Project(specs["data"]["kwargs"]["project_path"])
-      
-      index = args.select[0]
-      indiv = existing_hall[index]
-      
-      write_eci(proj, indiv.eci, casm.learn.to_json(index, indiv), verbose=args.verbose)
-      
-    elif args.checkspecs:
-      
-      casm.learn.checkspecs(input, verbose=args.verbose)
-           
-    else:
-      
-      # construct hall of fame
-      specs = input["problem_specs"]
-      halloffame_filename = input["halloffame_filename"]
-      halloffame_size = input["n_halloffame"]
-      hall = casm.learn.create_halloffame(halloffame_size)
-      if args.verbose:
-        print("# Hall of Fame size:", halloffame_size, "\n")
-      
-      if os.path.exists(halloffame_filename):
-        existing_hall = casm.learn.open_halloffame(halloffame_filename, args.verbose)
-        hall.update(existing_hall)
-      
-      # run fitting
-      if input["feature_selection"]["method"] == "DirectSelection":
-        casm.learn.direct_fit(input, verbose=args.verbose, hall=hall)
-      else:
-        casm.learn.fit_and_select(input, verbose=args.verbose, hall=hall)
-      
-      # pickle hall of fame
-      casm.learn.save_halloffame(hall, halloffame_filename, args.verbose)
-    
-  elif args.desc:
-    
-    print("""
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    parser = argparse.ArgumentParser(
+        description='Fit cluster expansion coefficients (ECI)')
+    parser.add_argument('--desc',
+                        help='Print extended usage description',
+                        action="store_true")
+    parser.add_argument('-s',
+                        '--settings',
+                        nargs=1,
+                        help='Settings input filename',
+                        type=str)
+    parser.add_argument(
+        '--format',
+        help=
+        'Hall of fame print format. Options are "details", "json", or "csv".',
+        type=str,
+        default=None)
+    #parser.add_argument('--path', help='Path to CASM project. Default assumes the current directory is in the CASM project.', type=str, default=os.getcwd())
+    parser.add_argument('--settings-format',
+                        help='Print input file description',
+                        action="store_true")
+    parser.add_argument('--exLasso',
+                        help='Print example input file using Lasso',
+                        action="store_true")
+    parser.add_argument('--exLassoCV',
+                        help='Print example input file using LassoCV',
+                        action="store_true")
+    parser.add_argument(
+        '--exRFE',
+        help=
+        'Print example input file using Recursive Feature Elimination (RFE)',
+        action="store_true")
+    parser.add_argument('--exGeneticAlgorithm',
+                        help='Print example input file using GeneticAlgorithm',
+                        action="store_true")
+    parser.add_argument(
+        '--exIndividualBestFirst',
+        help='Print example input file using IndividualBestFirst',
+        action="store_true")
+    parser.add_argument(
+        '--exPopulationBestFirst',
+        help='Print example input file using PopulationBestFirst',
+        action="store_true")
+    parser.add_argument('--exDirectSelection',
+                        help='Print example input file using DirectSelection',
+                        action="store_true")
+    parser.add_argument('--hall',
+                        help='Print hall of fame summary',
+                        action="store_true")
+    parser.add_argument(
+        '--indiv',
+        nargs='+',
+        help='Specify particular individuals by index in hall of fame',
+        type=int)
+    parser.add_argument('--select',
+                        nargs=1,
+                        help='Select individual to use',
+                        type=int)
+    parser.add_argument(
+        '--checkhull',
+        help='Check convex hull properties using the provided selection',
+        action="store_true",
+        default=False)
+    parser.add_argument(
+        '--checkspecs',
+        help='Output data and cv files containing the current problem specs',
+        action="store_true",
+        default=False)
+    parser.add_argument('-q',
+                        '--quiet',
+                        help='Quiet output',
+                        action="store_true",
+                        default=False)
+    args = parser.parse_args(argv)
+
+    args.verbose = not args.quiet
+
+    if args.settings_format:
+        casm.learn.print_input_help()
+        return
+
+    if args.exLasso:
+        print(six.u(json.dumps(casm.learn.example_input_Lasso(), indent=2)))
+        return
+    elif args.exLassoCV:
+        print(six.u(json.dumps(casm.learn.example_input_LassoCV(), indent=2)))
+        return
+    elif args.exRFE:
+        print(six.u(json.dumps(casm.learn.example_input_RFE(), indent=2)))
+        return
+    elif args.exGeneticAlgorithm:
+        print(
+            six.u(
+                json.dumps(casm.learn.example_input_GeneticAlgorithm(),
+                           indent=2)))
+        return
+    elif args.exIndividualBestFirst:
+        print(
+            six.u(
+                json.dumps(casm.learn.example_input_IndividualBestFirst(),
+                           indent=2)))
+        return
+    elif args.exPopulationBestFirst:
+        print(
+            six.u(
+                json.dumps(casm.learn.example_input_PopulationBestFirst(),
+                           indent=2)))
+        return
+    elif args.exDirectSelection:
+        print(
+            six.u(
+                json.dumps(casm.learn.example_input_DirectSelection(),
+                           indent=2,
+                           cls=casm.NoIndentEncoder)))
+        return
+
+    if args.settings:
+
+        if args.verbose:
+            print("Loading", args.settings[0])
+
+        input = casm.learn.open_input(args.settings[0])
+
+        if args.hall:
+
+            halloffame_filename = input["halloffame_filename"]
+            # print Hall of Fame summary
+            existing_hall = casm.learn.open_halloffame(halloffame_filename,
+                                                       args.verbose)
+
+            if args.indiv:
+                casm.learn.print_individual(existing_hall,
+                                            args.indiv,
+                                            format=args.format)
+            elif args.hall:
+                casm.learn.print_halloffame(existing_hall, format=args.format)
+
+        elif args.checkhull:
+
+            halloffame_filename = input["halloffame_filename"]
+            # print Hall of Fame summary
+            existing_hall = casm.learn.open_halloffame(halloffame_filename,
+                                                       args.verbose)
+
+            casm.learn.fit.checkhull(input,
+                                     existing_hall,
+                                     indices=args.indiv,
+                                     verbose=args.verbose)
+
+            # pickle hall of fame
+            casm.learn.save_halloffame(existing_hall, halloffame_filename,
+                                       args.verbose)
+
+        elif args.select:
+
+            specs = input["problem_specs"]
+            halloffame_filename = input["halloffame_filename"]
+            # print Hall of Fame summary
+            existing_hall = casm.learn.open_halloffame(halloffame_filename,
+                                                       args.verbose)
+
+            proj = Project(specs["data"]["kwargs"]["project_path"])
+
+            index = args.select[0]
+            indiv = existing_hall[index]
+
+            write_eci(proj,
+                      indiv.eci,
+                      casm.learn.to_json(index, indiv),
+                      verbose=args.verbose)
+
+        elif args.checkspecs:
+
+            casm.learn.checkspecs(input, verbose=args.verbose)
+
+        else:
+
+            # construct hall of fame
+            specs = input["problem_specs"]
+            halloffame_filename = input["halloffame_filename"]
+            halloffame_size = input["n_halloffame"]
+            hall = casm.learn.create_halloffame(halloffame_size)
+            if args.verbose:
+                print("# Hall of Fame size:", halloffame_size, "\n")
+
+            if os.path.exists(halloffame_filename):
+                existing_hall = casm.learn.open_halloffame(
+                    halloffame_filename, args.verbose)
+                hall.update(existing_hall)
+
+            # run fitting
+            if input["feature_selection"]["method"] == "DirectSelection":
+                casm.learn.direct_fit(input, verbose=args.verbose, hall=hall)
+            else:
+                casm.learn.fit_and_select(input,
+                                          verbose=args.verbose,
+                                          hall=hall)
+
+            # pickle hall of fame
+            casm.learn.save_halloffame(hall, halloffame_filename, args.verbose)
+
+    elif args.desc:
+
+        print("""
     
     1) Specify the problem:
       
@@ -305,11 +387,11 @@ def main(argv = None):
       calculations. See 'casm monte -h' and 'casm format --monte' for help. 
       
     """)
-    
-  else:
-    
-    parser.print_help()
+
+    else:
+
+        parser.print_help()
+
 
 if __name__ == "__main__":
-  main()
-
+    main()

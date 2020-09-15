@@ -20,7 +20,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
 
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -41,13 +40,10 @@ autosummary_generate = True  # Make _autosummary files and include them
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.coverage',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'sphinxarg.ext']
+    'sphinx.ext.autodoc', 'sphinx.ext.autosummary', 'sphinx.ext.coverage',
+    'sphinx.ext.viewcode', 'sphinx.ext.githubpages', 'sphinx.ext.napoleon',
+    'sphinxarg.ext'
+]
 
 # Napoleon settings
 napoleon_google_docstring = False
@@ -106,7 +102,6 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -140,12 +135,10 @@ html_static_path = ['_static']
 #     ]
 # }
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'CASMdoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -171,20 +164,15 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'CASM.tex', u'CASM Documentation',
-     u'CASM Developers', 'manual'),
+    (master_doc, 'CASM.tex', u'CASM Documentation', u'CASM Developers',
+     'manual'),
 ]
-
 
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'casm', u'CASM Documentation',
-     [author], 1)
-]
-
+man_pages = [(master_doc, 'casm', u'CASM Documentation', [author], 1)]
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -192,7 +180,6 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'CASM', u'CASM Documentation',
-     author, 'CASM', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'CASM', u'CASM Documentation', author, 'CASM',
+     'One line description of project.', 'Miscellaneous'),
 ]

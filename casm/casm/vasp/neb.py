@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import math
@@ -8,6 +9,7 @@ import sys
 
 import casm.vasp
 from casm.vasp import io
+
 
 class Neb(object):
     """The class contains all the funtions for performing Nudged Elastic Band(NEB) Calcutations with VASP
@@ -22,7 +24,7 @@ class Neb(object):
         
            Reads the settings from a neb.json """
         ## write more intro
-        
+
         print("Constructing a VASP NEB  calculation object")
         sys.stdout.flush()
 
@@ -36,9 +38,10 @@ class Neb(object):
 
         # find existing .../calcdir/run.run_index directories, store paths in self.rundir list
         self.rundir = []
-        self.errdir = [] ## keeps track of the error directories of present run only
+        self.errdir = [
+        ]  ## keeps track of the error directories of present run only
         self.update_rundir()
-        self.update_errdir() ## redundent but keep it for the flow
+        self.update_errdir()  ## redundent but keep it for the flow
 
         self.finaldir = os.path.join(self.calcdir, "run.final")
 
@@ -84,28 +87,27 @@ class Neb(object):
         print("VASP NEB object constructed\n")
         sys.stdout.flush()
 
-
     def add_rundir(self):
         """Make a new run.i directory"""
         os.mkdir(os.path.join(self.calcdir, "run." + str(len(self.rundir))))
         self.update_rundir()
         self.update_errdir()
 
-
     def update_rundir(self):
         """Find all .../config/calctype.default/run.i directories, store paths in self.rundir list"""
         self.rundir = []
         run_index = len(self.rundir)
-        while os.path.isdir(os.path.join(self.calcdir, "run." + str(run_index))):
-            self.rundir.append(os.path.join(self.calcdir, "run." + str(run_index)))
+        while os.path.isdir(os.path.join(self.calcdir,
+                                         "run." + str(run_index))):
+            self.rundir.append(
+                os.path.join(self.calcdir, "run." + str(run_index)))
             run_index += 1
-
 
     def add_errdir(self):
         """Move run.i to run.i_err.j directory"""
-        os.rename(self.rundir[-1], self.rundir[-1] + "_err." + str(len(self.errdir)))
+        os.rename(self.rundir[-1],
+                  self.rundir[-1] + "_err." + str(len(self.errdir)))
         self.update_errdir()
-
 
     def update_errdir(self):
         """Find all .../config/calctype.default/run.i_err.j directories, store paths in self.errdir list"""
@@ -122,49 +124,57 @@ class Neb(object):
         """ mv all files and directories (besides initdir) into initdir """
         ### still has to handle the images
 
-        print("Moving files and directories into initial run directory:", initdir)
+        print("Moving files and directories into initial run directory:",
+              initdir)
         initdir = os.path.abspath(initdir)
         for p in os.listdir(self.calcdir):
-            if (p in (io.VASP_INPUT_FILE_LIST + self.settings["extra_input_files"])) and (os.path.join(self.calcdir, p) != initdir):
-                os.rename(os.path.join(self.calcdir, p), os.path.join(initdir, p))
+            if (p in (io.VASP_INPUT_FILE_LIST +
+                      self.settings["extra_input_files"])) and (os.path.join(
+                          self.calcdir, p) != initdir):
+                os.rename(os.path.join(self.calcdir, p),
+                          os.path.join(initdir, p))
         ## copying the folders with image poscars into initdir
-        for i in range(settings["n_images"]+2):
-            folder_name = str(i).zfill(2) #max(2, len(str(settings["n_images"]))+1 )) ##too fancy!!!
-            shutil.copytree(os.path.join(self.calcdir,"poscars",folder_name),os.path.join(initdir,folder_name))
+        for i in range(settings["n_images"] + 2):
+            folder_name = str(i).zfill(
+                2)  #max(2, len(str(settings["n_images"]))+1 )) ##too fancy!!!
+            shutil.copytree(os.path.join(self.calcdir, "poscars", folder_name),
+                            os.path.join(initdir, folder_name))
 
         print("")
         sys.stdout.flush()
 
         # Keep a backup copy of the base INCAR
-        shutil.copyfile(os.path.join(initdir, "INCAR"), os.path.join(self.calcdir, "INCAR.base"))
-        os.rename(os.path.join(initdir, "POSCAR"), os.path.join(self.calcdir, "POSCAR.start"))
+        shutil.copyfile(os.path.join(initdir, "INCAR"),
+                        os.path.join(self.calcdir, "INCAR.base"))
+        os.rename(os.path.join(initdir, "POSCAR"),
+                  os.path.join(self.calcdir, "POSCAR.start"))
         # If an initial incar is called for, copy it in and set the appropriate flag
-        if (self.settings["initial"] != None) and (os.path.isfile(os.path.join(self.calcdir, self.settings["initial"]))):
-            new_values = io.Incar(os.path.join(self.calcdir, self.settings["initial"])).tags
+        if (self.settings["initial"] != None) and (os.path.isfile(
+                os.path.join(self.calcdir, self.settings["initial"]))):
+            new_values = io.Incar(
+                os.path.join(self.calcdir, self.settings["initial"])).tags
             io.set_incar_tag(new_values, initdir)
             print("  Set INCAR tags:", new_values, "\n")
             sys.stdout.flush()
 
-
-    def complete(self): 
+    def complete(self):
         """Check if the VASP calculation is complete.
 
            Completion criteria: self.calcdir/self.rundir[-1]/OUTCAR exists and is complete
         """
         ## test if this gives write output when job is still running
-        for img in range(1, self.settings["n_images"]+1):
-            outcarfile = os.path.join(self.rundir[-1], str(img).zfill(2), "OUTCAR")
+        for img in range(1, self.settings["n_images"] + 1):
+            outcarfile = os.path.join(self.rundir[-1],
+                                      str(img).zfill(2), "OUTCAR")
             if not os.path.isfile(outcarfile):
                 return False
-            if not io.Outcar(outcarfile).complete(): ## check this
+            if not io.Outcar(outcarfile).complete():  ## check this
                 return False
         return True
-
 
     def converged(self):
         ### might be redundent. presently return complete()
         return self.complete()
-
 
     def not_converging(self):
         """Check if configuration is not converging.
@@ -176,7 +186,6 @@ class Neb(object):
         if len(self.rundir) >= int(self.settings["run_limit"]):
             return True
         return False
-
 
     def run(self):
         """ Perform a series of vasp jobs to run calculations. Performs a series of vasp calculations until
@@ -199,41 +208,59 @@ class Neb(object):
             elif task == "new_run":
                 self.add_rundir()
                 # if "n_images" in settings then image CONTCARs will be copied
-                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
-                shutil.copyfile(os.path.join(self.calcdir, "INCAR.base"),
-                                os.path.join(self.rundir[-1], "INCAR")) ## should it be enforced??
+                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1],
+                                       self.settings)
+                shutil.copyfile(
+                    os.path.join(self.calcdir, "INCAR.base"),
+                    os.path.join(self.rundir[-1],
+                                 "INCAR"))  ## should it be enforced??
             elif task == "constant":
                 self.add_rundir()
                 # if "n_images" in settings then image CONTCARs will be copied
-                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1],
+                                       self.settings)
 
                 # set INCAR to ISIF = 2, ISMEAR = -5, NSW = 0, IBRION = -1
-                if (self.settings["final"] != None) and (os.path.isfile(os.path.join(self.calcdir, self.settings["final"]))):
-                    new_values = io.Incar(os.path.join(self.calcdir, self.settings["final"])).tags
+                if (self.settings["final"] != None) and (os.path.isfile(
+                        os.path.join(self.calcdir, self.settings["final"]))):
+                    new_values = io.Incar(
+                        os.path.join(self.calcdir,
+                                     self.settings["final"])).tags
                 else:
-                    new_values = {"ISIF":2, "ISMEAR":-5, "NSW":0, "IBRION":-1}
+                    new_values = {
+                        "ISIF": 2,
+                        "ISMEAR": -5,
+                        "NSW": 0,
+                        "IBRION": -1
+                    }
 
                 # set INCAR system tag to denote 'final'
                 if io.get_incar_tag("SYSTEM", self.rundir[-1]) is None:
                     new_values["SYSTEM"] = "final"
                 else:
-                    new_values["SYSTEM"] = io.get_incar_tag("SYSTEM", self.rundir[-1]) + " final"
+                    new_values["SYSTEM"] = io.get_incar_tag(
+                        "SYSTEM", self.rundir[-1]) + " final"
 
                 io.set_incar_tag(new_values, self.rundir[-1])
                 print("  Set INCAR tags:", new_values, "\n")
                 sys.stdout.flush()
 
-            else: ## redundent
+            else:  ## redundent
                 self.add_rundir()
-                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1],
+                                       self.settings)
 
             while True:
                 # run vasp
-                result = casm.vasp.run(self.rundir[-1], stdout="stdout",
-                                  npar=self.settings["npar"], ncore=self.settings["ncore"],
-                                  command=self.settings["vasp_cmd"], ncpus=self.settings["ncpus"],
-                                  kpar=self.settings["kpar"], err_types=self.settings["err_types"],
-                                  is_neb=True)
+                result = casm.vasp.run(self.rundir[-1],
+                                       stdout="stdout",
+                                       npar=self.settings["npar"],
+                                       ncore=self.settings["ncore"],
+                                       command=self.settings["vasp_cmd"],
+                                       ncpus=self.settings["ncpus"],
+                                       kpar=self.settings["kpar"],
+                                       err_types=self.settings["err_types"],
+                                       is_neb=True)
 
                 # if no errors, continue
                 if result is None or self.not_converging():
@@ -260,14 +287,14 @@ class Neb(object):
         if status == "complete":
             if not os.path.isdir(self.finaldir):
                 # mv final results to relax.final
-                print("mv", os.path.basename(self.rundir[-1]), os.path.basename(self.finaldir))
+                print("mv", os.path.basename(self.rundir[-1]),
+                      os.path.basename(self.finaldir))
                 sys.stdout.flush()
                 os.rename(self.rundir[-1], self.finaldir)
                 self.rundir.pop()
                 casm.vasp.complete_job(self.finaldir, self.settings)
 
         return (status, task)
-
 
     def status(self):
         """ Determine the status of a vasp relaxation series of runs. Individual runs in the series
@@ -298,14 +325,19 @@ class Neb(object):
         if io.job_complete(os.path.join(self.rundir[-1], "01")):
             # if it is a final constant volume run
             if io.get_incar_tag("SYSTEM", self.rundir[-1]) != None:
-                if io.get_incar_tag("SYSTEM", self.rundir[-1]).split()[-1].strip().lower() == "final":
+                if io.get_incar_tag("SYSTEM",
+                                    self.rundir[-1]).split()[-1].strip().lower(
+                                    ) == "final":
                     return ("complete", None)
 
             # elif constant volume run (but not the final one)
             if io.get_incar_tag("ISIF", self.rundir[-1]) in [0, 1, 2]:
-                if io.get_incar_tag("NSW", self.rundir[-1]) == len(io.Oszicar(os.path.join(self.rundir[-1], "01",  "OSZICAR")).E):
-			print "first "
-			return ("incomplete", "new_run")    # static run hit NSW limit and so isn't "done"
+                if io.get_incar_tag("NSW", self.rundir[-1]) == len(
+                        io.Oszicar(
+                            os.path.join(self.rundir[-1], "01", "OSZICAR")).E):
+                    print "first "
+                    return ("incomplete", "new_run"
+                            )  # static run hit NSW limit and so isn't "done"
                 else:
                     return ("incomplete", "constant")
 

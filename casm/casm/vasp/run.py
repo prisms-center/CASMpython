@@ -1,5 +1,6 @@
 """ Job manipuation routines for VASP"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
@@ -14,6 +15,7 @@ import signal
 
 from casm.vasp.error import VaspError, VaspWarning, error_check, crash_check
 from casm.vasp import io
+
 
 def complete_job(jobdir, settings):
     """Remove files from a vasp job directory
@@ -34,35 +36,47 @@ def complete_job(jobdir, settings):
     # remove files
     print("  rm:", end=' ')
     for f in settings["remove"]:
-        if not f in (settings["copy"] + settings["move"] + settings["compress"] + settings["backup"]):
-            if os.path.isfile(os.path.join(jobdir,f)):
+        if not f in (settings["copy"] + settings["move"] +
+                     settings["compress"] + settings["backup"]):
+            if os.path.isfile(os.path.join(jobdir, f)):
                 print(f, end=' ')
-                os.remove(os.path.join(jobdir,f))
+                os.remove(os.path.join(jobdir, f))
     for f in settings["extra_input_files"]:
         if os.path.isfile(os.path.join(jobdir, f)):
             print(f, end=' ')
-            os.remove(os.path.join(jobdir,f))
+            os.remove(os.path.join(jobdir, f))
     print("")
 
     # compress files
     print(" gzip:", end=' ')
     for file in settings["compress"]:
-        if os.path.isfile(os.path.join(jobdir,file)):
+        if os.path.isfile(os.path.join(jobdir, file)):
             print(file, end=' ')
             # Open target file, target file.gz
             f_in = open(os.path.join(jobdir, file), 'rb')
-            f_out = gzip.open(os.path.join(jobdir, file)+'.gz', 'wb')
+            f_out = gzip.open(os.path.join(jobdir, file) + '.gz', 'wb')
             # Compress, close files
             f_out.writelines(f_in)
             f_out.close()
             f_in.close()
             # Remove original target file
-            os.remove(os.path.join(jobdir,file))
+            os.remove(os.path.join(jobdir, file))
     print("")
     print("")
     sys.stdout.flush()
 
-def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=None, command=None, ncpus=None, kpar=None, poll_check_time = 5.0, err_check_time = 60.0, err_types=None):
+
+def run(jobdir=None,
+        stdout="std.out",
+        stderr="std.err",
+        npar=None,
+        ncore=None,
+        command=None,
+        ncpus=None,
+        kpar=None,
+        poll_check_time=5.0,
+        err_check_time=60.0,
+        err_types=None):
     """ Run vasp using subprocess.
 
         The 'command' is executed in the directory 'jobdir'.
@@ -108,7 +122,7 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
         else:
             command = "mpirun -np {NCPUS} vasp"
 
-    if re.search("\{NCPUS\}",command):
+    if re.search("\{NCPUS\}", command):
         command = command.format(NCPUS=str(ncpus))
 
     ### Expand remaining environment variables
@@ -118,25 +132,25 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
         ncore = None
 
     if npar is not None or ncore is not None:
-        io.set_incar_tag({"NPAR":npar, "NCORE":ncore}, jobdir)
+        io.set_incar_tag({"NPAR": npar, "NCORE": ncore}, jobdir)
 
     if kpar is not None:
-        io.set_incar_tag({"KPAR":kpar}, jobdir)
+        io.set_incar_tag({"KPAR": kpar}, jobdir)
 
     print("  jobdir:", jobdir)
     print("  exec:", command)
     sys.stdout.flush()
 
-    sout = open(os.path.join(jobdir,stdout),'w')
-    serr = open(os.path.join(jobdir,stderr),'w')
+    sout = open(os.path.join(jobdir, stdout), 'w')
+    serr = open(os.path.join(jobdir, stderr), 'w')
     err = None
-    p = subprocess.Popen(command.split(),stdout=sout, stderr=serr)
+    p = subprocess.Popen(command.split(), stdout=sout, stderr=serr)
 
     # wait for process to end, and periodically check for errors
     poll = p.poll()
     last_check = time.time()
     stopcar_time = None
-    while poll  is None:
+    while poll is None:
         time.sleep(poll_check_time)
 
         if time.time() - last_check > err_check_time:
@@ -191,7 +205,7 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
         # Crash-type errors take priority over any other error that may show up
         err = crash_check(jobdir, os.path.join(jobdir, stdout), err_types)
         if err is None:
-            err = error_check(jobdir, os.path.join(jobdir,stdout), err_types)
+            err = error_check(jobdir, os.path.join(jobdir, stdout), err_types)
     if err != None:
         print("  Found errors:", end=' ')
         for e in err:

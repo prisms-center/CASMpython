@@ -1,5 +1,6 @@
 """ Object and functions for handling atom geometries """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 #pylint: disable=too-many-lines
@@ -10,7 +11,8 @@ import os
 from ..species import species_settings
 from ..seq_exceptions import SiteError, CellError, GeomError, POSError
 
-class Site(object): #pylint: disable=too-few-public-methods
+
+class Site(object):  #pylint: disable=too-few-public-methods
     """ Site in a basis.
 
         Contains:
@@ -28,20 +30,23 @@ class Site(object): #pylint: disable=too-few-public-methods
         try:
             _, _, _ = [float(x) for x in self.position]
         except:
-            raise SiteError("Position %s could not be cast to a triplet of floats", self.position)
+            raise SiteError(
+                "Position %s could not be cast to a triplet of floats",
+                self.position)
 
     def write(self, stream=None, index=None):
         """ Write this Site to a file or string """
         arg_string = ""
         if index is not None:
-            arg_string += (self.occupant + "_" + str(index) + "    " + self.occ_alias + "    " +
+            arg_string += (self.occupant + "_" + str(index) + "    " +
+                           self.occ_alias + "    " +
                            ("  ").join([str(x) for x in self.position]))
             # stream.write(self.occupant + "_" + str(index) + "    " +
             #              self.occ_alias + "    " +
             #              ("  ").join([str(x) for x in self.position]))
         else:
             arg_string += (("  ").join([str(x) for x in self.position]) +
-                           "    " +  self.occupant)
+                           "    " + self.occupant)
             # stream.write(("  ").join([str(x) for x in self.position]) +
             #              "    " +  self.occupant)
         arg_string += "\n"
@@ -55,15 +60,19 @@ class Site(object): #pylint: disable=too-few-public-methods
             if self.charge is not None:
                 total_charge = float(self.charge)
             else:
-                raise GeomError("No charge on site and no charge supplied, can't print charge!")
+                raise GeomError(
+                    "No charge on site and no charge supplied, can't print charge!"
+                )
         else:
             total_charge = float(total_charge)
         stream.write("charge\n")
         stream.write("%g\n" % total_charge)
         stream.write("location of charge\n")
-        stream.write(("  ").join([str(x) for x in self.position]) + "   " + self.occupant)
+        stream.write(("  ").join([str(x) for x in self.position]) + "   " +
+                     self.occupant)
 
-class Cell(object): #pylint: disable=too-many-instance-attributes
+
+class Cell(object):  #pylint: disable=too-many-instance-attributes
     """ Container  class for cell data
 
         Contains:
@@ -73,9 +82,8 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
             self._scale (float): scale factor for cell, default 1.0
                 default 1.0
     """
-
     @classmethod
-    def POS(cls, POS):    #pylint: disable=invalid-name
+    def POS(cls, POS):  #pylint: disable=invalid-name
         """ Shorthand for POS construction """
         return cls(POS=POS)
 
@@ -85,7 +93,7 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
         return cls(seqfile=seqfile)
 
     @classmethod
-    def mini(cls, mini_POS):    #pylint: disable=invalid-name
+    def mini(cls, mini_POS):  #pylint: disable=invalid-name
         """ Construction from partial POS """
         return cls(POS=mini_POS, mini=True)
 
@@ -126,28 +134,28 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
             raise GeomError("Neither POS nor lcao.* provided, aborting!")
 
         ### Reciprocal lattice ###
-        r_1 = _div(_cross(self._lattice[1], self._lattice[2]), _dot(self._lattice[0],
-                                                                    _cross(self._lattice[1],
-                                                                           self._lattice[2])))
-        r_2 = _div(_cross(self._lattice[2], self._lattice[0]), _dot(self._lattice[1],
-                                                                    _cross(self._lattice[2],
-                                                                           self._lattice[0])))
-        r_3 = _div(_cross(self._lattice[0], self._lattice[1]), _dot(self._lattice[2],
-                                                                    _cross(self._lattice[0],
-                                                                           self._lattice[1])))
+        r_1 = _div(
+            _cross(self._lattice[1], self._lattice[2]),
+            _dot(self._lattice[0], _cross(self._lattice[1], self._lattice[2])))
+        r_2 = _div(
+            _cross(self._lattice[2], self._lattice[0]),
+            _dot(self._lattice[1], _cross(self._lattice[2], self._lattice[0])))
+        r_3 = _div(
+            _cross(self._lattice[0], self._lattice[1]),
+            _dot(self._lattice[2], _cross(self._lattice[0], self._lattice[1])))
         self._reciprocal_lattice = [r_1[:], r_2, r_3]
 
         # ### Ensuring 'scale' is always 1.0 ###
         # self.scale(scale=self._scale)
         # self._scale = 1.0
 
-    def read_POS(self, POS):   #pylint: disable=invalid-name
+    def read_POS(self, POS):  #pylint: disable=invalid-name
         """ Read a POS and construct lattice coords in a Cell object """
         with open(POS) as stream:
             _ = [stream.readline() for _ in range(1)]
             self._read_lattice(stream)
 
-    def read_mini_POS(self, mini_POS):   #pylint: disable=invalid-name
+    def read_mini_POS(self, mini_POS):  #pylint: disable=invalid-name
         """ Read a POS and construct lattice coords in a Cell object """
         with open(mini_POS) as stream:
             self._read_lattice(stream)
@@ -161,7 +169,7 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
         else:
             self._read_seq_file(seqfile)
 
-    def _read_seq_file(self, seqfile):    #pylint: disable=too-many-branches, too-many-statements, too-many-locals
+    def _read_seq_file(self, seqfile):  #pylint: disable=too-many-branches, too-many-statements, too-many-locals
         """ Read a seqquest file (or a buffer containing info from a file) and construct or amend
                 a Cell object """
         ### Initialize ###
@@ -184,9 +192,11 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
                         try:
                             line = stream.readline()
                             lattice[i][0], lattice[i][1], lattice[i][2] = [
-                                float(x) for x in line.strip().split()]
+                                float(x) for x in line.strip().split()
+                            ]
                         except:
-                            raise CellError("Error reading lattice vector %r" % line)
+                            raise CellError("Error reading lattice vector %r" %
+                                            line)
 
         ### Check validity ###
         if inner == 0:
@@ -195,7 +205,8 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
                 for i in range(3):
                     self._lattice[i] = lattice[i][:]
             else:
-                raise CellError("Something went wrong, %s could not be read" % seqfile)
+                raise CellError("Something went wrong, %s could not be read" %
+                                seqfile)
 
             # 'scale' keyword is optional
             if self._scale is not None:
@@ -203,7 +214,7 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
 
         return 1
 
-    def _read_seq_stream(self, seqfile):    #pylint: disable=too-many-branches, too-many-statements
+    def _read_seq_stream(self, seqfile):  #pylint: disable=too-many-branches, too-many-statements
         """ Read a seqquest file (or a buffer containing info from a file) and construct or amend
                 a Cell object """
         ### Initialize ###
@@ -232,14 +243,17 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
             else:
                 i = 0
                 lattice[i][0], lattice[i][1], lattice[i][2] = [
-                    float(x) for x in line.strip().split()]
+                    float(x) for x in line.strip().split()
+                ]
                 for i in range(1, 3):
                     try:
                         line = seqfile.readline()
                         lattice[i][0], lattice[i][1], lattice[i][2] = [
-                            float(x) for x in line.strip().split()]
+                            float(x) for x in line.strip().split()
+                        ]
                     except:
-                        raise CellError("Error reading lattice vector %r" % line)
+                        raise CellError("Error reading lattice vector %r" %
+                                        line)
             current_pos = seqfile.tell()
 
         # Rewind the stream before passing control back
@@ -252,7 +266,8 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
                 for i in range(3):
                     self._lattice[i] = lattice[i][:]
             else:
-                raise CellError("Something went wrong, %s could not be read" % seqfile)
+                raise CellError("Something went wrong, %s could not be read" %
+                                seqfile)
 
             # 'scale' keyword is optional
             if self._scale is not None:
@@ -297,8 +312,9 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
             with open(filename, "w") as stream:
                 stream.write("  %.8f" % (self._scale) + "\n")
                 for i in range(3):
-                    stream.write("     " + ("     ").join(["%.8f" % x
-                                                           for x in self._lattice[i]]) + "\n")
+                    stream.write("     " + (
+                        "     ").join(["%.8f" % x
+                                       for x in self._lattice[i]]) + "\n")
 
     def get_lattice(self, index=None):
         """ Returns the lattice, or lattice vector 'index', as listed list"""
@@ -324,13 +340,14 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
         # return abs(_dot(self._reciprocal_lattice[0], _cross(self._reciprocal_lattice[1],
         #                                                     self._reciprocal_lattice[2])))
 
-    def scale(self, scale=1.0, scalex=1.0, scaley=1.0, scalez=1.0, ndim=3):    #pylint: disable=too-many-arguments
+    def scale(self, scale=1.0, scalex=1.0, scaley=1.0, scalez=1.0, ndim=3):  #pylint: disable=too-many-arguments
         """ Applies scale settings """
         # Point structures don't get any cell dimensions scaled!
         if ndim == 0:
             pass
         elif ndim == 1 or ndim == 2:
-            raise CellError("Handling of ndim != 0 or 3 is not yet implemented!")
+            raise CellError(
+                "Handling of ndim != 0 or 3 is not yet implemented!")
         elif ndim == 3:
             for i in range(3):
                 for j in range(3):
@@ -352,7 +369,8 @@ class Cell(object): #pylint: disable=too-many-instance-attributes
         """ Alias for global scale """
         self.scale(scalez=scalez)
 
-class Geom(object): #pylint: disable=too-many-instance-attributes
+
+class Geom(object):  #pylint: disable=too-many-instance-attributes
     """ Container class for geometry data
 
         Contains:
@@ -365,9 +383,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
             *self.charge_loc (vec of float): location of the point charge, if any
             self.coord_mode (string): coord mode of POS/geom
     """
-
     @classmethod
-    def POS(cls, POS, species=None):    #pylint: disable=invalid-name
+    def POS(cls, POS, species=None):  #pylint: disable=invalid-name
         """ Shorthand for POS construction """
         return cls(POS=POS, species=species)
 
@@ -382,7 +399,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         return cls(seqfile=seqfile, species=species)
 
     @classmethod
-    def mini(cls, mini_POS):    #pylint: disable=invalid-name
+    def mini(cls, mini_POS):  #pylint: disable=invalid-name
         """ Construction from partial POS """
         return cls(POS=mini_POS, mini=True)
 
@@ -431,7 +448,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
 
         self.natoms = len(self.basis)
 
-    def read_POS(self, POS):   #pylint: disable=invalid-name
+    def read_POS(self, POS):  #pylint: disable=invalid-name
         """ Read a POS and construct atom coords in a Geom object """
         with open(POS) as stream:
             self.title = stream.readline().strip()
@@ -440,7 +457,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
             self._read_atominfo(stream)
             self._read_basis(stream)
 
-    def read_mini_POS(self, mini_POS):   #pylint: disable=invalid-name
+    def read_mini_POS(self, mini_POS):  #pylint: disable=invalid-name
         """ Read a POS and construct atom coords in a Geom object """
         with open(mini_POS) as stream:
             self.title = stream.readline().strip()
@@ -465,7 +482,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         try:
             self.num_atoms = [int(n) for n in numline.split()]
         except ValueError:
-            raise POSError("Could not read number of each atom type: '" + numline + "'")
+            raise POSError("Could not read number of each atom type: '" +
+                           numline + "'")
         # self.type_atoms = [int(x) for x in range(len(self.num_atoms))]
         # self.type_atoms = map(int, range(len(self.num_atoms)))
         self.type_atoms_alias = list(self.type_atoms)
@@ -485,19 +503,23 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         elif coord_mode.lower() == "direct":
             self.coord_mode = "LATTICE"
         else:
-            raise POSError("Invalid coordinate mode %s found in POS!" % coord_mode)
+            raise POSError("Invalid coordinate mode %s found in POS!" %
+                           coord_mode)
         for i in range(len(self.num_atoms)):
             for _ in range(self.num_atoms[i]):
                 line = stream.readline().strip()
                 if len(line) == 0:
-                    raise POSError("Error reading basis: insufficient number of atoms")
+                    raise POSError(
+                        "Error reading basis: insufficient number of atoms")
                 words = line.split()
                 pos = []
                 try:
                     pos = [float(x) for x in words[0:3]]
                 except ValueError:
-                    raise POSError("Error reading basis coordinate: '" + line + "'")
-                self.basis.append(Site(pos[:], self.type_atoms[i], self.type_atoms[i]))
+                    raise POSError("Error reading basis coordinate: '" + line +
+                                   "'")
+                self.basis.append(
+                    Site(pos[:], self.type_atoms[i], self.type_atoms[i]))
 
     def read_seq(self, seqfile, title=None):
         """ Read a seqquest file (or a buffer containing info from a file) and construct or amend
@@ -512,7 +534,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         else:
             self._read_seq_file(seqfile)
 
-    def _read_seq_file(self, seqfile):    #pylint: disable=too-many-branches, too-many-statements
+    def _read_seq_file(self, seqfile):  #pylint: disable=too-many-branches, too-many-statements
         """ Read a seqquest file (or a buffer containing info from a file) and construct or amend
                 a Geom object """
         ### Initialize ###
@@ -542,9 +564,11 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
                         if re.search("kgrid", line):
                             break
                         try:
-                            atom_id, atom_alias, pos[0], pos[1], pos[2] = line.split()
+                            atom_id, atom_alias, pos[0], pos[1], pos[
+                                2] = line.split()
                         except:
-                            raise GeomError("Error reading basis site: %r" % line)
+                            raise GeomError("Error reading basis site: %r" %
+                                            line)
                         atom_type = "_".join(atom_id.split("_")[:-1])
                         pos = [float(x) for x in pos]
 
@@ -563,7 +587,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         ### Check validity ###
         if inner == 0:
             if len(basis) == 0:
-                raise GeomError("Something went wrong, %s could not be read" % seqfile)
+                raise GeomError("Something went wrong, %s could not be read" %
+                                seqfile)
 
         # Want a sorted num_atoms list
         self.num_atoms = [num_atoms[x] for x in type_atoms]
@@ -573,7 +598,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
 
         return 1
 
-    def _read_seq_stream(self, seqfile):    #pylint: disable=too-many-branches, too-many-statements
+    def _read_seq_stream(self, seqfile):  #pylint: disable=too-many-branches, too-many-statements
         """ Read a seqquest file (or a buffer containing info from a file) and construct or amend
                 a Geom object """
         ### Initialize ###
@@ -602,7 +627,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
                     self.title = line.strip().split(";")[-1]
                 else:
                     try:
-                        atom_id, atom_alias, pos[0], pos[1], pos[2] = line.split()
+                        atom_id, atom_alias, pos[0], pos[1], pos[
+                            2] = line.split()
                     except:
                         raise GeomError("Error reading basis site: %r" % line)
                     atom_type = atom_id.split("_")[0]
@@ -623,7 +649,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         ### Check validity ###
         if inner == 0:
             if len(basis) == 0:
-                raise GeomError("Something went wrong, %s could not be read" % seqfile)
+                raise GeomError("Something went wrong, %s could not be read" %
+                                seqfile)
 
         # Want a sorted num_atoms list
         self.num_atoms = [num_atoms[x] for x in type_atoms]
@@ -640,7 +667,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
             Warning: Not sure we want to check equivalence regardless of atom name case
         """
         for i, atom in enumerate(self.type_atoms):
-            for s in species:   #pylint: disable=invalid-name
+            for s in species:  #pylint: disable=invalid-name
                 if s == atom:
                     self.type_atoms_alias[i] = species[s].alias
         index = 0
@@ -660,13 +687,15 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
                             charge_loc = True
                             old_charge_loc = index
                         else:
-                            raise POSError("Multiple locations for the charge center supplied:\n"
-                                           "     site %i: %s at %s in the POS\n"
-                                           "     site %i: %s at %s in the POS"
-                                           % (old_charge_loc, self.basis[old_charge_loc].occupant,
-                                              self.basis[old_charge_loc].position, index,
-                                              self.basis[index].occupant,
-                                              self.basis[index].position))
+                            raise POSError(
+                                "Multiple locations for the charge center supplied:\n"
+                                "     site %i: %s at %s in the POS\n"
+                                "     site %i: %s at %s in the POS" %
+                                (old_charge_loc,
+                                 self.basis[old_charge_loc].occupant,
+                                 self.basis[old_charge_loc].position, index,
+                                 self.basis[index].occupant,
+                                 self.basis[index].position))
                 index += 1
 
     def write_geom(self, filename=None):
@@ -693,7 +722,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
             with open(filename, "w") as stream:
                 stream.write(self.title + "\n")
                 stream.write((" ").join(self.type_atoms) + "\n")
-                stream.write((" ").join([str(x) for x in self.num_atoms]) + "\n")
+                stream.write((" ").join([str(x)
+                                         for x in self.num_atoms]) + "\n")
                 if self.coord_mode is "lattice":
                     stream.write("Direct" + "\n")
                 else:
@@ -747,7 +777,7 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
 
         return dict(zip(new_pos, orig_pos))
 
-    def scale(self, scale=1.0, scalex=1.0, scaley=1.0, scalez=1.0, ndim=3):    #pylint: disable=too-many-arguments
+    def scale(self, scale=1.0, scalex=1.0, scaley=1.0, scalez=1.0, ndim=3):  #pylint: disable=too-many-arguments
         """ Applies scale settings """
         # Lattice coord-mode doesn't need scaling!
         if self.coord_mode == "lattice":
@@ -756,7 +786,8 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         if ndim == 0:
             pass
         elif ndim == 1 or ndim == 2:
-            raise CellError("Handling of ndim != 0 or 3 is not yet implemented!")
+            raise CellError(
+                "Handling of ndim != 0 or 3 is not yet implemented!")
         elif ndim == 3:
             for site in self.basis:
                 for i in range(3):
@@ -781,17 +812,22 @@ class Geom(object): #pylint: disable=too-many-instance-attributes
         if self.coord_mode == "CARTESIAN":
             return
         for site in self.basis:
-            site.position = [sum([site.position[j] * cell.lattice[j][i] for j in range(3)])
-                             for i in range(3)][:]
+            site.position = [
+                sum([site.position[j] * cell.lattice[j][i] for j in range(3)])
+                for i in range(3)
+            ][:]
         self.coord_mode = "CARTESIAN"
 
-def write_POS(cell, geom, filename):    #pylint: disable=invalid-name
+
+def write_POS(cell, geom, filename):  #pylint: disable=invalid-name
     """ Writes a POS file using a Cell and Geom object together """
     with open(filename, "w") as stream:
         stream.write(geom.title + "\n")
         stream.write("  %.8f" % (cell._scale) + "\n")
         for i in range(3):
-            stream.write("     " + ("     ").join(["%.8f" % x for x in cell.lattice[i]]) + "\n")
+            stream.write("     " +
+                         ("     ").join(["%.8f" % x
+                                         for x in cell.lattice[i]]) + "\n")
         stream.write((" ").join(geom.type_atoms) + "\n")
         stream.write((" ").join([str(x) for x in geom.num_atoms]) + "\n")
         if geom.coord_mode == "LATTICE":
@@ -801,21 +837,25 @@ def write_POS(cell, geom, filename):    #pylint: disable=invalid-name
         for site in geom.basis:
             site.write(stream)
 
+
 def volume(lattice):
     """ Volume of a generic list-of-vecs """
     return abs(_dot(lattice[0], _cross(lattice[1], lattice[2])))
 
-def _cross(a, b):   #pylint: disable=invalid-name
+
+def _cross(a, b):  #pylint: disable=invalid-name
     """ Calculates the cross product of 2 vector-lists to avoid importing numpy """
-    x = a[1]*b[2] - a[2]*b[1]   #pylint: disable=invalid-name
-    y = a[2]*b[0] - a[0]*b[2]   #pylint: disable=invalid-name
-    z = a[0]*b[1] - a[1]*b[0]   #pylint: disable=invalid-name
+    x = a[1] * b[2] - a[2] * b[1]  #pylint: disable=invalid-name
+    y = a[2] * b[0] - a[0] * b[2]  #pylint: disable=invalid-name
+    z = a[0] * b[1] - a[1] * b[0]  #pylint: disable=invalid-name
     return [x, y, z]
 
-def _dot(a, b):   #pylint: disable=invalid-name
-    """ Calculates the dot product of 2 vector-lists to avoid importing numpy """
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
 
-def _div(a, b): #pylint: disable=invalid-name
+def _dot(a, b):  #pylint: disable=invalid-name
+    """ Calculates the dot product of 2 vector-lists to avoid importing numpy """
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _div(a, b):  #pylint: disable=invalid-name
     """ Calculates the division of a vector-list by a scalar to avoid importing numpy """
-    return [float(x)/b for x in a]
+    return [float(x) / b for x in a]
