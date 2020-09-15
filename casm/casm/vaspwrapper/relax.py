@@ -21,7 +21,7 @@ from casm.vaspwrapper import VaspWrapperError, read_settings, write_settings, \
   vasp_input_file_names
 from casm.vaspwrapper.vasp_calculator_base import VaspCalculatorBase
 
-class Relax(object):
+class Relax(VaspCalculatorBase):
     """The Relax class contains functions for setting up, executing, and parsing a VASP relaxation.
 
     Attributes

@@ -106,6 +106,9 @@ def main(argv = None):
         elif args.run:
             calculator.run()
 
+        elif args.report:
+            calculator.report()
+
     except Exception as e:
       print(e)
       sys.exit(1)
