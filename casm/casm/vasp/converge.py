@@ -1,5 +1,6 @@
 """ Converge class, methods, and errors """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 # External
@@ -14,6 +15,7 @@ from casm.vasp.run import complete_job, run
 from casm.vasp import io
 
 #pylint: disable=line-too-long, too-many-statements, too-many-branches, too-many-return-statements
+
 
 class Converge(object):
     """The Converge class contains functions for setting up, executing, and parsing a VASP convergence.
@@ -107,28 +109,27 @@ class Converge(object):
         print("VASP Converge object constructed\n")
         sys.stdout.flush()
 
-
     def add_rundir(self):
         """Make a new run.i directory"""
         os.mkdir(os.path.join(self.propdir, "run." + str(len(self.rundir))))
         self.update_rundir()
         self.update_errdir()
 
-
     def update_rundir(self):
         """Find all .../config/calctype/prop/prop_value/run.i directories, store paths in self.rundir list"""
         self.rundir = []
         run_index = len(self.rundir)
-        while os.path.isdir(os.path.join(self.propdir, "run." + str(run_index))):
-            self.rundir.append(os.path.join(self.propdir, "run." + str(run_index)))
+        while os.path.isdir(os.path.join(self.propdir,
+                                         "run." + str(run_index))):
+            self.rundir.append(
+                os.path.join(self.propdir, "run." + str(run_index)))
             run_index += 1
-
 
     def add_errdir(self):
         """Move run.i to run.i_err.j directory"""
-        os.rename(self.rundir[-1], self.rundir[-1] + "_err." + str(len(self.errdir)))
+        os.rename(self.rundir[-1],
+                  self.rundir[-1] + "_err." + str(len(self.errdir)))
         self.update_errdir()
-
 
     def update_errdir(self):
         """Find all .../config/calctype/prop/prop_value/run.i_err.j directories, store paths in self.errdir list"""
@@ -141,24 +142,29 @@ class Converge(object):
                 self.errdir.append(self.rundir[-1] + "_err." + str(err_index))
                 err_index += 1
 
-
     def setup(self, initdir):
         """ mv all files and directories (besides initdir) into initdir """
 
         print("Moving files into initial run directory:", initdir)
         initdir = os.path.abspath(initdir)
         for my_prop in os.listdir(self.propdir):
-            if (my_prop in io.VASP_INPUT_FILE_LIST + self.settings["extra_input_files"]) and (os.path.join(self.propdir, my_prop) != initdir):
-                os.rename(os.path.join(self.propdir, my_prop), os.path.join(initdir, my_prop))
+            if (my_prop in io.VASP_INPUT_FILE_LIST +
+                    self.settings["extra_input_files"]) and (os.path.join(
+                        self.propdir, my_prop) != initdir):
+                os.rename(os.path.join(self.propdir, my_prop),
+                          os.path.join(initdir, my_prop))
         print("")
         sys.stdout.flush()
 
         # Keep a backup copy of the base INCAR
-        shutil.copyfile(os.path.join(initdir, "INCAR"), os.path.join(self.propdir, "INCAR.base"))
+        shutil.copyfile(os.path.join(initdir, "INCAR"),
+                        os.path.join(self.propdir, "INCAR.base"))
 
         # If an initial incar is called for, copy it in and set the appropriate flag
-        if (self.settings["initial"] != None) and (os.path.isfile(os.path.join(self.propdir, self.settings["initial"]))):
-            new_values = io.Incar(os.path.join(self.propdir, self.settings["initial"])).tags
+        if (self.settings["initial"] != None) and (os.path.isfile(
+                os.path.join(self.propdir, self.settings["initial"]))):
+            new_values = io.Incar(
+                os.path.join(self.propdir, self.settings["initial"])).tags
             io.set_incar_tag(new_values, initdir)
             print("  Set INCAR tags:", new_values, "\n")
             sys.stdout.flush()
@@ -175,7 +181,6 @@ class Converge(object):
             return False
         return True
 
-
     def converged(self):
         """Check if configuration is relaxed.
 
@@ -190,14 +195,17 @@ class Converge(object):
             if io.ionic_steps(self.rundir[-1]) <= 3:
                 return True
             if self.settings["nrg_convergence"] != None:
-                if io.job_complete(self.rundir[-1]) and io.job_complete(self.rundir[-2]):
-                    osz_1 = io.Oszicar(os.path.join(self.rundir[-1], "OSZICAR"))
-                    osz_2 = io.Oszicar(os.path.join(self.rundir[-2], "OSZICAR"))
-                    if abs(osz_1.E[-1] - osz_2.E[-1]) < self.settings["nrg_convergence"]:
+                if io.job_complete(self.rundir[-1]) and io.job_complete(
+                        self.rundir[-2]):
+                    osz_1 = io.Oszicar(os.path.join(self.rundir[-1],
+                                                    "OSZICAR"))
+                    osz_2 = io.Oszicar(os.path.join(self.rundir[-2],
+                                                    "OSZICAR"))
+                    if abs(osz_1.E[-1] -
+                           osz_2.E[-1]) < self.settings["nrg_convergence"]:
                         return True
 
         return False
-
 
     def not_converging(self):
         """Check if configuration is not converging.
@@ -209,7 +217,6 @@ class Converge(object):
         if len(self.rundir) >= int(self.settings["run_limit"]):
             return True
         return False
-
 
     def run(self):
         """ Perform a series of vasp jobs to relax a structure. Performs a series of vasp calculations until
@@ -233,23 +240,33 @@ class Converge(object):
             elif task == "relax":
                 self.add_rundir()
                 continue_job(self.rundir[-2], self.rundir[-1], self.settings)
-                shutil.copyfile(os.path.join(self.propdir, "INCAR.base"), os.path.join(self.rundir[-1], "INCAR"))
+                shutil.copyfile(os.path.join(self.propdir, "INCAR.base"),
+                                os.path.join(self.rundir[-1], "INCAR"))
 
             elif task == "constant":
                 self.add_rundir()
                 continue_job(self.rundir[-2], self.rundir[-1], self.settings)
 
                 # set INCAR to ISIF = 2, ISMEAR = -5, NSW = 0, IBRION = -1
-                if (self.settings["final"] != None) and (os.path.isfile(os.path.join(self.propdir, self.settings["final"]))):
-                    new_values = io.Incar(os.path.join(self.propdir, self.settings["final"])).tags
+                if (self.settings["final"] != None) and (os.path.isfile(
+                        os.path.join(self.propdir, self.settings["final"]))):
+                    new_values = io.Incar(
+                        os.path.join(self.propdir,
+                                     self.settings["final"])).tags
                 else:
-                    new_values = {"ISIF":2, "ISMEAR":-5, "NSW":0, "IBRION":-1}
+                    new_values = {
+                        "ISIF": 2,
+                        "ISMEAR": -5,
+                        "NSW": 0,
+                        "IBRION": -1
+                    }
 
                 # set INCAR system tag to denote 'final'
                 if io.get_incar_tag("SYSTEM", self.rundir[-1]) is None:
                     new_values["SYSTEM"] = "final"
                 else:
-                    new_values["SYSTEM"] = io.get_incar_tag("SYSTEM", self.rundir[-1]) + " final"
+                    new_values["SYSTEM"] = io.get_incar_tag(
+                        "SYSTEM", self.rundir[-1]) + " final"
 
                 io.set_incar_tag(new_values, self.rundir[-1])
                 print("  Set INCAR tags:", new_values, "\n")
@@ -262,14 +279,21 @@ class Converge(object):
 
             while True:
                 # run vasp
-                result = run(self.rundir[-1], npar=self.settings["npar"], ncore=self.settings["ncore"], command=self.settings["vasp_cmd"], ncpus=self.settings["ncpus"], kpar=self.settings["kpar"], err_types=self.settings["err_types"])
+                result = run(self.rundir[-1],
+                             npar=self.settings["npar"],
+                             ncore=self.settings["ncore"],
+                             command=self.settings["vasp_cmd"],
+                             ncpus=self.settings["ncpus"],
+                             kpar=self.settings["kpar"],
+                             err_types=self.settings["err_types"])
 
                 # if no errors, continue
                 if result is None or self.not_converging():
                     # Check for actions that should be taken after the initial run
                     if len(self.rundir) == 1:
                         if self.settings["fine_ngx"]:
-                            outcarfile = os.path.join(self.rundir[-1], "OUTCAR")
+                            outcarfile = os.path.join(self.rundir[-1],
+                                                      "OUTCAR")
                             if not os.path.isfile(outcarfile):
                                 # This is an error but I'm not sure what to do about it
                                 pass
@@ -278,18 +302,20 @@ class Converge(object):
                                 if not init_outcar.complete:
                                     # This is an error but I'm not sure what to do about it
                                     pass
-                                elif (init_outcar.ngx is None or
-                                      init_outcar.ngy is None or
-                                      init_outcar.ngz is None):
+                                elif (init_outcar.ngx is None
+                                      or init_outcar.ngy is None
+                                      or init_outcar.ngz is None):
                                     # This is an error but I'm not sure what to do about it
                                     pass
                                 else:
                                     ng_tags = {
-                                        "ngx" : init_outcar.ngx*2,
-                                        "ngy" : init_outcar.ngy*2,
-                                        "ngz" : init_outcar.ngz*2}
+                                        "ngx": init_outcar.ngx * 2,
+                                        "ngy": init_outcar.ngy * 2,
+                                        "ngz": init_outcar.ngz * 2
+                                    }
                                     print(ng_tags)
-                                    io.set_incar_tag(ng_tags, self.propdir, "INCAR.base")
+                                    io.set_incar_tag(ng_tags, self.propdir,
+                                                     "INCAR.base")
 
                     break
 
@@ -311,9 +337,14 @@ class Converge(object):
                 if (self.settings["backup"] != None) and len(self.rundir) > 1:
                     print("Restoring from backups:")
                     for my_file in self.settings["backup"]:
-                        if os.path.isfile(os.path.join(self.rundir[-2], my_file + "_BACKUP.gz")):
-                            f_in = gzip.open(os.path.join(self.rundir[-2], my_file + "_BACKUP.gz", 'rb'))
-                            f_out = open(os.path.join(self.rundir[-1], my_file, 'wb'))
+                        if os.path.isfile(
+                                os.path.join(self.rundir[-2],
+                                             my_file + "_BACKUP.gz")):
+                            f_in = gzip.open(
+                                os.path.join(self.rundir[-2],
+                                             my_file + "_BACKUP.gz", 'rb'))
+                            f_out = open(
+                                os.path.join(self.rundir[-1], my_file, 'wb'))
                             f_out.write(f_in.read())
                             f_in.close()
                             f_out.close()
@@ -327,14 +358,14 @@ class Converge(object):
         if status == "complete":
             if not os.path.isdir(self.finaldir):
                 # mv final results to relax.final
-                print("mv", os.path.basename(self.rundir[-1]), os.path.basename(self.finaldir))
+                print("mv", os.path.basename(self.rundir[-1]),
+                      os.path.basename(self.finaldir))
                 sys.stdout.flush()
                 os.rename(self.rundir[-1], self.finaldir)
                 self.rundir.pop()
                 complete_job(self.finaldir, self.settings)
 
         return (status, task)
-
 
     def status(self):
         """ Determine the status of a vasp convergence series of runs. Individual runs in the series
@@ -366,16 +397,21 @@ class Converge(object):
 
             # if it is a final constant volume run
             if io.get_incar_tag("SYSTEM", self.rundir[-1]) != None:
-                if io.get_incar_tag("SYSTEM", self.rundir[-1]).split()[-1].strip().lower() == "final":
-                # if io.get_incar_tag("ISIF", self.rundir[-1]) == 2 and \
-                #    io.get_incar_tag("NSW", self.rundir[-1]) == 0 and \
-                #    io.get_incar_tag("ISMEAR", self.rundir[-1]) == -5:
+                if io.get_incar_tag("SYSTEM",
+                                    self.rundir[-1]).split()[-1].strip().lower(
+                                    ) == "final":
+                    # if io.get_incar_tag("ISIF", self.rundir[-1]) == 2 and \
+                    #    io.get_incar_tag("NSW", self.rundir[-1]) == 0 and \
+                    #    io.get_incar_tag("ISMEAR", self.rundir[-1]) == -5:
                     return ("complete", None)
 
             # elif constant volume run (but not the final one)
             if io.get_incar_tag("ISIF", self.rundir[-1]) in [0, 1, 2]:
-                if io.get_incar_tag("NSW", self.rundir[-1]) == len(io.Oszicar(os.path.join(self.rundir[-1], "OSZICAR")).E):
-                    return ("incomplete", "relax")      # static run hit NSW limit and so isn't "done"
+                if io.get_incar_tag("NSW", self.rundir[-1]) == len(
+                        io.Oszicar(os.path.join(self.rundir[-1],
+                                                "OSZICAR")).E):
+                    return ("incomplete", "relax"
+                            )  # static run hit NSW limit and so isn't "done"
                 else:
                     return ("incomplete", "constant")
 

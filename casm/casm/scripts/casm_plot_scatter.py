@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import json
@@ -47,105 +48,99 @@ Input file attributes:
 """
 
 input_example = {
-  "figure_kwargs": {
-    "plot_height": 400,
-    "plot_width": 800,
-    "tools": "crosshair,pan,reset,box_zoom,wheel_zoom,save"
-  },
-  "series": [
-    {
-      "project": None,
-      "selection": "MASTER",
-      "x": "comp(a)",
-      "y": "formation_energy",
-      "tooltips": [
-        "scel_size",
-        "volume_relaxation"
-      ],
-      "legend":"formation_energy"
+    "figure_kwargs": {
+        "plot_height": 400,
+        "plot_width": 800,
+        "tools": "crosshair,pan,reset,box_zoom,wheel_zoom,save"
     },
-    {
-      "project": None,
-      "selection": "MASTER",
-      "x": "comp(a)",
-      "y": "clex(formation_energy)",
-      "tooltips": [
-        "scel_size",
-        "volume_relaxation"
-      ]
-    }
-  ]
+    "series": [{
+        "project": None,
+        "selection": "MASTER",
+        "x": "comp(a)",
+        "y": "formation_energy",
+        "tooltips": ["scel_size", "volume_relaxation"],
+        "legend": "formation_energy"
+    }, {
+        "project": None,
+        "selection": "MASTER",
+        "x": "comp(a)",
+        "y": "clex(formation_energy)",
+        "tooltips": ["scel_size", "volume_relaxation"]
+    }]
 }
 
 style_example = {
-  "hover_alpha": 0.7, 
-  "hover_color": "orange", 
-  "selected": {
-    "line_color": "blue", 
-    "line_alpha": 0.0, 
-    "line_width": 0.0, 
-    "color": "blue", 
-    "fill_alpha": 0.5, 
-    "radii": 10
-  }, 
-  "unselected": {
-    "line_color": "gray", 
-    "line_alpha": 0.0, 
-    "line_width": 0.0, 
-    "color": "gray", 
-    "fill_alpha": 0.3, 
-    "radii": 7
-  }, 
-  "marker": "circle"
+    "hover_alpha": 0.7,
+    "hover_color": "orange",
+    "selected": {
+        "line_color": "blue",
+        "line_alpha": 0.0,
+        "line_width": 0.0,
+        "color": "blue",
+        "fill_alpha": 0.5,
+        "radii": 10
+    },
+    "unselected": {
+        "line_color": "gray",
+        "line_alpha": 0.0,
+        "line_width": 0.0,
+        "color": "gray",
+        "fill_alpha": 0.3,
+        "radii": 7
+    },
+    "marker": "circle"
 }
 
+
 class PlotScatterCommand(casm.plotting.PlotTypeCommand):
-    
     @classmethod
     def name(cls):
         return "scatter"
-    
+
     @classmethod
     def short_desc(cls):
         return "Scatter plot"
-    
+
     @classmethod
     def long_desc(cls):
         return usage_desc
-    
+
     @classmethod
     def style_example(cls):
         return style_example
-    
+
     @classmethod
     def input_example(cls):
         return input_example
-    
+
     @classmethod
     def plot(cls, doc, args):
         with open(args.input, 'rb') as f:
             input = json.loads(f.read().decode('utf-8'))
-        
+
         data = casm.plotting.PlottingData()
-        figure_kwargs = input.get('figure_kwargs', casm.plotting.default_figure_kwargs)
+        figure_kwargs = input.get('figure_kwargs',
+                                  casm.plotting.default_figure_kwargs)
         fig = bokeh.plotting.Figure(**figure_kwargs)
         tap_action = casm.plotting.TapAction(data)
         renderers = []
-        
+
         for index, series in enumerate(input['series']):
-            series['self'] = casm.plotting.Scatter(data=data, index=index, **series)
-        
+            series['self'] = casm.plotting.Scatter(data=data,
+                                                   index=index,
+                                                   **series)
+
         # first query data necessary for all series
         for series in input['series']:
             series['self'].query()
-        
+
         for series in input['series']:
             series['self'].plot(fig, tap_action)
             renderers += series['self'].renderers
-        
+
         # add tools
         fig.add_tools(tap_action.tool())
         fig.add_tools(bokeh.models.BoxSelectTool(renderers=renderers))
         fig.add_tools(bokeh.models.LassoSelectTool(renderers=renderers))
-        
+
         doc.add_root(fig)

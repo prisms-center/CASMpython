@@ -1,10 +1,12 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os, re, gzip
 
+
 class OszicarError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
@@ -19,7 +21,7 @@ class Oszicar(object):
            self.mag = list of ionic step magnetic moment values
            self.nelm = list of number of electronic steps in each ionic step
     """
-    def __init__(self,filename):
+    def __init__(self, filename):
         self.filename = filename
         self.E = []
         self.mag = []
@@ -29,7 +31,6 @@ class Oszicar(object):
         except OszicarError as e:
             raise e
 
-
     def read(self):
         """Parse OSZICAR file. Currently just collects E0 as list 'self.E'"""
         if os.path.isfile(self.filename):
@@ -37,18 +38,16 @@ class Oszicar(object):
                 f = gzip.open(self.filename)
             else:
                 f = open(self.filename)
-        elif os.path.isfile(self.filename+".gz"):
-            f = gzip.open(self.filename+".gz")
+        elif os.path.isfile(self.filename + ".gz"):
+            f = gzip.open(self.filename + ".gz")
             raise OszicarError("file not found: " + self.filename)
 
         self.E = []
         for line in f:
-            if re.search("E0",line):
+            if re.search("E0", line):
                 self.E.append(float(line.split()[4]))
                 self.num_elm.append(int(prev_line.split()[1]))
             if re.search("mag", line):
                 self.mag.append(float(line.split()[-1]))
-            prev_line = str(line) ## previous line
+            prev_line = str(line)  ## previous line
         f.close()
-
-

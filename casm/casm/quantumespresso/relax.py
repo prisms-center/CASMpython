@@ -1,9 +1,11 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os, math, sys, shutil, gzip
 import casm.quantumespresso
 from casm.quantumespresso import qeio
+
 
 class Relax(object):
     """The Relax class contains functions for setting up, executing, and parsing a Quantum Espresso relaxation.
@@ -111,28 +113,27 @@ class Relax(object):
         print("Quantum Espresso Relax object constructed\n")
         sys.stdout.flush()
 
-
     def add_rundir(self):
         """Make a new run.i directory"""
         os.mkdir(os.path.join(self.relaxdir, "run." + str(len(self.rundir))))
         self.update_rundir()
         self.update_errdir()
 
-
     def update_rundir(self):
         """Find all .../config/qe/relax/run.i directories, store paths in self.rundir list"""
         self.rundir = []
         run_index = len(self.rundir)
-        while os.path.isdir( os.path.join(self.relaxdir, "run." + str(run_index))):
-                self.rundir.append( os.path.join(self.relaxdir, "run." + str(run_index)) )
-                run_index += 1
-
+        while os.path.isdir(
+                os.path.join(self.relaxdir, "run." + str(run_index))):
+            self.rundir.append(
+                os.path.join(self.relaxdir, "run." + str(run_index)))
+            run_index += 1
 
     def add_errdir(self):
         """Move run.i to run.i_err.j directory"""
-        os.rename(self.rundir[-1], self.rundir[-1] + "_err." + str(len(self.errdir)))
+        os.rename(self.rundir[-1],
+                  self.rundir[-1] + "_err." + str(len(self.errdir)))
         self.update_errdir()
-
 
     def update_errdir(self):
         """Find all .../config/qe/relax/run.i_err.j directories, store paths in self.errdir list"""
@@ -142,30 +143,34 @@ class Relax(object):
         else:
             err_index = len(self.errdir)
             while os.path.isdir(self.rundir[-1] + "_err." + str(err_index)):
-                    self.errdir.append(self.rundir[-1] + "_err." + str(err_index))
-                    err_index += 1
-
+                self.errdir.append(self.rundir[-1] + "_err." + str(err_index))
+                err_index += 1
 
     def setup(self, initdir, settings):
         """ mv all files and directories (besides initdir) into initdir """
 
-        infilename=settings["infilename"]
+        infilename = settings["infilename"]
 
         print("Moving files into initial run directory:", initdir)
         initdir = os.path.abspath(initdir)
         for p in os.listdir(self.relaxdir):
-            if (p in ([infilename] + self.settings["extra_input_files"])) and (os.path.join(self.relaxdir, p) != initdir):
-                os.rename(os.path.join(self.relaxdir,p), os.path.join(initdir,p))
+            if (p in ([infilename] + self.settings["extra_input_files"])) and (
+                    os.path.join(self.relaxdir, p) != initdir):
+                os.rename(os.path.join(self.relaxdir, p),
+                          os.path.join(initdir, p))
         print("")
         sys.stdout.flush()
 
         # Keep a backup copy of the base Infile
-        shutil.copyfile(os.path.join(initdir,infilename),os.path.join(self.relaxdir,infilename + ".base"))
+        shutil.copyfile(os.path.join(initdir, infilename),
+                        os.path.join(self.relaxdir, infilename + ".base"))
 
         # If an initial infile is called for, copy it in and set the appropriate flag
-        if (self.settings["initial"] != None) and (os.path.isfile(os.path.join(self.relaxdir,self.settings["initial"]))):
-            new_values = qeio.Infile(os.path.join(self.relaxdir,self.settings["initial"])).tags
-            qeio.set_infile_tag(new_values,infilename,initdir)
+        if (self.settings["initial"] != None) and (os.path.isfile(
+                os.path.join(self.relaxdir, self.settings["initial"]))):
+            new_values = qeio.Infile(
+                os.path.join(self.relaxdir, self.settings["initial"])).tags
+            qeio.set_infile_tag(new_values, infilename, initdir)
             print("  Set Infile tags:", new_values, "\n")
             sys.stdout.flush()
 
@@ -174,14 +179,13 @@ class Relax(object):
 
            Completion criteria: .../config/qe/relax/run.final/outfilename exists and is complete
         """
-        outfilename= self.settings["outfilename"]
-        myoutfile = os.path.join(self.finaldir,outfilename)
+        outfilename = self.settings["outfilename"]
+        myoutfile = os.path.join(self.finaldir, outfilename)
         if not os.path.isfile(myoutfile):
             return False
         if not qeio.Outfile(myoutfile).complete():
             return False
         return True
-
 
     def converged(self):
         """Check if configuration is relaxed.
@@ -193,19 +197,23 @@ class Relax(object):
                                     or 2) the last two jobs had final E0 differ by less than
                                           self.settings["nrg_convergence"]
         """
-        outfilename=self.settings["outfilename"]
+        outfilename = self.settings["outfilename"]
         if len(self.rundir) >= 2:
-            if qeio.ionic_steps(outfilename,self.rundir[-1]) <= 3:
+            if qeio.ionic_steps(outfilename, self.rundir[-1]) <= 3:
                 return True
             if self.settings["nrg_convergence"] != None:
-                if qeio.job_complete(outfilename,self.rundir[-1]) and qeio.job_complete(outfilename,self.rundir[-2]):
-                    o1 = qeio.Outfile(os.path.join(self.rundir[-1],outfilename))
-                    o2 = qeio.Outfile(os.path.join(self.rundir[-2],outfilename))
-                    if abs( o1.E[-1] - o2.E[-1]) < self.settings["nrg_convergence"]:
+                if qeio.job_complete(outfilename,
+                                     self.rundir[-1]) and qeio.job_complete(
+                                         outfilename, self.rundir[-2]):
+                    o1 = qeio.Outfile(
+                        os.path.join(self.rundir[-1], outfilename))
+                    o2 = qeio.Outfile(
+                        os.path.join(self.rundir[-2], outfilename))
+                    if abs(o1.E[-1] -
+                           o2.E[-1]) < self.settings["nrg_convergence"]:
                         return True
 
         return False
-
 
     def not_converging(self):
         """Check if configuration is not converging.
@@ -217,7 +225,6 @@ class Relax(object):
         if len(self.rundir) >= int(self.settings["run_limit"]):
             return True
         return False
-
 
     def run(self):
         """ Perform a series of quantum espresso jobs to relax a structure. Performs a series of quantum espresso calculations until
@@ -232,8 +239,8 @@ class Relax(object):
         print("\n++  status:", status, "  next task:", task)
         sys.stdout.flush()
 
-        infilename=self.settings["infilename"]
-        outfilename=self.settings["outfilename"]
+        infilename = self.settings["infilename"]
+        outfilename = self.settings["outfilename"]
 
         while status == "incomplete":
             if task == "setup":
@@ -242,36 +249,54 @@ class Relax(object):
 
             elif task == "relax":
                 self.add_rundir()
-                casm.quantumespresso.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                casm.quantumespresso.continue_job(self.rundir[-2],
+                                                  self.rundir[-1],
+                                                  self.settings)
 
             elif task == "constant":
                 self.add_rundir()
-                casm.quantumespresso.continue_job(self.rundir[-2], self.rundir[-1],self.settings)
+                casm.quantumespresso.continue_job(self.rundir[-2],
+                                                  self.rundir[-1],
+                                                  self.settings)
 
                 # set Infile to calculation = relax
-                if (self.settings["final"] != None) and (os.path.isfile(os.path.join(self.relaxdir,self.settings["final"]))):
-                    new_values = qeio.Infile(os.path.join(self.relaxdir, self.settings["final"])).tags
+                if (self.settings["final"] != None) and (os.path.isfile(
+                        os.path.join(self.relaxdir, self.settings["final"]))):
+                    new_values = qeio.Infile(
+                        os.path.join(self.relaxdir,
+                                     self.settings["final"])).tags
                 else:
-                    new_values = {"calculation":"'relax'"}
+                    new_values = {"calculation": "'relax'"}
 
                 # set Infile title tag to denote 'final'
-                if qeio.get_infile_tag("title",infilename, self.rundir[-1]) is None:
+                if qeio.get_infile_tag("title", infilename,
+                                       self.rundir[-1]) is None:
                     new_values["title"] = "'final'"
                 else:
-                    new_values["title"] = "'{}'".format(qeio.get_infile_tag("title", self.rundir[-1]) + " final")
+                    new_values["title"] = "'{}'".format(
+                        qeio.get_infile_tag("title", self.rundir[-1]) +
+                        " final")
 
-                qeio.set_infile_tag(new_values,infilename,self.rundir[-1])
+                qeio.set_infile_tag(new_values, infilename, self.rundir[-1])
                 print("  Set Infile tags:", new_values, "\n")
                 sys.stdout.flush()
 
             else:
                 # probably hit walltime
                 self.add_rundir()
-                casm.quantumespresso.continue_job(self.rundir[-2], self.rundir[-1], self.settings)
+                casm.quantumespresso.continue_job(self.rundir[-2],
+                                                  self.rundir[-1],
+                                                  self.settings)
 
             while True:
                 # run quantum espresso
-                result = casm.quantumespresso.run(infilename,outfilename,self.rundir[-1],command=self.settings["qe_cmd"],ncpus=self.settings["ncpus"],err_types=self.settings["err_types"])
+                result = casm.quantumespresso.run(
+                    infilename,
+                    outfilename,
+                    self.rundir[-1],
+                    command=self.settings["qe_cmd"],
+                    ncpus=self.settings["ncpus"],
+                    err_types=self.settings["err_types"])
 
                 # if no errors, continue
                 if result == None or self.not_converging():
@@ -287,16 +312,21 @@ class Relax(object):
                 sys.stdout.flush()
 
                 print("Attempting to fix error:", str(err))
-                err.fix(self.errdir[-1],self.rundir[-1], self.settings)
+                err.fix(self.errdir[-1], self.rundir[-1], self.settings)
                 print("")
                 sys.stdout.flush()
 
                 if (self.settings["backup"] != None) and len(self.rundir) > 1:
                     print("Restoring from backups:")
                     for f in self.settings["backup"]:
-                        if os.path.isfile(os.path.join(self.rundir[-2], f + "_BACKUP.gz")):
-                            f_in = gzip.open(os.path.join(self.rundir[-2], f + "_BACKUP.gz", 'rb'))
-                            f_out = open(os.path.join(self.rundir[-1], f, 'wb'))
+                        if os.path.isfile(
+                                os.path.join(self.rundir[-2],
+                                             f + "_BACKUP.gz")):
+                            f_in = gzip.open(
+                                os.path.join(self.rundir[-2], f + "_BACKUP.gz",
+                                             'rb'))
+                            f_out = open(os.path.join(self.rundir[-1], f,
+                                                      'wb'))
                             f_out.write(f_in.read())
                             f_in.close()
                             f_out.close()
@@ -310,14 +340,14 @@ class Relax(object):
         if status == "complete":
             if not os.path.isdir(self.finaldir):
                 # mv final results to relax.final
-                print("mv", os.path.basename(self.rundir[-1]), os.path.basename(self.finaldir))
+                print("mv", os.path.basename(self.rundir[-1]),
+                      os.path.basename(self.finaldir))
                 sys.stdout.flush()
                 os.rename(self.rundir[-1], self.finaldir)
                 self.rundir.pop()
                 casm.quantumespresso.complete_job(self.finaldir, self.settings)
 
         return (status, task)
-
 
     def status(self):
         """ Determine the status of a quantum espresso relaxation series of runs. Individual runs in the series
@@ -332,11 +362,11 @@ class Relax(object):
             quantum espresso job directory that is not yet completed, "relax" indicates another
             volume relaxation job is required, and "constant" that a constant volume run is required.
         """
-        infilename=self.settings["infilename"]
-        outfilename=self.settings["outfilename"]
+        infilename = self.settings["infilename"]
+        outfilename = self.settings["outfilename"]
         # check if all complete
-        if qeio.job_complete(outfilename,self.finaldir):
-            return ("complete",None)
+        if qeio.job_complete(outfilename, self.finaldir):
+            return ("complete", None)
 
         # check status of relaxation runs
         self.update_rundir()
@@ -345,17 +375,29 @@ class Relax(object):
             return ("incomplete", "setup")
 
         # if the latest run is complete:
-        if qeio.job_complete(outfilename,self.rundir[-1]):
+        if qeio.job_complete(outfilename, self.rundir[-1]):
             # if it is a final constant volume run
-            if qeio.get_infile_tag("title", infilename, self.rundir[-1]) != None:
-                print(qeio.get_infile_tag("title", infilename, self.rundir[-1])[1:-1].split()[-1].strip().lower())
-                if qeio.get_infile_tag("title", infilename, self.rundir[-1])[1:-1].split()[-1].strip().lower() == "final":
+            if qeio.get_infile_tag("title", infilename,
+                                   self.rundir[-1]) != None:
+                print(
+                    qeio.get_infile_tag(
+                        "title", infilename,
+                        self.rundir[-1])[1:-1].split()[-1].strip().lower())
+                if qeio.get_infile_tag("title", infilename,
+                                       self.rundir[-1])[1:-1].split(
+                                       )[-1].strip().lower() == "final":
                     return ("complete", None)
 
             # elif constant volume run (but not the final one)
-            if qeio.get_infile_tag("calculation", infilename, self.rundir[-1]) in ['relax','scf','nscf']:
-                if qeio.get_infile_tag("nsteps", infilename, self.rundir[-1]) == len(qeio.Outfile(os.path.join(self.rundir[-1],outfilename)).E):
-                    return ("incomplete", "relax")      # static run hit NSW limit and so isn't "done"
+            if qeio.get_infile_tag(
+                    "calculation", infilename,
+                    self.rundir[-1]) in ['relax', 'scf', 'nscf']:
+                if qeio.get_infile_tag(
+                        "nsteps", infilename, self.rundir[-1]) == len(
+                            qeio.Outfile(
+                                os.path.join(self.rundir[-1], outfilename)).E):
+                    return ("incomplete", "relax"
+                            )  # static run hit NSW limit and so isn't "done"
                 else:
                     return ("incomplete", "constant")
 

@@ -1,29 +1,27 @@
 """Setup and helpers for Runcell block from lcao.in"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import re
 
-class Runcell(dict): #pylint: disable=too-few-public-methods
+
+class Runcell(dict):  #pylint: disable=too-few-public-methods
     """ Container for Runcell part of Lcao.in """
     # __*_keys are tuples because ORDER IS IMPORTANT and these are
     # iterated over later
     __start_str = "cell optimization data"
     __end_str = "end cell optimization"
 
-    __ucmethod_keys = (
-        "ucmethod",
-        )
+    __ucmethod_keys = ("ucmethod", )
 
     __ucmethod_values = (
         "BROYDEN",
         "STEEPEST",
         None,
-        )
+    )
 
-    __constraint_keys = (
-        "constraint",
-        )
+    __constraint_keys = ("constraint", )
 
     __constraint_values = (
         "isotropic",
@@ -35,41 +33,31 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
         "zrelax",
         "zfixed",
         None,
-        )
+    )
 
     __float_num_keys = (
         "pressure",
         "str_broyden",
         "bulk_modulus",
         "uc_convergence",
-        )
+    )
 
     __int_num_keys = (
         "ucsteps",
         "uchistory",
-        )
+    )
 
-    __float_vec_keys = (
-        "uniaxial_pressure",
-        )
+    __float_vec_keys = ("uniaxial_pressure", )
 
-    __float_mat_keys = (
-        "stress",
-        )
+    __float_mat_keys = ("stress", )
 
-    __all_keys = set(__ucmethod_keys +
-                     __constraint_keys +
-                     __float_num_keys +
-                     __int_num_keys +
-                     __float_vec_keys +
-                     __float_mat_keys)
-
+    __all_keys = set(__ucmethod_keys + __constraint_keys + __float_num_keys +
+                     __int_num_keys + __float_vec_keys + __float_mat_keys)
 
     @property
     def ucmethod_keys(self):
         """ view into protected member """
         return self.__ucmethod_keys
-
 
     @property
     def ucmethod_values(self):
@@ -111,7 +99,8 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
         # check if we're 1. frozen, and 2. if the attr already exists
         if self.__is_frozen and not self.__contains__(key):
             raise TypeError(
-                "%r could not be added: %r is frozen to adding new keys" % (key, self))
+                "%r could not be added: %r is frozen to adding new keys" %
+                (key, self))
         else:
             if key in self.__ucmethod_keys:
                 if not value in self.__ucmethod_values:
@@ -122,7 +111,7 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
                 if not value in self.__constraint_values:
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
-                        % (key, self.__class__, value, self.__constraint_values))   #pylint: disable=line-too-long
+                        % (key, self.__class__, value, self.__constraint_values))  #pylint: disable=line-too-long
             elif key in self.__int_num_keys:
                 if not isinstance(value, int) and value is not None:
                     raise TypeError(
@@ -144,9 +133,9 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3-vecs"))
-                elif (not isinstance(value[0], float) or
-                      not isinstance(value[1], float) or
-                      not isinstance(value[2], float)):
+                elif (not isinstance(value[0], float)
+                      or not isinstance(value[1], float)
+                      or not isinstance(value[2], float)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3-vecs"))
@@ -161,22 +150,25 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3x3-matrices"))
-                elif (not isinstance(value[0], list) or
-                      not isinstance(value[1], list) or
-                      not isinstance(value[2], list)):
+                elif (not isinstance(value[0], list)
+                      or not isinstance(value[1], list)
+                      or not isinstance(value[2], list)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3x3-matrices"))
-                elif (not len(value[0]) != 3 or
-                      not len(value[1]) != 3 or
-                      not len(value[2]) != 3):
+                elif (not len(value[0]) != 3 or not len(value[1]) != 3
+                      or not len(value[2]) != 3):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, "float 3x3-matrices"))
-                elif (not isinstance(value[0][0], float) or not isinstance(value[0][1], float) or   #pylint: disable=too-many-boolean-expressions
-                      not isinstance(value[0][2], float) or not isinstance(value[1][0], float) or
-                      not isinstance(value[1][1], float) or not isinstance(value[1][2], float) or
-                      not isinstance(value[2][0], float) or not isinstance(value[2][1], float) or
+                elif (not isinstance(value[0][0], float)
+                      or not isinstance(value[0][1], float) or  #pylint: disable=too-many-boolean-expressions
+                      not isinstance(value[0][2], float) or
+                      not isinstance(value[1][0], float) or
+                      not isinstance(value[1][1], float) or
+                      not isinstance(value[1][2], float) or
+                      not isinstance(value[2][0], float) or
+                      not isinstance(value[2][1], float) or
                       not isinstance(value[2][2], float)):
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
@@ -196,40 +188,44 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
 
     def read_stream(self, stream):  #pylint: disable=too-many-branches, too-many-statements
         """ Parse StringIO from lcao.in to Runcell object """
-        while True: #pylint: disable=too-many-nested-blocks
+        while True:  #pylint: disable=too-many-nested-blocks
             unparsed = True
             line = stream.readline()
             if line == "":
                 return
         # for line in stream:
-            # End of setup block
+        # End of setup block
             elif re.search(r"end\s*cell", line, re.IGNORECASE):
                 break
             else:
                 for key in self.ucmethod_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = stream.readline().strip()
                         unparsed = False
                 for key in self.constraint_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = stream.readline().strip()
                         unparsed = False
                 for key in self.int_num_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = int(stream.readline().strip())
                         unparsed = False
                 for key in self.float_num_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = float(stream.readline().strip())
                         unparsed = False
                 for key in self.float_vec_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
-                        self[key] = [float(x) for x in stream.readline().strip().split()[:3]]
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
+                        self[key] = [
+                            float(x)
+                            for x in stream.readline().strip().split()[:3]
+                        ]
                         unparsed = False
                 for key in self.float_mat_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         for _ in range(3):
-                            self[key].append(float(stream.readline().strip().split()[:3]))
+                            self[key].append(
+                                float(stream.readline().strip().split()[:3]))
                         unparsed = False
                 # There may be other commands we don't know what to do with
                 if unparsed:
@@ -238,7 +234,7 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
         # Update default values, scales, etc
         self._update_defaults()
 
-    def _update_defaults(self): #pylint: disable=no-self-use
+    def _update_defaults(self):  #pylint: disable=no-self-use
         """ Applies lcao.in defaults to settings """
         # all keywords are optional
         return
@@ -265,7 +261,8 @@ class Runcell(dict): #pylint: disable=too-few-public-methods
                 arg_string += "%.8f\n" % self[key]
         if self['uniaxial_pressure'] is not None:
             arg_string += "uniaxial_pressure\n  "
-            arg_string += "%.8f %.8f %.8f \n" % tuple(self['uniaxial_pressure'])
+            arg_string += "%.8f %.8f %.8f \n" % tuple(
+                self['uniaxial_pressure'])
         if self['stress'] is not None:
             arg_string += "stress\n"
             for i in range(3):

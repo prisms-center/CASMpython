@@ -1,6 +1,8 @@
 """Write without buffering"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
+
 
 def _print(*args, **kwargs):
     """Print and always flush"""

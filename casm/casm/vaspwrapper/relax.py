@@ -1,5 +1,6 @@
 """Defines the relax module methods"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import json
@@ -20,6 +21,7 @@ from casm.project import DirectoryStructure, ProjectSettings
 from casm.vaspwrapper import VaspWrapperError, read_settings, write_settings, \
   vasp_input_file_names
 from casm.vaspwrapper.vasp_calculator_base import VaspCalculatorBase
+
 
 class Relax(VaspCalculatorBase):
     """The Relax class contains functions for setting up, executing, and parsing a VASP relaxation.
@@ -85,7 +87,7 @@ class Relax(VaspCalculatorBase):
     def pre_setup(self):
         """Setus up folders and writes POS files"""
         self.selection.write_pos()
-        for index,config_data in self.selection.data.iterrows():
+        for index, config_data in self.selection.data.iterrows():
             try:
                 os.makedirs(config_data["calcdir"])
             except:
@@ -129,8 +131,8 @@ class Relax(VaspCalculatorBase):
     @staticmethod
     def run_cmd(configdir, calctype):
         """Return a string of command to run a single configuration"""
-        return "python -c \"import casm.vaspwrapper; obj = casm.vaspwrapper.Relax.from_configuration_dir('{0}', '{1}'); obj.run()\"\n".format(configdir,
-                                                                                                                                              calctype)
+        return "python -c \"import casm.vaspwrapper; obj = casm.vaspwrapper.Relax.from_configuration_dir('{0}', '{1}'); obj.run()\"\n".format(
+            configdir, calctype)
 
     def finalize(self, config_data, super_poscarfile=None):
         """Checks convergnce and write a properties file for the selection"""
@@ -141,5 +143,6 @@ class Relax(VaspCalculatorBase):
 
     def properties(self, calcdir, super_poscarfile=None, speciesfile=None):
         """Make properties output as a list of dict of each image properties"""
-        output = super(Relax, self).properties(calcdir, super_poscarfile, speciesfile)
+        output = super(Relax, self).properties(calcdir, super_poscarfile,
+                                               speciesfile)
         return output

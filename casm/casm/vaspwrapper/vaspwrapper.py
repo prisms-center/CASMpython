@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 from casm import vasp
@@ -8,7 +9,7 @@ import casm.vasp.io
 
 
 class VaspWrapperError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
@@ -75,29 +76,36 @@ def read_settings(filename):
 
     select_one = [["nodes", "atom_per_proc", "nodes_per_image"]]
 
-    optional = ["account","pmem","priority","constraint","message","email","qos","npar","ncore",
-                "kpar", "ncpus","vasp_cmd","run_limit","nrg_convergence",
-                "encut", "kpoints","extra_input_files", "move", "copy", "remove",
-                "compress", "backup", "initial", "final", "strict_kpoints", "err_types",
-                "preamble", "prerun", "postrun", "prop", "prop_start", "prop_stop",
-                "prop_step", "tol", "tol_amount", "name", "fine_ngx", "CI_neb", "n_images",
-                "software", "method", "endstate_calctype", "initial_deformation"]
+    optional = [
+        "account", "pmem", "priority", "constraint", "message", "email", "qos",
+        "npar", "ncore", "kpar", "ncpus", "vasp_cmd", "run_limit",
+        "nrg_convergence", "encut", "kpoints", "extra_input_files", "move",
+        "copy", "remove", "compress", "backup", "initial", "final",
+        "strict_kpoints", "err_types", "preamble", "prerun", "postrun", "prop",
+        "prop_start", "prop_stop", "prop_step", "tol", "tol_amount", "name",
+        "fine_ngx", "CI_neb", "n_images", "software", "method",
+        "endstate_calctype", "initial_deformation"
+    ]
 
     for key in required:
         if not key in settings:
-            raise VaspWrapperError( key + "' missing from: '" + filename + "'")
+            raise VaspWrapperError(key + "' missing from: '" + filename + "'")
 
     if len(select_one):
         for key_list in select_one:
             if not [key in settings for key in key_list].count(True) == 1:
-                raise VaspWrapperError("Declare one and only of the following options: '" + "' or '".join(key_list) + "' in file: '" + filename + "'")
+                raise VaspWrapperError(
+                    "Declare one and only of the following options: '" +
+                    "' or '".join(key_list) + "' in file: '" + filename + "'")
             for key in key_list:
                 if not key in settings:
                     settings[key] = None
 
     for key in optional:
         if not key in settings:
-            if key.lower() in ["extra_input_files", "remove", "compress", "backup"]:
+            if key.lower() in [
+                    "extra_input_files", "remove", "compress", "backup"
+            ]:
                 settings[key] = []
             elif key.lower() in ["move"]:
                 settings[key] = casm.vasp.io.DEFAULT_VASP_MOVE_LIST
@@ -125,16 +133,19 @@ def read_settings(filename):
     if settings["fine_ngx"] == None:
         settings["fine_ngx"] = False
     for k in settings.keys():
-        if k not in required + optional + [key for key_list in select_one for key in key_list]:
-            raise VaspWrapperError("unknown key '" + k + "' found in: '" + filename + "'")
+        if k not in required + optional + [
+                key for key_list in select_one for key in key_list
+        ]:
+            raise VaspWrapperError("unknown key '" + k + "' found in: '" +
+                                   filename + "'")
 
     return settings
 
 
 def write_settings(settings, filename):
     """ Write 'settings' as json file, 'filename' """
-    with open(filename,'wb') as file:
-        file.write(six.u(json.dump( settings, file, indent=4)).encode('utf-8'))
+    with open(filename, 'wb') as file:
+        file.write(six.u(json.dump(settings, file, indent=4)).encode('utf-8'))
 
 
 def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
@@ -200,21 +211,36 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
 
     # Verify that required input files exist
     if incarfile is None:
-        raise vasp.VaspError("vasp_input_file_names failed. No INCAR file found in CASM project.")
+        raise vasp.VaspError(
+            "vasp_input_file_names failed. No INCAR file found in CASM project."
+        )
     if prim_kpointsfile is None:
-        raise vasp.VaspError("vasp_input_file_names failed. No KPOINTS file found in CASM project.")
+        raise vasp.VaspError(
+            "vasp_input_file_names failed. No KPOINTS file found in CASM project."
+        )
     if prim_poscarfile is None:
-        warnings.warn("No reference POSCAR file found in CASM project. I hope your KPOINTS mode is A/AUTO/Automatic or this will fail!", vasp.VaspWarning)
+        warnings.warn(
+            "No reference POSCAR file found in CASM project. I hope your KPOINTS mode is A/AUTO/Automatic or this will fail!",
+            vasp.VaspWarning)
     if super_poscarfile is None and not is_neb:
-        raise vasp.VaspError("vasp_input_file_names failed. No POS file found for this configuration.")
+        raise vasp.VaspError(
+            "vasp_input_file_names failed. No POS file found for this configuration."
+        )
     if speciesfile is None:
-        raise vasp.VaspError("vasp_input_file_names failed. No SPECIES file found in CASM project.")
+        raise vasp.VaspError(
+            "vasp_input_file_names failed. No SPECIES file found in CASM project."
+        )
 
-    return (incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile)
+    return (incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile,
+            speciesfile)
+
 
 def read_properties(filename):
     """ Read a properties.calc.json"""
-    required = ["atom_type", "atoms_per_type", "coord_mode", "relaxed_basis", "relaxed_energy", "relaxed_forces", "relaxed_lattice"]
+    required = [
+        "atom_type", "atoms_per_type", "coord_mode", "relaxed_basis",
+        "relaxed_energy", "relaxed_forces", "relaxed_lattice"
+    ]
     optional = ["relaxed_magmom", "relaxed_mag_basis"]
 
     with open(filename, 'rb') as myfile:

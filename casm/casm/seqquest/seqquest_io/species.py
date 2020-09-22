@@ -12,14 +12,16 @@ Other valid tags:
     MASS, SPIN_POL
 
 """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
 import re
 from .seq_exceptions import SpeciesError
 
-class IndividualSpecies(object):    #pylint: disable=too-many-instance-attributes
+
+class IndividualSpecies(object):  #pylint: disable=too-many-instance-attributes
     """
         The IndividualSpecies class contains:
             self.name(str): the name as listed in the POS file
@@ -35,10 +37,18 @@ class IndividualSpecies(object):    #pylint: disable=too-many-instance-attribute
             self.tags (dict): the misc tags that need to be modified in the lcao.in for this specie
                                 (ex. MAGMOM = 2) All values are stored as strings.
     """
-    def __init__(self, values, tags, tags_idx, atm_dir, #pylint: disable=too-many-arguments
-                 charge_idx=None, charge_loc_idx=None,
-                 nrg_idx=None, mass_idx=None, spin_idx=None,
-                 gfixed_idx=None):
+    def __init__(
+            self,
+            values,
+            tags,
+            tags_idx,
+            atm_dir,  #pylint: disable=too-many-arguments
+            charge_idx=None,
+            charge_loc_idx=None,
+            nrg_idx=None,
+            mass_idx=None,
+            spin_idx=None,
+            gfixed_idx=None):
         """ Construct an IndividualSpecies.
 
             Args:
@@ -54,17 +64,19 @@ class IndividualSpecies(object):    #pylint: disable=too-many-instance-attribute
                 spin_idx (int): index of column with 'SPIN_POL'
                 gfixed_idx (int): index of column with 'gfixed'
         """
-        tag_len = (len(tags) + 3
-                   + bool(charge_idx) + bool(charge_loc_idx)
-                   + bool(nrg_idx) + bool(mass_idx) + bool(spin_idx) + bool(gfixed_idx))
+        tag_len = (len(tags) + 3 + bool(charge_idx) + bool(charge_loc_idx) +
+                   bool(nrg_idx) + bool(mass_idx) + bool(spin_idx) +
+                   bool(gfixed_idx))
         if len(values) != tag_len:
-            raise SpeciesError("Length of values != length of tags + %i.\nvalues = " % tag_len
-                               + str(values) + "\ntags = " + str(tags))
+            raise SpeciesError(
+                "Length of values != length of tags + %i.\nvalues = " %
+                tag_len + str(values) + "\ntags = " + str(tags))
         self.name = values[0]
         self.alias = values[1]
         self.atm_dir = atm_dir
         self.atm_location = values[2]
-        self.atm_file = os.path.join(self.atm_dir, self.atm_location.lstrip("/"))
+        self.atm_file = os.path.join(self.atm_dir,
+                                     self.atm_location.lstrip("/"))
         self.tags = dict()
         if charge_idx is not None:
             self.charge = float(values[charge_idx])
@@ -101,15 +113,14 @@ class IndividualSpecies(object):    #pylint: disable=too-many-instance-attribute
             headers += "{0:<12}".format(key)
         stream.write(headers + "\n")
 
-
     def write(self, stream):
         """ Write IndividualSpecies line"""
         values = "{0:<12} {1:<12} {2:<36} {3:<12} {4:<12} ".format(
-            self.name, self.alias, self.atm_location, self.charge, self.charge_loc)
+            self.name, self.alias, self.atm_location, self.charge,
+            self.charge_loc)
         for key in sorted(self.tags.keys()):
             values += "{0:<12}".format(self.tags[key])
         stream.write(values + "\n")
-
 
     def print_all(self):
         """ Print contents of SPECIES """
@@ -120,7 +131,8 @@ class IndividualSpecies(object):    #pylint: disable=too-many-instance-attribute
         print(self.atm_location)
         print(self.atm_file)
 
-def species_settings(filename): #pylint: disable=too-many-locals, too-many-branches
+
+def species_settings(filename):  #pylint: disable=too-many-locals, too-many-branches
     """ Returns a dict of IndividualSpecies objects, with keys equal to their names. """
     with open(filename) as stream:
         # Read atm_dir_path from first line
@@ -147,7 +159,8 @@ Found: '" + line + "'""")
         column_names = header.split()
         # Check if the header is even valid
         if len(column_names) < 3:
-            raise SpeciesError("Insufficient number of columns in SPECIES file")
+            raise SpeciesError(
+                "Insufficient number of columns in SPECIES file")
         for i, name in enumerate(column_names):
             if name in ['SPECIES', 'ALIAS', 'atm_location']:
                 pass
@@ -157,7 +170,9 @@ Found: '" + line + "'""")
                 try:
                     charge_loc_idx = column_names.index("CHARGE_LOC")
                 except ValueError:
-                    raise SpeciesError("Keywords CHARGE and CHARGE_LOC must both be specified!")
+                    raise SpeciesError(
+                        "Keywords CHARGE and CHARGE_LOC must both be specified!"
+                    )
             elif name == 'CHARGE_LOC':
                 pass
 
@@ -182,10 +197,9 @@ Found: '" + line + "'""")
         for line in stream:
             if line.strip():
                 values = line.strip().split()
-                my_species_settings[values[0]] = IndividualSpecies(values, tags, tags_idx,
-                                                                   atm_dir_path, charge_idx,
-                                                                   charge_loc_idx, nrg_idx,
-                                                                   mass_idx, spin_idx, gfixed_idx)
+                my_species_settings[values[0]] = IndividualSpecies(
+                    values, tags, tags_idx, atm_dir_path, charge_idx,
+                    charge_loc_idx, nrg_idx, mass_idx, spin_idx, gfixed_idx)
 
     return my_species_settings
 

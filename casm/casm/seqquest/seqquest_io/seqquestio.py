@@ -1,5 +1,6 @@
 """ Class for creating seqquest i/o files """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
@@ -13,16 +14,18 @@ DEFAULT_QUEST_MOVE_LIST = []
 DEFAULT_QUEST_COPY_LIST = ["lcao.in"]
 DEFAULT_QUEST_REMOVE_LIST = []
 
+
 def job_complete(jobdir=None):
     """return True if the seqquest job at path 'jobdir' is complete"""
     if jobdir is None:
         jobdir = os.getcwd()
     outfile = os.path.join(jobdir, "lcao.out")
-    if (not os.path.isfile(outfile)) and (not os.path.isfile(outfile+".gz")):
+    if (not os.path.isfile(outfile)) and (not os.path.isfile(outfile + ".gz")):
         return False
     if LcaoOUT(outfile).complete:
         return True
     return False
+
 
 def get_lcao_tag(keys, jobdir=None):
     """ Opens lcao.in in 'jobdir' and returns 'key' value """
@@ -30,6 +33,7 @@ def get_lcao_tag(keys, jobdir=None):
         jobdir = os.getcwd()
     tlcaoin = LcaoIN(os.path.join(jobdir, "lcao.in"))
     return tlcaoin.get(keys)
+
 
 class SeqquestIO(object):
     """ Generate a set of SeqQuest input files from settings files
@@ -39,8 +43,11 @@ class SeqquestIO(object):
             self.lcao_in: LcaoIN object
             self.species: Species dict
     """
-
-    def __init__(self, lcao_in_file, super_poscarfile, speciesfile, extra_input_files=None):
+    def __init__(self,
+                 lcao_in_file,
+                 super_poscarfile,
+                 speciesfile,
+                 extra_input_files=None):
         """ Construct a Seqquest IO object
 
             Args:
@@ -49,7 +56,9 @@ class SeqquestIO(object):
                 speciesfile: path to SPECIES file
         """
         self.species = species_settings(speciesfile)
-        self.lcao_in = LcaoIN(lcao_in_file, speciesfile=speciesfile, POS=super_poscarfile)
+        self.lcao_in = LcaoIN(lcao_in_file,
+                              speciesfile=speciesfile,
+                              POS=super_poscarfile)
         if extra_input_files is not None:
             self.extra_input_files = extra_input_files
 
@@ -70,7 +79,6 @@ class SeqquestIO(object):
         self.write_atomfile(dirpath)
         self.lcao_in.write(filename=os.path.join(dirpath, "lcao.in"),
                            geom_filename=os.path.join(dirpath, "lcao.geom_in"))
-
 
         # copy extra input files
         for e_file in self.extra_input_files:

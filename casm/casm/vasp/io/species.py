@@ -1,9 +1,9 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import numpy as np
 import os, re
-
 """
 Sample Species File:
 POTCAR_DIR_PATH = /absolute/path/to/vasp_potentials
@@ -15,11 +15,12 @@ Mn4        Mn       1       PAW_PBE/Mn         4         6
 
 
 class SpeciesError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
         return self.msg
+
 
 class SpeciesDict(dict):
     """
@@ -29,6 +30,7 @@ class SpeciesDict(dict):
     def set_available_tags(self, tags):
         """ Set a metadata member that lists the available tags listed in a SPECIES file """
         self.tags = tags
+
 
 class IndividualSpecies:
     """
@@ -44,7 +46,6 @@ class IndividualSpecies:
             self.potcar_location: location of POTCAR directory relative to self.potcardir_base
             self.potcardir: directory containing particular POTCAR (self.potcardir_base joined with self.potcar_location)
     """
-
     def __init__(self, values, tags, potcardir_base):
         """ Construct an IndividualSpecies.
 
@@ -53,8 +54,10 @@ class IndividualSpecies:
                 tags: (str list) column names 4+ in SPECIES file, INCAR tags that need to be modified
                 potcardir_base: (str) common directory for all POTCARs
         """
-        if len(values) != (len(tags)+4):
-            raise SpeciesError("Length of values != length of tags + 4.\nvalues = " + str(values) + "\ntags = " + str(tags))
+        if len(values) != (len(tags) + 4):
+            raise SpeciesError(
+                "Length of values != length of tags + 4.\nvalues = " +
+                str(values) + "\ntags = " + str(tags))
         self.name = values[0]
         self.alias = values[1]
         try:
@@ -63,28 +66,28 @@ class IndividualSpecies:
             raise SpeciesError("Could not read POTCAR: " + str(values))
         self.potcardir_base = potcardir_base
         self.potcar_location = values[3]
-        self.potcardir = os.path.join(self.potcardir_base, self.potcar_location.lstrip("/"))
+        self.potcardir = os.path.join(self.potcardir_base,
+                                      self.potcar_location.lstrip("/"))
         self.tags = dict()
-        for i,key in enumerate(tags):
-            self.tags[key] = values[i+4]
+        for i, key in enumerate(tags):
+            self.tags[key] = values[i + 4]
 
-
-    def write_header(self,file):
+    def write_header(self, file):
         """ Write header to a file """
         file.write("POTCAR_DIR_PATH = " + self.potcardir_base)
-        headers = "{0:<12} {1:<12} {2:<12} {3:<36} ".format("SPECIES","ALIAS","POTCAR","POTCAR_location")
+        headers = "{0:<12} {1:<12} {2:<12} {3:<36} ".format(
+            "SPECIES", "ALIAS", "POTCAR", "POTCAR_location")
         for key in sorted(self.tags.keys()):
             headers += "{0:<12}".format(key)
         file.write(headers)
 
-
-    def write(self,file):
+    def write(self, file):
         """ Write IndividualSpecies line"""
-        values = "{0:<12} {1:<12} {2:<12} {3:<36} ".format(self.name, self.alias, self.write_potcar, self.potcar_location)
+        values = "{0:<12} {1:<12} {2:<12} {3:<36} ".format(
+            self.name, self.alias, self.write_potcar, self.potcar_location)
         for key in sorted(self.tags.keys()):
             values += "{0:<12}".format(self.tags[key])
         file.write(values)
-
 
     def print_all(self):
         print(self.name)
@@ -94,6 +97,7 @@ class IndividualSpecies:
         print(self.potcardir_base)
         print(self.potcar_location)
         print(self.potcardir)
+
 
 # replacing Species class with 'species_settings' function that returns a dict of IndividualSpecies
 
@@ -146,9 +150,11 @@ def species_settings(filename):
 
     # Read POTCAR_DIR_PATH from first line
     line = file.readline()
-    m = re.match("POTCAR_DIR_PATH\s*=\s*(.*)",line)
+    m = re.match("POTCAR_DIR_PATH\s*=\s*(.*)", line)
     if not m:
-        raise SpeciesError("Could not read POTCAR_DIR_PATH.\nExpected: POTCAR_DIR_PATH = /path/to/POTCAR_DIR\nFound: '" + line + "'")
+        raise SpeciesError(
+            "Could not read POTCAR_DIR_PATH.\nExpected: POTCAR_DIR_PATH = /path/to/POTCAR_DIR\nFound: '"
+            + line + "'")
     POTCAR_DIR_PATH = m.group(1)
 
     # Parsing the header
@@ -162,7 +168,8 @@ def species_settings(filename):
     for line in file:
         if line.strip():
             values = line.strip().split()
-            species_settings[values[0]] = IndividualSpecies(values, tags, POTCAR_DIR_PATH)
+            species_settings[values[0]] = IndividualSpecies(
+                values, tags, POTCAR_DIR_PATH)
 
     file.close()
 
@@ -172,12 +179,11 @@ def species_settings(filename):
 def write_species_settings(species, filename):
     """ Write a SPECIES file from a species dict """
     try:
-        file = open(filename,'w')
+        file = open(filename, 'w')
     except:
-        raise SpeciesError("Could not open file for writing: '" + filename + "'")
+        raise SpeciesError("Could not open file for writing: '" + filename +
+                           "'")
     species.keys()[0].write_header(file)
     for s in sorted(species.keys()):
         species[s].write(file)
     file.close()
-
-

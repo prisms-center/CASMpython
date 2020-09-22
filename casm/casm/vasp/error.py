@@ -1,5 +1,6 @@
 """ Job manipuation routines for VASP"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import abc
@@ -11,9 +12,11 @@ import time
 
 from casm.vasp import io
 
+
 class VaspError(Exception):
     """ VASP related errors """
     pass
+
 
 class VaspWarning(Warning):
     """ VASP related warnings"""
@@ -22,6 +25,7 @@ class VaspWarning(Warning):
 
     def __str__(self):
         return self.msg
+
 
 def continue_job(jobdir, contdir, settings):
     """Use the files in vasp job directory 'jobdir', to setup a vasp job in directory 'contdir'.
@@ -40,76 +44,117 @@ def continue_job(jobdir, contdir, settings):
          to contdir/POSCAR. jobdir/POSCAR and jobdir/CONTCAR are always kept.
     """
 
-    print("Continue VASP job:\n  Original: " + jobdir + "\n  Continuation: " + contdir)
+    print("Continue VASP job:\n  Original: " + jobdir + "\n  Continuation: " +
+          contdir)
     sys.stdout.flush()
 
     # remove duplicates
-    move = list(set(settings['move']+io.DEFAULT_VASP_MOVE_LIST+settings['extra_input_files']))
-    copy = list(set(settings['copy']+io.DEFAULT_VASP_COPY_LIST))
+    move = list(
+        set(settings['move'] + io.DEFAULT_VASP_MOVE_LIST +
+            settings['extra_input_files']))
+    copy = list(set(settings['copy'] + io.DEFAULT_VASP_COPY_LIST))
     remove = list(set(settings['remove']))
     compress = list(set(settings['compress']))
     backup = list(set(settings['backup']))
 
     # Check that necessary files are being moved/copied: INCAR, POTCAR, KPOINTS
     if not "POTCAR" in (move + copy):
-        warnings.warn("Warning: POTCAR not found in either 'move' or 'copy'. Moving POTCAR by default", VaspWarning)
+        warnings.warn(
+            "Warning: POTCAR not found in either 'move' or 'copy'. Moving POTCAR by default",
+            VaspWarning)
         move += ["POTCAR"]
     if not "INCAR" in (move + copy):
-        warnings.warn("Warning: INCAR not found in either 'move' or 'copy'. Copying INCAR by default", VaspWarning)
+        warnings.warn(
+            "Warning: INCAR not found in either 'move' or 'copy'. Copying INCAR by default",
+            VaspWarning)
         copy += ["INCAR"]
     if not "KPOINTS" in (move + copy):
-        warnings.warn("Warning: KPOINTS not found in either 'move' or 'copy'. Copying KPOINTS by default", VaspWarning)
+        warnings.warn(
+            "Warning: KPOINTS not found in either 'move' or 'copy'. Copying KPOINTS by default",
+            VaspWarning)
         copy += ["KPOINTS"]
 
     # Check that the user isn't being contradictory or silly
     for f in move:
         if f == "POSCAR" or f == "CONTCAR":
-            raise VaspError("Error in casm.vasp.general.continue_job().  Do not include POSCAR or CONTCAR in 'move'; use 'backup' if you want a backup")
+            raise VaspError(
+                "Error in casm.vasp.general.continue_job().  Do not include POSCAR or CONTCAR in 'move'; use 'backup' if you want a backup"
+            )
         if f in remove:
             if f in io.DEFAULT_VASP_MOVE_LIST:
-                raise VaspError("Error in casm.vasp.general.continue_job(). %s cannot be removed, VASP will not run!!!" % f)
+                raise VaspError(
+                    "Error in casm.vasp.general.continue_job(). %s cannot be removed, VASP will not run!!!"
+                    % f)
             else:
-                warnings.warn("Warning: %s found in both 'move' and 'remove'. The file will not be removed." % f, VaspWarning)
+                warnings.warn(
+                    "Warning: %s found in both 'move' and 'remove'. The file will not be removed."
+                    % f, VaspWarning)
                 remove = list(set(remove) - set([f]))
         if f in copy:
             if f in io.DEFAULT_VASP_MOVE_LIST:
-                warnings.warn("Warning: %s found in both 'move' and 'copy'. The fill will be moved only." % f, VaspWarning)
+                warnings.warn(
+                    "Warning: %s found in both 'move' and 'copy'. The fill will be moved only."
+                    % f, VaspWarning)
                 copy = list(set(copy) - set([f]))
             else:
-                warnings.warn("Warning: %s found in both 'move' and 'copy'. The file will be copied only." % f, VaspWarning)
+                warnings.warn(
+                    "Warning: %s found in both 'move' and 'copy'. The file will be copied only."
+                    % f, VaspWarning)
                 move = list(set(move) - set([f]))
         if f in compress:
             if f in io.DEFAULT_VASP_MOVE_LIST:
-                raise VaspError("Error in casm.vasp.general.continue_job(). %s cannot be compressed, VASP will not run!!!" % f)
+                raise VaspError(
+                    "Error in casm.vasp.general.continue_job(). %s cannot be compressed, VASP will not run!!!"
+                    % f)
             else:
-                raise VaspError("Error in casm.vasp.general.continue_job(). %s found in both 'move' and 'compress', but these options contradict. Did you mean 'backup'?" % f)
+                raise VaspError(
+                    "Error in casm.vasp.general.continue_job(). %s found in both 'move' and 'compress', but these options contradict. Did you mean 'backup'?"
+                    % f)
     for f in copy:
         if f == "POSCAR" or f == "CONTCAR":
-            raise VaspError("Error in casm.vasp.general.continue_job().  Do not include POSCAR or CONTCAR in 'copy'; use 'backup' if you want a backup")
+            raise VaspError(
+                "Error in casm.vasp.general.continue_job().  Do not include POSCAR or CONTCAR in 'copy'; use 'backup' if you want a backup"
+            )
         if f == "WAVECAR" or f == "CHGCAR":
-            warnings.warn("Warning: %s can be rather huge. It is suggested to include %s in 'move', rather than 'copy'. If you're worried about corruption due to interrupted runs, add %s to 'backup' as well." % (f, f, f), VaspWarning)
+            warnings.warn(
+                "Warning: %s can be rather huge. It is suggested to include %s in 'move', rather than 'copy'. If you're worried about corruption due to interrupted runs, add %s to 'backup' as well."
+                % (f, f, f), VaspWarning)
         if f in remove:
-            warnings.warn("Warning: %sfound in 'copy' and 'remove', which is the same as 'move'." % f, VaspWarning)
+            warnings.warn(
+                "Warning: %sfound in 'copy' and 'remove', which is the same as 'move'."
+                % f, VaspWarning)
             move += f
             copy = list(set(copy) - set([f]))
             remove = list(set(copy) - set([f]))
         if f in compress:
-            warnings.warn("Warning: %s found in 'copy' and 'compress'. It is suggested to include %s in 'move' and 'backup' instead." % (f, f), VaspWarning)
+            warnings.warn(
+                "Warning: %s found in 'copy' and 'compress'. It is suggested to include %s in 'move' and 'backup' instead."
+                % (f, f), VaspWarning)
         if f in backup:
-            warnings.warn("Warning: %s found in 'copy' and 'backup'. This will result in three copies of your file being made (old, old_BACKUP.gz, and copy)!" % f, VaspWarning)
+            warnings.warn(
+                "Warning: %s found in 'copy' and 'backup'. This will result in three copies of your file being made (old, old_BACKUP.gz, and copy)!"
+                % f, VaspWarning)
     for f in remove:
         if f in compress:
-            warnings.warn("Warning: %s found in both 'compress' and 'remove'. Defaulting to 'compress' only!" % f, VaspWarning)
+            warnings.warn(
+                "Warning: %s found in both 'compress' and 'remove'. Defaulting to 'compress' only!"
+                % f, VaspWarning)
             remove = list(set(remove) - set([f]))
     for f in compress:
         if f in backup:
-            warnings.warn("Warning: %s found in 'compress' and 'backup'. Defaulting to ompressing only!" % f, VaspWarning)
+            warnings.warn(
+                "Warning: %s found in 'compress' and 'backup'. Defaulting to ompressing only!"
+                % f, VaspWarning)
             backup = list(set(backup) - set([f]))
     for f in backup:
         if (f not in move) and (f in remove):
-            warnings.warn("Warning: 'backup' is meant for files being moved, but %s is found under 'remove' only. Did you maybe mean 'compress'?", VaspWarning)
+            warnings.warn(
+                "Warning: 'backup' is meant for files being moved, but %s is found under 'remove' only. Did you maybe mean 'compress'?",
+                VaspWarning)
         elif (f not in move):
-            warnings.warn("Warning: %s not found in 'move', so you'll just end up with 2 copies of the file..." % f, VaspWarning)
+            warnings.warn(
+                "Warning: %s not found in 'move', so you'll just end up with 2 copies of the file..."
+                % f, VaspWarning)
 
     # make the new contdir
     try:
@@ -124,7 +169,7 @@ def continue_job(jobdir, contdir, settings):
             print(file, end=' ')
             # Open target file, target file.gz
             f_in = open(os.path.join(jobdir, file), 'rb')
-            f_out = gzip.open(os.path.join(jobdir, file)+'_BACKUP.gz', 'wb')
+            f_out = gzip.open(os.path.join(jobdir, file) + '_BACKUP.gz', 'wb')
             # Compress, close files
             f_out.writelines(f_in)
             f_out.close()
@@ -132,14 +177,19 @@ def continue_job(jobdir, contdir, settings):
     print("")
 
     # copy CONTCAR/POSCAR/etc
-    if os.path.isfile(os.path.join(jobdir, "CONTCAR")) and os.path.getsize(os.path.join(jobdir, "CONTCAR")) > 0:
-        shutil.copyfile(os.path.join(jobdir, "CONTCAR"), os.path.join(contdir, "POSCAR"))
+    if os.path.isfile(os.path.join(jobdir, "CONTCAR")) and os.path.getsize(
+            os.path.join(jobdir, "CONTCAR")) > 0:
+        shutil.copyfile(os.path.join(jobdir, "CONTCAR"),
+                        os.path.join(contdir, "POSCAR"))
         print("  cp CONTCAR -> POSCAR")
-    elif os.path.isfile(os.path.join(jobdir,"POSCAR")):
-        shutil.copyfile(os.path.join(jobdir, "POSCAR"), os.path.join(contdir, "POSCAR"))
+    elif os.path.isfile(os.path.join(jobdir, "POSCAR")):
+        shutil.copyfile(os.path.join(jobdir, "POSCAR"),
+                        os.path.join(contdir, "POSCAR"))
         print("  no CONTCAR: cp POSCAR -> POSCAR")
-    elif not "n_images" in settings: #raise error if its not an Neb run
-        print(VaspError("no CONTCAR or POSCAR avaiable for continuation of the job\n"))
+    elif not "n_images" in settings:  #raise error if its not an Neb run
+        print(
+            VaspError(
+                "no CONTCAR or POSCAR avaiable for continuation of the job\n"))
 
     # move files
     print("  mv:", end=' ')
@@ -158,7 +208,8 @@ def continue_job(jobdir, contdir, settings):
         print(file, end=' ')
         # This prevents a missing file from crashing the vasprun (e.g. a missing WAVECAR)
         if os.path.isfile(os.path.join(jobdir, file)):
-            shutil.copyfile(os.path.join(jobdir, file), os.path.join(contdir, file))
+            shutil.copyfile(os.path.join(jobdir, file),
+                            os.path.join(contdir, file))
         else:
             print("Could not find file %s, skipping!" % file)
     print("")
@@ -174,17 +225,17 @@ def continue_job(jobdir, contdir, settings):
     # compress files
     print(" gzip:", end=' ')
     for file in compress:
-        if os.path.isfile(os.path.join(jobdir,file)):
+        if os.path.isfile(os.path.join(jobdir, file)):
             print(file, end=' ')
             # Open target file, target file.gz
             f_in = open(os.path.join(jobdir, file), 'rb')
-            f_out = gzip.open(os.path.join(jobdir, file)+'.gz', 'wb')
+            f_out = gzip.open(os.path.join(jobdir, file) + '.gz', 'wb')
             # Compress, close files
             f_out.writelines(f_in)
             f_out.close()
             f_in.close()
             # Remove original target file
-            os.remove(os.path.join(jobdir,file))
+            os.remove(os.path.join(jobdir, file))
     print("")
 
     # check if the run is a neb job and copy the image CONTCAR to POSCAR
@@ -196,12 +247,17 @@ def continue_job(jobdir, contdir, settings):
             img_dir = str(i).zfill(2)
             print("Image directory: {}".format(img_dir))
             os.makedirs(os.path.join(contdir, img_dir))
-            if os.path.isfile(os.path.join(jobdir, img_dir, "CONTCAR")) and os.path.getsize(os.path.join(jobdir, img_dir, "CONTCAR")) > 0:
-                shutil.copyfile(os.path.join(jobdir, img_dir, "CONTCAR"), os.path.join(contdir, img_dir, "POSCAR"))
+            if os.path.isfile(os.path.join(
+                    jobdir, img_dir, "CONTCAR")) and os.path.getsize(
+                        os.path.join(jobdir, img_dir, "CONTCAR")) > 0:
+                shutil.copyfile(os.path.join(jobdir, img_dir, "CONTCAR"),
+                                os.path.join(contdir, img_dir, "POSCAR"))
                 print("  cp {0}/CONTCAR -> {0}/POSCAR".format(img_dir))
             else:
-                shutil.copyfile(os.path.join(jobdir, img_dir, "POSCAR"), os.path.join(contdir, img_dir, "POSCAR"))
-                print("  no {0}/CONTCAR: cp {0}/POSCAR -> {0}/POSCAR".format(img_dir))
+                shutil.copyfile(os.path.join(jobdir, img_dir, "POSCAR"),
+                                os.path.join(contdir, img_dir, "POSCAR"))
+                print("  no {0}/CONTCAR: cp {0}/POSCAR -> {0}/POSCAR".format(
+                    img_dir))
 
             # move files
             print("  mv:", end='')
@@ -223,7 +279,7 @@ def continue_job(jobdir, contdir, settings):
                 if os.path.isfile(os.path.join(jobdir, img_dir, file)):
                     shutil.copyfile(os.path.join(jobdir, img_dir, file),
                                     os.path.join(contdir, img_dir, file))
-                elif file not in ["INCAR","KPOINTS"]:
+                elif file not in ["INCAR", "KPOINTS"]:
                     print("Could not find file %s, skipping!" % file)
             print("")
 
@@ -242,7 +298,8 @@ def continue_job(jobdir, contdir, settings):
                     print(file, end='')
                     # Open target file, target file.gz
                     f_in = open(os.path.join(jobdir, img_dir, file), 'rb')
-                    f_out = gzip.open(os.path.join(jobdir, img_dir, file)+'.gz', 'wb')
+                    f_out = gzip.open(
+                        os.path.join(jobdir, img_dir, file) + '.gz', 'wb')
                     # Compress, close files
                     f_out.writelines(f_in)
                     f_out.close()
@@ -275,6 +332,7 @@ class _RunError(object):
     def __str__(self):
         return self.pattern
 
+
 class _CrashError(object):
     """ Template class for all crash-related errors to be caught """
     ___metaclass__ = abc.ABCMeta
@@ -293,6 +351,7 @@ class _CrashError(object):
 
     def __str__(self):
         return self.pattern
+
 
 class _FreezeError(object):
     """ Template class for all crash-related errors to be caught """
@@ -313,6 +372,7 @@ class _FreezeError(object):
     def __str__(self):
         return self.pattern
 
+
 class IbzkptError(_RunError):
     """ VERY BAD NEWS! internal error in subroutine IBZKPT
 
@@ -323,8 +383,6 @@ class IbzkptError(_RunError):
 
     def __str__(self):
         return self.pattern
-
-
 
     def error(self, line=None, jobdir=None):
         """ Check if pattern found in line, and KPOINTS subdivisions are odd or not Gamma"""
@@ -350,7 +408,8 @@ class IbzkptError(_RunError):
             kpt.automode = "GAMMA"
             kpt.subdivisions = [max_k, max_k, max_k]
             kpt.shift = [0.0, 0.0, 0.0]
-            print("  Changed KPOINTS from AUTO (%s) to GAMMA (%s)" % (old_kpt, kpt.subdivisions))
+            print("  Changed KPOINTS from AUTO (%s) to GAMMA (%s)" %
+                  (old_kpt, kpt.subdivisions))
             kpt.write(os.path.join(new_jobdir, "KPOINTS"))
 
         else:
@@ -361,9 +420,12 @@ class IbzkptError(_RunError):
                     kpt.subdivisions[i] += 1
 
             if odd == False:
-                print("  Set KPOINTS subdivision to be odd:", kpt.subdivisions, "and mode to Gamma")
+                print("  Set KPOINTS subdivision to be odd:", kpt.subdivisions,
+                      "and mode to Gamma")
                 kpt.automode = "Gamma"
                 kpt.write(os.path.join(new_jobdir, "KPOINTS"))
+
+
 #        else:
 #            symprec = io.get_incar_tag("SYMPREC", jobdir = new_jobdir)
 #            if symprec is None or symprec < 1.1e-8:
@@ -372,6 +434,7 @@ class IbzkptError(_RunError):
 #            elif io.get_incar_tag("ISYM", jobdir = new_jobdir) != 0:
 #                print "  Set ISYM = 0"
 #                io.set_incar_tag({"ISYM": 0}, jobdir = new_jobdir)
+
 
 class FEXCFError(_RunError):
     """ERROR FEXCF: supplied exchange-correlation table"""
@@ -398,15 +461,15 @@ class FEXCFError(_RunError):
         continue_job(err_jobdir, new_jobdir, settings)
         if io.get_incar_tag("IBRION", jobdir=new_jobdir) != 2:
             print("  Set IBRION = 2")
-            io.set_incar_tag({"IBRION":2}, jobdir=new_jobdir)
+            io.set_incar_tag({"IBRION": 2}, jobdir=new_jobdir)
         elif io.get_incar_tag("POTIM", jobdir=new_jobdir) > 0.1:
             print("  Set POTIM = 0.1")
             sys.stdout.flush()
-            io.set_incar_tag({"POTIM":0.1}, jobdir=new_jobdir)
+            io.set_incar_tag({"POTIM": 0.1}, jobdir=new_jobdir)
         elif io.get_incar_tag("POTIM", jobdir=new_jobdir) > 0.01:
             print("  Set POTIM = 0.01")
             sys.stdout.flush()
-            io.set_incar_tag({"POTIM":0.01}, jobdir=new_jobdir)
+            io.set_incar_tag({"POTIM": 0.01}, jobdir=new_jobdir)
 
 
 class SubSpaceMatrixError(_RunError):
@@ -435,19 +498,28 @@ class SubSpaceMatrixError(_RunError):
         continue_job(err_jobdir, new_jobdir, settings)
         if io.get_incar_tag("ALGO", jobdir=new_jobdir) != "VeryFast":
             print("  Set Algo = VeryFast, and Unset IALGO")
-            io.set_incar_tag({"IALGO":None, "ALGO":"VeryFast"}, jobdir=new_jobdir)
+            io.set_incar_tag({
+                "IALGO": None,
+                "ALGO": "VeryFast"
+            },
+                             jobdir=new_jobdir)
         elif io.get_incar_tag("IBRION", jobdir=new_jobdir) != 1:
             print("  Set IBRION = 1 and POTIM = 0.1")
             sys.stdout.flush()
-            io.set_incar_tag({"IBRION":1, "POTIM":0.1}, jobdir=new_jobdir)
+            io.set_incar_tag({"IBRION": 1, "POTIM": 0.1}, jobdir=new_jobdir)
         elif io.get_incar_tag("LREAL", jobdir=new_jobdir) != "False":
             print("  Set LREAL = .FALSE.")
             sys.stdout.flush()
-            io.set_incar_tag({"LREAL":False}, jobdir=new_jobdir)
+            io.set_incar_tag({"LREAL": False}, jobdir=new_jobdir)
         else:
             print("  Set Algo = Normal, and Unset IALGO")
             sys.stdout.flush()
-            io.set_incar_tag({"IALGO":None, "ALGO":"Normal"}, jobdir=new_jobdir)
+            io.set_incar_tag({
+                "IALGO": None,
+                "ALGO": "Normal"
+            },
+                             jobdir=new_jobdir)
+
 
 class InisymError(_CrashError):
     """ VASP can't figure out the (magnetic) symmetry """
@@ -456,13 +528,14 @@ class InisymError(_CrashError):
     def fix(self, err_jobdir, new_jobdir, settings):
         """ Up symprec, or turn off symmetry"""
         continue_job(err_jobdir, new_jobdir, settings)
-        symprec = io.get_incar_tag("SYMPREC", jobdir = new_jobdir)
+        symprec = io.get_incar_tag("SYMPREC", jobdir=new_jobdir)
         if symprec is None or symprec > 1.1e-8:
             print("  Set SYMPREC = 1e-8")
-            io.set_incar_tag({"SYMPREC": 1e-8}, jobdir = new_jobdir)
-        elif io.get_incar_tag("ISYM", jobdir = new_jobdir) != 0:
+            io.set_incar_tag({"SYMPREC": 1e-8}, jobdir=new_jobdir)
+        elif io.get_incar_tag("ISYM", jobdir=new_jobdir) != 0:
             print("  Set ISYM = 0")
-            io.set_incar_tag({"ISYM": 0}, jobdir = new_jobdir)
+            io.set_incar_tag({"ISYM": 0}, jobdir=new_jobdir)
+
 
 class SgrconError(_CrashError):
     """ VASP is having yet another symmetry problem """
@@ -471,13 +544,14 @@ class SgrconError(_CrashError):
     def fix(self, err_jobdir, new_jobdir, settings):
         """ Up symprec, or turn off symmetry"""
         continue_job(err_jobdir, new_jobdir, settings)
-        symprec = io.get_incar_tag("SYMPREC", jobdir = new_jobdir)
+        symprec = io.get_incar_tag("SYMPREC", jobdir=new_jobdir)
         if symprec is None or symprec > 1.1e-8:
             print("  Set SYMPREC = 1e-8")
-            io.set_incar_tag({"SYMPREC": 1e-8}, jobdir = new_jobdir)
-        elif io.get_incar_tag("ISYM", jobdir = new_jobdir) != 0:
+            io.set_incar_tag({"SYMPREC": 1e-8}, jobdir=new_jobdir)
+        elif io.get_incar_tag("ISYM", jobdir=new_jobdir) != 0:
             print("  Set ISYM = 0")
-            io.set_incar_tag({"ISYM": 0}, jobdir = new_jobdir)
+            io.set_incar_tag({"ISYM": 0}, jobdir=new_jobdir)
+
 
 class WavecarError(_CrashError):
     """ A bad WAVECAR is causing the job to crash/abort """
@@ -497,6 +571,7 @@ class WavecarError(_CrashError):
         with open(os.path.join(new_jobdir, "WAVECAR"), 'a') as f:
             pass
 
+
 class NbandsError(_RunError):
     """Your highest band is occupied at some k-points! Unless you are"""
     pattern = "Your highest band is occupied at some k-points! Unless you are"
@@ -506,29 +581,35 @@ class NbandsError(_RunError):
 
     def error(self, line=None, jobdir=None):
         """ Check if pattern found in line """
-        if re.search(self.pattern,line):
+        if re.search(self.pattern, line):
             return True
         return False
 
     def fix(self, err_jobdir, new_jobdir, settings):
         """ Try to fix the error by increasing the number of bands"""
         continue_job(err_jobdir, new_jobdir, settings)
-        with open(os.path.join(err_jobdir,'OUTCAR')) as f:
+        with open(os.path.join(err_jobdir, 'OUTCAR')) as f:
             err_outcar = f.read().splitlines()
         nbands_line = []
         for line in err_outcar:
             if "NBANDS" in line:
                 nbands_line.append(line)
-        if len(nbands_line)<1:
+        if len(nbands_line) < 1:
             print("SERIOUS WARNING :  ")
-            print("        Couldn't find any reference to nbands in the OUTCAR. Continuing without fixing")
+            print(
+                "        Couldn't find any reference to nbands in the OUTCAR. Continuing without fixing"
+            )
         else:
             for l in nbands_line:
                 if 'k-points' in l.strip().split():
-                    print("  Set NBANDS = "+str(int(1.1 * float(l.strip().split()[-1]))))
+                    print("  Set NBANDS = " +
+                          str(int(1.1 * float(l.strip().split()[-1]))))
                     sys.stdout.flush()
-                    io.set_incar_tag({"NBANDS":int(1.1 * float(l.strip().split()[-1]))}, jobdir=new_jobdir)
+                    io.set_incar_tag(
+                        {"NBANDS": int(1.1 * float(l.strip().split()[-1]))},
+                        jobdir=new_jobdir)
                     break
+
 
 class NoConvergeError(_RunError):
     """An ionic step was performed without a fully-converged density"""
@@ -551,7 +632,7 @@ class NoConvergeError(_RunError):
             # This may not be a SCF line at all, so pass to-float errors
             try:
                 # Determining if the SCF came *close* to converging
-                if ediff*10. <= float(line.split()[3]):
+                if ediff * 10. <= float(line.split()[3]):
                     return True
                 return False
             except:
@@ -561,19 +642,29 @@ class NoConvergeError(_RunError):
         """ Try to fix the error by changing the algo"""
         continue_job(err_jobdir, new_jobdir, settings)
         # Replace the potentially bad POSCAR
-        shutil.copyfile(os.path.join(err_jobdir, "POSCAR"), os.path.join(new_jobdir, "POSCAR"))
+        shutil.copyfile(os.path.join(err_jobdir, "POSCAR"),
+                        os.path.join(new_jobdir, "POSCAR"))
         # First, see if a change of ALGO helps
         curr_algo = io.get_incar_tag("ALGO", new_jobdir).upper()
         if curr_algo == 'FAST':
-            io.set_incar_tag({"ALGO":"Normal", "IALGO":None}, jobdir=new_jobdir)
+            io.set_incar_tag({
+                "ALGO": "Normal",
+                "IALGO": None
+            },
+                             jobdir=new_jobdir)
             print("  Set ALGO = Normal")
         elif curr_algo == 'NORMAL':
-            io.set_incar_tag({"ALGO":"All", "IALGO":None}, jobdir=new_jobdir)
+            io.set_incar_tag({"ALGO": "All", "IALGO": None}, jobdir=new_jobdir)
             print("  Set ALGO = All")
         elif curr_algo == 'ALL':
-            io.set_incar_tag({"ALGO":"Damped", "IALGO":None}, jobdir=new_jobdir)
-            io.set_incar_tag({"TIME":"0.4"}, jobdir=new_jobdir)
+            io.set_incar_tag({
+                "ALGO": "Damped",
+                "IALGO": None
+            },
+                             jobdir=new_jobdir)
+            io.set_incar_tag({"TIME": "0.4"}, jobdir=new_jobdir)
             print("  Set ALGO = Damped, TIME = 0.4")
+
 
 class FreezeError(_FreezeError):
     """VASP appears frozen"""
@@ -604,7 +695,8 @@ class FreezeError(_FreezeError):
                 most_recent = t
                 most_recent_file = f
 
-        print("Most recent file output (" + most_recent_file + "):", most_recent, " seconds ago.")
+        print("Most recent file output (" + most_recent_file + "):",
+              most_recent, " seconds ago.")
         sys.stdout.flush()
         if t < 300:
             return False
@@ -614,9 +706,9 @@ class FreezeError(_FreezeError):
             print("outcar.complete:", outcar.complete)
             sys.stdout.flush()
             return False
-        elif outcar.slowest_loop != None and most_recent > 5.0*outcar.slowest_loop:
+        elif outcar.slowest_loop != None and most_recent > 5.0 * outcar.slowest_loop:
             print("slowest_loop:", outcar.slowest_loop)
-            print("5.0*slowest_loop:", 5.0*outcar.slowest_loop)
+            print("5.0*slowest_loop:", 5.0 * outcar.slowest_loop)
             print("most_recent:", most_recent)
             sys.stdout.flush()
             return True
@@ -628,6 +720,7 @@ class FreezeError(_FreezeError):
         """
         continue_job(err_jobdir, new_jobdir, settings)
         print("  Kill job and try to continue")
+
 
 def error_check(jobdir, stdoutfile, err_types):
     """ Check vasp stdout for errors """
@@ -641,7 +734,7 @@ def error_check(jobdir, stdoutfile, err_types):
         # err_objs = {'IbzkptError' : IbzkptError(), 'SubSpaceMatrixError' : SubSpaceMatrixError(), 'NbandsError' : NbandsError()}
         for s in err_types:
             if s not in err_objs.keys():
-                raise VaspError('Invalid err_type: %s'%s)
+                raise VaspError('Invalid err_type: %s' % s)
         possible = [err_objs[s] for s in err_types]
 
     # Error to check line by line, only look for first of each type
@@ -650,13 +743,13 @@ def error_check(jobdir, stdoutfile, err_types):
         for p in possible:
             if not p.__class__.__name__ in err:
                 if p.error(line=line, jobdir=jobdir):
-                    err[ p.__class__.__name__] = p
+                    err[p.__class__.__name__] = p
 
     # Error to check for once
     possible = [i_err() for i_err in _FreezeError.__subclasses__()]
     for p in possible:
         if p.error(line=None, jobdir=jobdir):
-            err[ p.__class__.__name__] = p
+            err[p.__class__.__name__] = p
 
     sout.close()
     if len(err) == 0:
@@ -664,9 +757,14 @@ def error_check(jobdir, stdoutfile, err_types):
     else:
         return err
 
+
 def error_check_neb(jobdir, stdoutfile, err_types):
     """ Check vasp stdout for errors in a neb calculation"""
-    image_folders = [str(i).zfill(2) for i in range(1, 100) if os.path.exists(os.path.join(jobdir, str(i).zfill(2)))][:-1]
+    image_folders = [
+        str(i).zfill(2) for i in range(1, 100)
+        if os.path.exists(os.path.join(jobdir,
+                                       str(i).zfill(2)))
+    ][:-1]
     err = dict()
     err_objs = {}
     for i_err in _RunError.__subclasses__():
@@ -677,7 +775,7 @@ def error_check_neb(jobdir, stdoutfile, err_types):
         # err_objs = {'IbzkptError' : IbzkptError(), 'SubSpaceMatrixError' : SubSpaceMatrixError(), 'NbandsError' : NbandsError()}
         for s in err_types:
             if s not in err_objs.keys():
-                raise VaspError('Invalid err_type: %s'%s)
+                raise VaspError('Invalid err_type: %s' % s)
         possible = [err_objs[s] for s in err_types]
 
     # Error to check line by line, only look for first of each type
@@ -707,6 +805,7 @@ def error_check_neb(jobdir, stdoutfile, err_types):
     else:
         return err
 
+
 def crash_check(jobdir, stdoutfile, crash_types):
     """ Check vasp stdout for evidence of a crash """
     err = None
@@ -726,7 +825,19 @@ def crash_check(jobdir, stdoutfile, crash_types):
     else:
         return {err.__class__.__name__: err}
 
-def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=None, command=None, ncpus=None, kpar=None, poll_check_time = 5.0, err_check_time = 60.0, err_types=None, is_neb = False):
+
+def run(jobdir=None,
+        stdout="std.out",
+        stderr="std.err",
+        npar=None,
+        ncore=None,
+        command=None,
+        ncpus=None,
+        kpar=None,
+        poll_check_time=5.0,
+        err_check_time=60.0,
+        err_types=None,
+        is_neb=False):
     """ Run vasp using subprocess.
 
         The 'command' is executed in the directory 'jobdir'.
@@ -772,7 +883,7 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
         else:
             command = "mpirun -np {NCPUS} vasp"
 
-    if re.search("\{NCPUS\}",command):
+    if re.search("\{NCPUS\}", command):
         command = command.format(NCPUS=str(ncpus))
 
     ### Expand remaining environment variables
@@ -782,10 +893,10 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
         ncore = None
 
     if npar is not None or ncore is not None:
-        io.set_incar_tag({"NPAR":npar, "NCORE":ncore}, jobdir)
+        io.set_incar_tag({"NPAR": npar, "NCORE": ncore}, jobdir)
 
     if kpar is not None:
-        io.set_incar_tag({"KPAR":kpar}, jobdir)
+        io.set_incar_tag({"KPAR": kpar}, jobdir)
 
     print("  jobdir:", jobdir)
     print("  exec:", command)
@@ -805,15 +916,17 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
     poll = p.poll()
     last_check = time.time()
     stopcar_time = None
-    while poll  is None:
+    while poll is None:
         time.sleep(poll_check_time)
 
         if time.time() - last_check > err_check_time:
             last_check = time.time()
             if is_neb:
-                err = error_check_neb(jobdir, os.path.join(jobdir, stdout), err_types)
+                err = error_check_neb(jobdir, os.path.join(jobdir, stdout),
+                                      err_types)
             else:
-                err = error_check(jobdir, os.path.join(jobdir, stdout), err_types)
+                err = error_check(jobdir, os.path.join(jobdir, stdout),
+                                  err_types)
             if err != None:
                 # FreezeErrors are fatal and usually not helped with STOPCAR
                 if "FreezeError" in err.keys():
@@ -861,16 +974,18 @@ def run(jobdir = None, stdout = "std.out", stderr = "std.err", npar=None, ncore=
     # check finished job for errors
     if err is None:
         # Crash-type errors take priority over any other error that may show up
-        if is_neb: #if its neb it checks for crashes in the first image
+        if is_neb:  #if its neb it checks for crashes in the first image
             err = crash_check(os.path.join(jobdir, "01"),
                               os.path.join(jobdir, stdout), err_types)
         else:
             err = crash_check(jobdir, os.path.join(jobdir, stdout), err_types)
         if err is None:
             if is_neb:
-                err = error_check_neb(jobdir, os.path.join(jobdir, stdout), err_types)
+                err = error_check_neb(jobdir, os.path.join(jobdir, stdout),
+                                      err_types)
             else:
-                err = error_check(jobdir, os.path.join(jobdir, stdout), err_types)
+                err = error_check(jobdir, os.path.join(jobdir, stdout),
+                                  err_types)
     if err != None:
         print("  Found errors:", end='')
         for e in err:

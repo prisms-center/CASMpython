@@ -1,5 +1,6 @@
 """ lcaoIN class and associated functions, methods, and error class """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import re
@@ -10,13 +11,14 @@ from .commands import Commands
 from ..species import species_settings
 from ..geom import Geom, Cell
 
+
 class Neb(object):  #pylint: disable=too-few-public-methods
     """ Container for Neb part of Lcao.in """
     pass
 
-class LcaoIN(object):   #pylint: disable=too-many-instance-attributes
-    """ Container object for reading, parsing, and writing lcao.in files """
 
+class LcaoIN(object):  #pylint: disable=too-many-instance-attributes
+    """ Container object for reading, parsing, and writing lcao.in files """
     def __getitem__(self, key):
         """ Giving dict-like access to props """
         if key not in ["commands", "setup", "run", "neb"]:
@@ -56,12 +58,15 @@ class LcaoIN(object):   #pylint: disable=too-many-instance-attributes
                 if line == "":
                     break
             # for line in lcao:
-                # Enter run block
+            # Enter run block
                 if re.search(r"run\s*phase", line, re.IGNORECASE):
                     self.run = Run()
                     self.run.read_stream(lcao)
 
-    def write(self, filename="lcao.in", geom_in_file=False, geom_filename="lcao.geom_in"):
+    def write(self,
+              filename="lcao.in",
+              geom_in_file=False,
+              geom_filename="lcao.geom_in"):
         """ Writes the lcaoIN object as filename """
         with open(filename, "w") as stream:
             stream.write(self.commands.construct_args())
@@ -82,7 +87,8 @@ class LcaoIN(object):   #pylint: disable=too-many-instance-attributes
             energies = []
             for indiv_spec in species.values():
                 if not indiv_spec.alias + " = " + indiv_spec.atm_location in atom_files:
-                    atom_files.append(indiv_spec.alias + " = " + indiv_spec.atm_location)
+                    atom_files.append(indiv_spec.alias + " = " +
+                                      indiv_spec.atm_location)
                     if indiv_spec.nrg is not None:
                         energies.append(indiv_spec.nrg)
             self.setup['atom file'] = atom_files[:]
@@ -95,13 +101,14 @@ class LcaoIN(object):   #pylint: disable=too-many-instance-attributes
             # Update gfixed, if now available
             site_idx = 1
             gfixed_sites = []
-            for n, occ in zip(self.setup.geom.num_atoms, self.setup.geom.type_atoms):   #pylint: disable=invalid-name
+            for n, occ in zip(self.setup.geom.num_atoms,
+                              self.setup.geom.type_atoms):  #pylint: disable=invalid-name
                 if species[occ].gfixed:
                     gfixed_sites.append([site_idx, site_idx + n - 1])
                 site_idx += n
             if gfixed_sites != [] and self.run.geometry["gfixed"] is None:
-                self.run.geometry["gfixed"] = [x[:] for x in gfixed_sites] # Ensure copy via slices
-
+                self.run.geometry["gfixed"] = [x[:] for x in gfixed_sites
+                                               ]  # Ensure copy via slices
 
         # Update charge, if now available
         if self.setup['charge'] is None:
