@@ -250,7 +250,6 @@ class Poscar:
                 basis_dict[atom] = range(start, end)
             else:
                 basis_dict[atom] += range(start, end)
-
         # print(basis_dict)
 
         orig_pos = []

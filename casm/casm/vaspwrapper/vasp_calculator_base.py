@@ -764,7 +764,6 @@ class VaspCalculatorBase(object):
                     for i, v in enumerate(super_contcar.basis):
                         output["atom_vals"]["Cmagmom"]["value"][
                             unsort_dict[i]] = [noindent.NoIndent(ocar.mag[i])]
-
         return output
 
 

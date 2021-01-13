@@ -202,7 +202,6 @@ def write_vasp_input(dirpath,
         print("  Writing POTCAR:", os.path.join(dirpath, 'POTCAR'))
         write_potcar(os.path.join(dirpath, 'POTCAR'), super_poscar,
                      species_settings, sort)
-
     # copy extra input files
     if len(extra_input_files):
         print("  Copying extra input files", end=' ')

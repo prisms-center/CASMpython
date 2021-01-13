@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 from builtins import *
 from casm import vasp
 
+from casm import vasp
 import os, shutil, six, re, subprocess, json
 import warnings
 import casm.vasp.io
