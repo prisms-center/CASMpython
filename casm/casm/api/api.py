@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import ctypes
@@ -12,8 +13,9 @@ from sys import platform
 
 import sh
 
+
 class API(object):
-  """
+    """
   Class to provide access to the libccasm C API.
 
   Acts like a singleton by loading libcasm and libccasm into a class member the
@@ -21,8 +23,8 @@ class API(object):
 
   Each API instance uses the same shared class member to make calls.
   """
-  class __API(object):
-    """
+    class __API(object):
+        """
     Hidden class of which there will be only one instance
 
     Attributes
@@ -35,147 +37,185 @@ class API(object):
         Handle to libccasm.*
 
     """
+        def __init__(self):
+            """Loads dynamic libraries"""
+
+            try:
+                if 'LIBCASM' in os.environ:
+                    libcasm_path = os.environ['LIBCASM']
+                else:
+                    casm_path = find_executable('ccasm')
+                    if platform == 'darwin':
+                        libcasm_path = sh.grep(sh.otool('-L', casm_path),
+                                               'libcasm').split()[0]
+                        libcasm_path = libcasm_path.replace(
+                            '@loader_path', dirname(casm_path))
+                    else:
+                        libcasm_path = sh.grep(sh.ldd(casm_path),
+                                               'libcasm').split()[2]
+                libccasm_path = libcasm_path.replace('libcasm', 'libccasm')
+
+                self.lib_casm = ctypes.CDLL(libcasm_path,
+                                            mode=ctypes.RTLD_GLOBAL)
+                self.lib_ccasm = ctypes.CDLL(libccasm_path,
+                                             mode=ctypes.RTLD_GLOBAL)
+            except Exception as e:
+                print("\n~~~ Error loading casm libraries ~~~")
+                if 'LIBCASM' in os.environ:
+                    libcasm_path = os.environ['LIBCASM']
+                    print("Looking for libcasm at LIBCASM:", libcasm_path)
+                    if not os.path.exists(libcasm_path):
+                        print("File does not exist")
+                        print(
+                            "Install CASM if it is not installed, or update your PATH, or set LIBCASM to the location of libcasm."
+                        )
+                    else:
+                        print(
+                            "File exists, but for unknown reason could not be loaded."
+                        )
+                else:
+                    casm_path = find_executable('ccasm')
+                    print("find_executable('ccasm'):", casm_path)
+                    if casm_path is None:
+                        print(
+                            "Could not find 'ccasm' executable. CASM is not installed on your PATH."
+                        )
+                        print(
+                            "Install CASM if it is not installed, or update your PATH, or set LIBCASM to the location of libcasm."
+                        )
+                    elif basename(dirname(casm_path)) == ".libs":
+                        print(
+                            "Found 'ccasm' executable in a '.libs' directory. Are you running tests?"
+                        )
+                        if platform == 'darwin':
+                            check = join(dirname(casm_path), "libcasm.dylib")
+                        else:
+                            check = join(dirname(casm_path), "libcasm.so")
+                        if os.path.exists(check):
+                            print("You probably need to set LIBCASM=" + check)
+                        else:
+                            print(
+                                "You probably need to re-make or update your PATH"
+                            )
+                    else:
+                        print(
+                            "Found 'ccasm', but for unknown reason could not determine libcasm location."
+                        )
+                        if platform == 'darwin':
+                            print("otool -L:")
+                            res = sh.otool('-L', casm_path)
+                            for val in res:
+                                print(val.strip())
+                        else:
+                            print("ldd:")
+                            res = sh.ldd(casm_path)
+                            for val in res:
+                                print(val.strip())
+                print("")
+                raise e
+
+            #### Argument types
+
+            self.lib_ccasm.casm_STDOUT.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_STDERR.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_nullstream.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_ostringstream_new.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_ostringstream_delete.argtypes = [
+                ctypes.c_void_p
+            ]
+            self.lib_ccasm.casm_ostringstream_delete.restype = None
+
+            self.lib_ccasm.casm_ostringstream_size.argtypes = [ctypes.c_void_p]
+            self.lib_ccasm.casm_ostringstream_size.restype = ctypes.c_ulong
+
+            self.lib_ccasm.casm_ostringstream_strcpy.argtypes = [
+                ctypes.c_void_p,
+                ctypes.POINTER(ctypes.c_char)
+            ]
+            self.lib_ccasm.casm_ostringstream_strcpy.restype = ctypes.POINTER(
+                ctypes.c_char)
+
+            self.lib_ccasm.casm_primclex_null.argtypes = None
+            self.lib_ccasm.casm_primclex_null.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_primclex_new.argtypes = [
+                ctypes.c_char_p, ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_void_p
+            ]
+            self.lib_ccasm.casm_primclex_new.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_primclex_delete.argtypes = [ctypes.c_void_p]
+            self.lib_ccasm.casm_primclex_delete.restype = None
+
+            self.lib_ccasm.casm_primclex_refresh.argtypes = [
+                ctypes.c_void_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool,
+                ctypes.c_bool, ctypes.c_bool
+            ]
+            self.lib_ccasm.casm_primclex_refresh.restype = None
+
+            self.lib_ccasm.casm_primclex_set_logging.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_void_p
+            ]
+            self.lib_ccasm.casm_primclex_set_logging.restype = None
+
+            self.lib_ccasm.casm_command_list.argtypes = [ctypes.c_void_p]
+            self.lib_ccasm.casm_command_list.restype = None
+
+            self.lib_ccasm.casm_capi.argtypes = [
+                ctypes.c_char_p, ctypes.c_void_p, ctypes.c_char_p,
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p
+            ]
+            self.lib_ccasm.casm_capi.restype = ctypes.c_int
+
+            self.lib_ccasm.casm_capi_call.argtypes = [
+                ctypes.c_char_p, ctypes.c_void_p
+            ]
+            self.lib_ccasm.casm_capi_call.restype = ctypes.c_int
+
+    __api = None
+
     def __init__(self):
-      """Loads dynamic libraries"""
-
-      try:
-          if 'LIBCASM' in os.environ:
-              libcasm_path = os.environ['LIBCASM']
-          else:
-              casm_path = find_executable('ccasm')
-              if platform == 'darwin':
-                  libcasm_path = sh.grep(sh.otool('-L', casm_path), 'libcasm').split()[0]
-                  libcasm_path = libcasm_path.replace('@loader_path', dirname(casm_path))
-              else:
-                  libcasm_path = sh.grep(sh.ldd(casm_path), 'libcasm').split()[2]
-          libccasm_path = libcasm_path.replace('libcasm', 'libccasm')
-
-          self.lib_casm = ctypes.CDLL(libcasm_path, mode=ctypes.RTLD_GLOBAL)
-          self.lib_ccasm = ctypes.CDLL(libccasm_path, mode=ctypes.RTLD_GLOBAL)
-      except Exception as e:
-          print("\n~~~ Error loading casm libraries ~~~")
-          if 'LIBCASM' in os.environ:
-              libcasm_path = os.environ['LIBCASM']
-              print("Looking for libcasm at LIBCASM:", libcasm_path)
-              if not os.path.exists(libcasm_path):
-                  print("File does not exist")
-                  print("Install CASM if it is not installed, or update your PATH, or set LIBCASM to the location of libcasm.")
-              else:
-                  print("File exists, but for unknown reason could not be loaded.")
-          else:
-              casm_path = find_executable('ccasm')
-              print("find_executable('ccasm'):", casm_path)
-              if casm_path is None:
-                  print("Could not find 'ccasm' executable. CASM is not installed on your PATH.")
-                  print("Install CASM if it is not installed, or update your PATH, or set LIBCASM to the location of libcasm.")
-              elif basename(dirname(casm_path)) == ".libs":
-                  print("Found 'ccasm' executable in a '.libs' directory. Are you running tests?")
-                  if platform == 'darwin':
-                      check = join(dirname(casm_path), "libcasm.dylib")
-                  else:
-                      check = join(dirname(casm_path), "libcasm.so")
-                  if os.path.exists(check):
-                      print("You probably need to set LIBCASM="+check)
-                  else:
-                      print("You probably need to re-make or update your PATH")
-              else:
-                  print("Found 'ccasm', but for unknown reason could not determine libcasm location.")
-                  if platform == 'darwin':
-                      print("otool -L:")
-                      res = sh.otool('-L', casm_path)
-                      for val in res:
-                          print(val.strip())
-                  else:
-                      print("ldd:")
-                      res = sh.ldd(casm_path)
-                      for val in res:
-                          print(val.strip())
-          print("")
-          raise e
-
-      #### Argument types
-
-      self.lib_ccasm.casm_STDOUT.restype = ctypes.c_void_p
-
-      self.lib_ccasm.casm_STDERR.restype = ctypes.c_void_p
-
-      self.lib_ccasm.casm_nullstream.restype = ctypes.c_void_p
-
-      self.lib_ccasm.casm_ostringstream_new.restype = ctypes.c_void_p
-
-      self.lib_ccasm.casm_ostringstream_delete.argtypes = [ctypes.c_void_p]
-      self.lib_ccasm.casm_ostringstream_delete.restype = None
-
-      self.lib_ccasm.casm_ostringstream_size.argtypes = [ctypes.c_void_p]
-      self.lib_ccasm.casm_ostringstream_size.restype = ctypes.c_ulong
-
-      self.lib_ccasm.casm_ostringstream_strcpy.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_char)]
-      self.lib_ccasm.casm_ostringstream_strcpy.restype = ctypes.POINTER(ctypes.c_char)
-
-
-      self.lib_ccasm.casm_primclex_null.argtypes = None
-      self.lib_ccasm.casm_primclex_null.restype = ctypes.c_void_p
-
-      self.lib_ccasm.casm_primclex_new.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
-      self.lib_ccasm.casm_primclex_new.restype = ctypes.c_void_p
-
-      self.lib_ccasm.casm_primclex_delete.argtypes = [ctypes.c_void_p]
-      self.lib_ccasm.casm_primclex_delete.restype = None
-
-      self.lib_ccasm.casm_primclex_refresh.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool]
-      self.lib_ccasm.casm_primclex_refresh.restype = None
-
-      self.lib_ccasm.casm_primclex_set_logging.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
-      self.lib_ccasm.casm_primclex_set_logging.restype = None
-
-      self.lib_ccasm.casm_command_list.argtypes = [ctypes.c_void_p]
-      self.lib_ccasm.casm_command_list.restype = None
-
-      self.lib_ccasm.casm_capi.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
-      self.lib_ccasm.casm_capi.restype = ctypes.c_int
-
-      self.lib_ccasm.casm_capi_call.argtypes = [ctypes.c_char_p, ctypes.c_void_p]
-      self.lib_ccasm.casm_capi_call.restype = ctypes.c_int
-
-  __api = None
-
-  def __init__(self):
-    """
+        """
     Acts like a singleton by loading libcasm and libccasm into a class member the
     first time (and only the first time) that a new API instance is constructed.
 
     Each API instance uses the same shared class member to make calls.
     """
-    if API.__api is None:
-      API.__api = API.__API()
-    return
+        if API.__api is None:
+            API.__api = API.__API()
+        return
 
-  def stdout(self):
-    """
+    def stdout(self):
+        """
     Get a pointer to a CASM::Log that writes to std::cout.
 
     This does not need to be deleted manually.
     """
-    return API.__api.lib_ccasm.casm_STDOUT()
+        return API.__api.lib_ccasm.casm_STDOUT()
 
-  def stderr(self):
-    """
+    def stderr(self):
+        """
     Get a pointer to a CASM::Log that writes to std::cerr
 
     This does not need to be deleted manually.
     """
-    return API.__api.lib_ccasm.casm_STDERR()
+        return API.__api.lib_ccasm.casm_STDERR()
 
-  def nullstream(self):
-    """
+    def nullstream(self):
+        """
     Get a pointer to a CASM::Log that writes to null.
 
     This does not need to be deleted manually.
     """
-    return API.__api.lib_ccasm.casm_nullstream()
+        return API.__api.lib_ccasm.casm_nullstream()
 
-  def ostringstream_new(self):
-    """
+    def ostringstream_new(self):
+        """
     Construct a CASM::OStringStreamLog that writes to std::ostringstream.
 
     Returns
@@ -184,10 +224,10 @@ class API(object):
         Used for capturing CASM output in a string.
         This ptr needs to be deleted manually by using API.ostringstream_delete(ptr)
     """
-    return API.__api.lib_ccasm.casm_ostringstream_new()
+        return API.__api.lib_ccasm.casm_ostringstream_new()
 
-  def ostringstream_to_str(self, ptr):
-    """
+    def ostringstream_to_str(self, ptr):
+        """
     Copy the value of a CASM::OStringStreamLog to a Python string.
 
     Arguments
@@ -202,12 +242,13 @@ class API(object):
         The contents of a CASM::OStringStreamLog
 
     """
-    c_str = ctypes.create_string_buffer(API.__api.lib_ccasm.casm_ostringstream_size(ptr))
-    API.__api.lib_ccasm.casm_ostringstream_strcpy(ptr, c_str)
-    return c_str.value
+        c_str = ctypes.create_string_buffer(
+            API.__api.lib_ccasm.casm_ostringstream_size(ptr))
+        API.__api.lib_ccasm.casm_ostringstream_strcpy(ptr, c_str)
+        return c_str.value
 
-  def ostringstream_delete(self, ptr):
-    """
+    def ostringstream_delete(self, ptr):
+        """
     Delete a CASM::OStringStreamLog
 
     Arguments
@@ -216,11 +257,11 @@ class API(object):
       ptr: CASM::OStringStreamLog pointer
 
     """
-    API.__api.lib_ccasm.casm_ostringstream_delete(ptr)
-    return
+        API.__api.lib_ccasm.casm_ostringstream_delete(ptr)
+        return
 
-  def primclex_null(self):
-    """
+    def primclex_null(self):
+        """
     Construct a CASM::PrimClex nullptr
 
     Returns
@@ -228,10 +269,10 @@ class API(object):
       ptr: CASM::PrimClex nullptr
 
     """
-    return API.__api.lib_ccasm.casm_primclex_null()
+        return API.__api.lib_ccasm.casm_primclex_null()
 
-  def primclex_new(self, path, log, debug_log, err_log):
-    """
+    def primclex_new(self, path, log, debug_log, err_log):
+        """
     Construct a new CASM::PrimClex
 
     Arguments
@@ -265,10 +306,17 @@ class API(object):
       ptr: CASM::PrimClex pointer
 
     """
-    return API.__api.lib_ccasm.casm_primclex_new(six.b(path), log, debug_log, err_log)
+        return API.__api.lib_ccasm.casm_primclex_new(six.b(path), log,
+                                                     debug_log, err_log)
 
-  def primclex_refresh(self, ptr, read_settings=False, read_composition=False, read_chem_ref=False, read_configs=False, clear_clex=False):
-    """
+    def primclex_refresh(self,
+                         ptr,
+                         read_settings=False,
+                         read_composition=False,
+                         read_chem_ref=False,
+                         read_configs=False,
+                         clear_clex=False):
+        """
     Call CASM::PrimClex::refresh to reload PrimClex data from settings files
 
     Arguments
@@ -298,11 +346,14 @@ class API(object):
       This does not check if what you request will cause problems.
 
     """
-    API.__api.lib_ccasm.casm_primclex_refresh(ptr, read_settings, read_composition, read_chem_ref, read_configs, clear_clex)
-    return
+        API.__api.lib_ccasm.casm_primclex_refresh(ptr, read_settings,
+                                                  read_composition,
+                                                  read_chem_ref, read_configs,
+                                                  clear_clex)
+        return
 
-  def primclex_delete(self, ptr):
-    """
+    def primclex_delete(self, ptr):
+        """
     Delete a CASM::PrimClex
 
     Arguments
@@ -311,17 +362,18 @@ class API(object):
       ptr: CASM::PrimClex pointer
 
     """
-    API.__api.lib_ccasm.casm_primclex_delete(ptr)
-    return
+        API.__api.lib_ccasm.casm_primclex_delete(ptr)
+        return
 
-  def primclex_set_logging(self, primclex, log, debug_log, err_log):
-    """
+    def primclex_set_logging(self, primclex, log, debug_log, err_log):
+        """
     Set the PrimClex Logging
     """
-    API.__api.lib_ccasm.casm_primclex_set_logging(primclex, log, debug_log, err_log)
+        API.__api.lib_ccasm.casm_primclex_set_logging(primclex, log, debug_log,
+                                                      err_log)
 
-  def command_list(self):
-    """
+    def command_list(self):
+        """
     Get list of recognized casm commands implemented at the libcasm level
 
     Returns
@@ -330,14 +382,14 @@ class API(object):
         JSON array containing the list of recognized casm commands
 
     """
-    ptr = self.ostringstream_new()
-    API.__api.lib_ccasm.casm_command_list(ptr)
-    s = self.ostringstream_to_str(ptr)
-    self.ostringstream_delete(ptr)
-    return s
+        ptr = self.ostringstream_new()
+        API.__api.lib_ccasm.casm_command_list(ptr)
+        s = self.ostringstream_to_str(ptr)
+        self.ostringstream_delete(ptr)
+        return s
 
-  def capi(self, args, primclex, root, log, debug_log, err_log):
-    """
+    def capi(self, args, primclex, root, log, debug_log, err_log):
+        """
     Make an API call
 
     Arguments
@@ -399,10 +451,12 @@ class API(object):
             Unknown attempting to overwrite another CASM project
 
     """
-    return API.__api.lib_ccasm.casm_capi(six.b(args), primclex, six.b(root), log, debug_log, err_log)
+        return API.__api.lib_ccasm.casm_capi(six.b(args), primclex,
+                                             six.b(root), log, debug_log,
+                                             err_log)
 
-  def capi_call(self, args, primclex):
-    """
+    def capi_call(self, args, primclex):
+        """
     Make an API call, using existing PrimClex's path and logging
 
     Arguments
@@ -451,7 +505,7 @@ class API(object):
             Unknown attempting to overwrite another CASM project
 
     """
-    return API.__api.lib_ccasm.casm_capi_call(six.b(args), primclex)
+        return API.__api.lib_ccasm.casm_capi_call(six.b(args), primclex)
 
 
 def command_list():
@@ -466,6 +520,7 @@ def command_list():
     """
     _api = API()
     return _api.command_list()
+
 
 def casm_command(args, root=None, combine_output=False):
     """
@@ -508,9 +563,11 @@ def casm_command(args, root=None, combine_output=False):
     else:
         ss_err = _api.stderr()
 
-    returncode = _api.capi(args, _api.primclex_null(), root, ss, ss_debug, ss_err)
+    returncode = _api.capi(args, _api.primclex_null(), root, ss, ss_debug,
+                           ss_err)
 
     return returncode
+
 
 def casm_capture(args, root=None, combine_output=False):
     """
@@ -563,7 +620,8 @@ def casm_capture(args, root=None, combine_output=False):
         ss_debug = ss
         ss_err = _api.ostringstream_new()
 
-    returncode = _api.capi(args, _api.primclex_null(), root, ss, ss_debug, ss_err)
+    returncode = _api.capi(args, _api.primclex_null(), root, ss, ss_debug,
+                           ss_err)
 
     # copy strings and delete stringstreams
     stdout = _api.ostringstream_to_str(ss)

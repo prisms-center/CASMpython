@@ -1,11 +1,13 @@
 """ Wrapper for handling seqquest/casm integration """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import json
 import six
 
 from casm.seqquest import seqquest_io
+
 
 class QuestWrapperError(Exception):
     """ Errors related to QuestWrapper """
@@ -62,19 +64,23 @@ def read_settings(filename):
 
     required = ["queue", "ppn", "atom_per_proc", "walltime"]
 
-    optional = ["account","pmem","priority","constraint","message","email","qos",
-                "ncpus","run_cmd","run_limit","nrg_convergence", "encut", "kpoints",
-                "extra_input_files", "move", "copy", "remove", "compress", "backup", "initial",
-                "final", "strict_kpoints", "err_types", "preamble", "prop", "prop_start",
-                "prop_stop", "prop_step", "tol", "tol_amount", "name", "fine_ngx",
-                "prerun", "postrun", "cont_relax"]
+    optional = [
+        "account", "pmem", "priority", "constraint", "message", "email", "qos",
+        "ncpus", "run_cmd", "run_limit", "nrg_convergence", "encut", "kpoints",
+        "extra_input_files", "move", "copy", "remove", "compress", "backup",
+        "initial", "final", "strict_kpoints", "err_types", "preamble", "prop",
+        "prop_start", "prop_stop", "prop_step", "tol", "tol_amount", "name",
+        "fine_ngx", "prerun", "postrun", "cont_relax"
+    ]
     for key in required:
         if not key in settings:
-            raise QuestWrapperError( key + "' missing from: '" + filename + "'")
+            raise QuestWrapperError(key + "' missing from: '" + filename + "'")
 
     for key in optional:
         if not key in settings:
-            if key.lower() in ["extra_input_files", "remove", "compress", "backup"]:
+            if key.lower() in [
+                    "extra_input_files", "remove", "compress", "backup"
+            ]:
                 settings[key] = []
             elif key.lower() in ["move"]:
                 settings[key] = seqquest_io.DEFAULT_QUEST_MOVE_LIST
@@ -104,7 +110,8 @@ def read_settings(filename):
     for k in settings.keys():
         if k not in required:
             if k not in optional:
-                raise QuestWrapperError("unknown key '" + k + "' found in: '" + filename + "'")
+                raise QuestWrapperError("unknown key '" + k + "' found in: '" +
+                                        filename + "'")
 
     return settings
 
@@ -112,11 +119,16 @@ def read_settings(filename):
 def write_settings(settings, filename):
     """ Write 'settings' as json file, 'filename' """
     with open(filename, 'wb') as stream:
-        stream.write(six.u(json.dumps(settings, stream, indent=4)).encode('utf-8'))
+        stream.write(
+            six.u(json.dumps(settings, stream, indent=4)).encode('utf-8'))
+
 
 def read_properties(filename):
     """ Read a properties.calc.json"""
-    required = ["atom_type", "atoms_per_type", "coord_mode", "relaxed_basis", "relaxed_energy", "relaxed_forces", "relaxed_lattice"]
+    required = [
+        "atom_type", "atoms_per_type", "coord_mode", "relaxed_basis",
+        "relaxed_energy", "relaxed_forces", "relaxed_lattice"
+    ]
     optional = ["relaxed_magmom", "relaxed_mag_basis"]
 
     with open(filename, 'rb') as myfile:
@@ -131,6 +143,7 @@ def read_properties(filename):
             properties[key] = None
 
     return properties
+
 
 def quest_input_file_names(dir, configname, clex):
     """
@@ -181,13 +194,16 @@ def quest_input_file_names(dir, configname, clex):
 
     # Verify that required input files exist
     if lcao_in is None:
-        raise seqquest.SeqQuestError("Relax.setup failed. No lcao.in file found in CASM\
+        raise seqquest.SeqQuestError(
+            "Relax.setup failed. No lcao.in file found in CASM\
                                     project.")
     if super_poscarfile is None:
-        raise seqquest.SeqQuestError("Relax.setup failed. No POS file found for this\
+        raise seqquest.SeqQuestError(
+            "Relax.setup failed. No POS file found for this\
                                     configuration.")
     if speciesfile is None:
-        raise seqquest.SeqQuestError("Relax.setup failed. No SPECIES file found in CASM\
+        raise seqquest.SeqQuestError(
+            "Relax.setup failed. No SPECIES file found in CASM\
                                     project.")
 
     return (lcao_in, super_poscarfile, speciesfile)

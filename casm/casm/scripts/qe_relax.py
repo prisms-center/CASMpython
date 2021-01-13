@@ -1,8 +1,10 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import casm.qewrapper
 import sys
+
 
 def main():
     print("Begin qe.relax")
@@ -20,6 +22,7 @@ def main():
     relaxation.submit()
 
     print("Finish qe.relax")
+
 
 if __name__ == "__main__":
     main()

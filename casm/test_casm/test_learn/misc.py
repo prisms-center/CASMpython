@@ -1,5 +1,6 @@
 """test_casm/test_learn/misc.py"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
@@ -11,6 +12,7 @@ from os.path import join
 
 import test_casm
 from test_casm.test_project import casm_project_setup
+
 
 def casm_learn_setup(self):
     """Implements common setup for casm.learn tests
@@ -36,15 +38,16 @@ class CasmLearnTestCase(unittest.TestCase):
         ZrO_dir (str): Location of a ZrO test project that contains VASP calculations.
 
     """
-
     @classmethod
     def setUpClass(cls):
         """On inherited classes, run our `setUp` method"""
         if cls is not CasmLearnTestCase and cls.setUp is not CasmLearnTestCase.setUp:
             orig_setUp = cls.setUp
+
             def setUpOverride(self, *args, **kwargs):
                 CasmLearnTestCase.setUp(self)
                 return orig_setUp(self, *args, **kwargs)
+
             cls.setUp = setUpOverride
 
     def setUp(self):

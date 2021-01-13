@@ -1,5 +1,5 @@
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os
@@ -10,15 +10,19 @@ import sys
 from casm.vasp.io import incar, kpoints, oszicar, outcar, species, poscar
 from casm.project import attribute_info
 
-VASP_INPUT_FILE_LIST = ["INCAR", "STOPCAR", "POTCAR", "KPOINTS", "POSCAR",
-                        "EXHCAR", "CHGCAR", "WAVECAR", "TMPCAR"]
+VASP_INPUT_FILE_LIST = [
+    "INCAR", "STOPCAR", "POTCAR", "KPOINTS", "POSCAR", "EXHCAR", "CHGCAR",
+    "WAVECAR", "TMPCAR"
+]
 
 DEFAULT_VASP_MOVE_LIST = ["POTCAR"]
 
 DEFAULT_VASP_COPY_LIST = ["INCAR", "KPOINTS"]
 
-DEFAULT_VASP_REMOVE_LIST = ["IBZKPT", "CHG", "CHGCAR", "WAVECAR", "TMPCAR", "EIGENVAL",
-                            "DOSCAR", "PROCAR", "PCDAT", "XDATCAR", "LOCPOT", "ELFCAR", "PROOUT"]
+DEFAULT_VASP_REMOVE_LIST = [
+    "IBZKPT", "CHG", "CHGCAR", "WAVECAR", "TMPCAR", "EIGENVAL", "DOSCAR",
+    "PROCAR", "PCDAT", "XDATCAR", "LOCPOT", "ELFCAR", "PROOUT"
+]
 
 
 class VaspIOError(Exception):
@@ -34,7 +38,8 @@ def job_complete(jobdir=None):
     if jobdir is None:
         jobdir = os.getcwd()
     outcarfile = os.path.join(jobdir, "OUTCAR")
-    if (not os.path.isfile(outcarfile)) and (not os.path.isfile(outcarfile+".gz")):
+    if (not os.path.isfile(outcarfile)) and (
+            not os.path.isfile(outcarfile + ".gz")):
         return False
     if outcar.Outcar(outcarfile).complete:
         return True
@@ -84,8 +89,8 @@ def ionic_steps(jobdir=None):
         toszicar = oszicar.Oszicar(os.path.join(jobdir, "OSZICAR"))
         return len(toszicar.E)
     except:
-        raise VaspIOError(
-            "Could not read number of ionic steps from " + os.path.join(jobdir, "OSZICAR"))
+        raise VaspIOError("Could not read number of ionic steps from " +
+                          os.path.join(jobdir, "OSZICAR"))
 
 
 def write_potcar(filename, poscar, species, sort=True):
@@ -93,7 +98,8 @@ def write_potcar(filename, poscar, species, sort=True):
     if sort == False:
         with open(filename, 'w') as file:
             for name in poscar.type_atoms:
-                with open(os.path.join(species[name].potcardir, 'POTCAR')) as potcar:
+                with open(os.path.join(species[name].potcardir,
+                                       'POTCAR')) as potcar:
                     file.write(potcar.read())
     else:
         # dict: key = alias, value = list of Sites
@@ -104,9 +110,12 @@ def write_potcar(filename, poscar, species, sort=True):
             for alias in sorted(pos.keys()):
                 # find matching IndividualSpecies with write_potcar == True
                 for name in species:
-                    if species[name].alias == alias and species[name].write_potcar:
+                    if species[name].alias == alias and species[
+                            name].write_potcar:
                         # add to POTCAR file
-                        with open(os.path.join(species[name].potcardir, 'POTCAR')) as potcar:
+                        with open(
+                                os.path.join(species[name].potcardir,
+                                             'POTCAR')) as potcar:
                             file.write(potcar.read())
                         break
 
@@ -135,7 +144,15 @@ def write_stopcar(mode='e', jobdir=None):
     stopcar_write.close()
 
 
-def write_vasp_input(dirpath, incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile, sort=True, extra_input_files=[], strict_kpoints=False):
+def write_vasp_input(dirpath,
+                     incarfile,
+                     prim_kpointsfile,
+                     prim_poscarfile,
+                     super_poscarfile,
+                     speciesfile,
+                     sort=True,
+                     extra_input_files=[],
+                     strict_kpoints=False):
     """ Write VASP input files in directory 'dirpath' """
     print("Setting up VASP input files:", dirpath)
 
@@ -164,8 +181,8 @@ def write_vasp_input(dirpath, incarfile, prim_kpointsfile, prim_poscarfile, supe
     dof_info = attribute_info.AttributeInfo(super_poscarfile)
 
     print("  Reading INCAR:", incarfile)
-    super_incar = incar.Incar(
-        incarfile, species_settings, super_poscar, sort, dof_info)
+    super_incar = incar.Incar(incarfile, species_settings, super_poscar, sort,
+                              dof_info)
 
     print("  Generating supercell KPOINTS")
     if strict_kpoints:
@@ -183,8 +200,8 @@ def write_vasp_input(dirpath, incarfile, prim_kpointsfile, prim_poscarfile, supe
     super_kpoints.write(os.path.join(dirpath, 'KPOINTS'))
     if super_poscarfile != None:
         print("  Writing POTCAR:", os.path.join(dirpath, 'POTCAR'))
-        write_potcar(os.path.join(dirpath, 'POTCAR'),
-                     super_poscar, species_settings, sort)
+        write_potcar(os.path.join(dirpath, 'POTCAR'), super_poscar,
+                     species_settings, sort)
 
     # copy extra input files
     if len(extra_input_files):

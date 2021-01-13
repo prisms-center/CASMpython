@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import os, shutil, six, re, subprocess, json
@@ -7,8 +8,9 @@ import warnings
 import casm.quantumespresso as quantumespresso
 import casm.quantumespresso.qeio as qeio
 
+
 class QEWrapperError(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
@@ -73,11 +75,14 @@ def read_settings(filename):
 
     for key in required:
         if not key in settings:
-            raise QEWrapperError( key + "' missing from: '" + filename + "'")
+            raise QEWrapperError(key + "' missing from: '" + filename + "'")
 
     for key in optional:
         if not key in settings:
-            if key.lower() in ["extra_input_files", "remove", "compress", "backup","move","copy"]:
+            if key.lower() in [
+                    "extra_input_files", "remove", "compress", "backup",
+                    "move", "copy"
+            ]:
                 settings[key] = []
             else:
                 settings[key] = None
@@ -99,7 +104,8 @@ def read_settings(filename):
     for k in settings.keys():
         if k not in required:
             if k not in optional:
-                raise QEWrapperError("unknown key '" + k + "' found in: '" + filename + "'")
+                raise QEWrapperError("unknown key '" + k + "' found in: '" +
+                                     filename + "'")
 
     return settings
 
@@ -107,22 +113,28 @@ def read_settings(filename):
 def write_settings(settings, filename):
     """ Write 'settings' as json file, 'filename' """
     with open(filename, 'wb') as file:
-        file.write(six.u(json.dumps( settings, file, indent=4)).encode('utf-8'))
+        file.write(six.u(json.dumps(settings, file, indent=4)).encode('utf-8'))
 
 
 def qe_input_file_names(dirstruc, configname, clex, infilename):
     # Find required input files in CASM project directory tree
 
-    myinfile = dirstruc.settings_path_crawl(infilename,configname, clex)
+    myinfile = dirstruc.settings_path_crawl(infilename, configname, clex)
     super_poscarfile = dirstruc.POS(configname)
     speciesfile = dirstruc.settings_path_crawl("SPECIES", configname, clex)
 
     # Verify that required input files exist
     if myinfile is None:
-        raise quantumespresso.QuantumEspressoError("qe_input_file_names failed. No file found in CASM project matching: " + infilename )
+        raise quantumespresso.QuantumEspressoError(
+            "qe_input_file_names failed. No file found in CASM project matching: "
+            + infilename)
     if super_poscarfile is None:
-        raise quantumespresso.QuantumEspressoError("qe_input_file_names failed. No POS file found for this configuration.")
+        raise quantumespresso.QuantumEspressoError(
+            "qe_input_file_names failed. No POS file found for this configuration."
+        )
     if speciesfile is None:
-        raise quantumespresso.QuantumEspressoError("qe_input_file_names failed. No SPECIES file found in CASM project.")
+        raise quantumespresso.QuantumEspressoError(
+            "qe_input_file_names failed. No SPECIES file found in CASM project."
+        )
 
     return (myinfile, super_poscarfile, speciesfile)

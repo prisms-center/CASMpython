@@ -6,14 +6,6 @@ from casm.project.query import query
 from casm.project.io import write_eci
 from casm.project.attribute_info import AttributeInfo
 __all__ = [
-    'project_path',
-    'ClexDescription',
-    'ProjectSettings',
-    'DirectoryStructure',
-    'Project',
-    'Prim',
-    'Selection',
-    'query',
-    'write_eci',
-    'AttributeInfo'
+    'project_path', 'ClexDescription', 'ProjectSettings', 'DirectoryStructure',
+    'Project', 'Prim', 'Selection', 'query', 'write_eci', 'AttributeInfo'
 ]

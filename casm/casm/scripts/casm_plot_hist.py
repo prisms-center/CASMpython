@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import casm.plotting
@@ -39,78 +40,77 @@ Input file attributes:
 """
 
 input_example = {
-  "figure_kwargs": {
-    "plot_height": 400,
-    "plot_width": 800,
-    "tools": "crosshair,pan,reset,box_zoom,wheel_zoom,save"
-  },
-  "series": [
-    {
-      "project": None,
-      "selection": "MASTER",
-      "x": "comp(a)",
-      "hist_kwargs": {
-        "bins": 10
-      }
-    }
-  ]
+    "figure_kwargs": {
+        "plot_height": 400,
+        "plot_width": 800,
+        "tools": "crosshair,pan,reset,box_zoom,wheel_zoom,save"
+    },
+    "series": [{
+        "project": None,
+        "selection": "MASTER",
+        "x": "comp(a)",
+        "hist_kwargs": {
+            "bins": 10
+        }
+    }]
 }
 
 style_example = {
-  "selected": {
-    "color": "blue", 
-  }
+    "selected": {
+        "color": "blue",
+    }
 }
 
+
 class PlotHistCommand(casm.plotting.PlotTypeCommand):
-    
     @classmethod
     def name(cls):
         return "hist"
-    
+
     @classmethod
     def short_desc(cls):
         return "Histogram plot"
-    
+
     @classmethod
     def long_desc(cls):
         return usage_desc
-    
+
     @classmethod
     def style_example(cls):
         return style_example
-    
+
     @classmethod
     def input_example(cls):
         return input_example
-    
+
     @classmethod
     def plot(cls, doc, args):
         with open(args.input, 'rb') as f:
             input = json.loads(f.read().decode('utf-8'))
-        
+
         data = casm.plotting.PlottingData()
-        figure_kwargs = input.get('figure_kwargs', casm.plotting.default_figure_kwargs)
+        figure_kwargs = input.get('figure_kwargs',
+                                  casm.plotting.default_figure_kwargs)
         fig = bokeh.plotting.Figure(**figure_kwargs)
         tap_action = casm.plotting.TapAction(data)
         renderers = []
-        
+
         for index, series in enumerate(input['series']):
-            series['self'] = casm.plotting.Histogram(data=data, index=index, **series)
-        
+            series['self'] = casm.plotting.Histogram(data=data,
+                                                     index=index,
+                                                     **series)
+
         # first query data necessary for all series
         for series in input['series']:
             series['self'].query()
-        
+
         for series in input['series']:
             series['self'].plot(fig, tap_action)
             renderers += series['self'].renderers
-        
+
         # add tools
         fig.add_tools(tap_action.tool())
         fig.add_tools(bokeh.models.BoxSelectTool(renderers=renderers))
         fig.add_tools(bokeh.models.LassoSelectTool(renderers=renderers))
-        
-        doc.add_root(fig)
 
-    
+        doc.add_root(fig)

@@ -1,5 +1,6 @@
 """Setup and helpers for Run block from lcao.in"""
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import re
@@ -8,6 +9,7 @@ from .dynamics import Dynamics
 from .geometry import Geometry
 from .runcell import Runcell
 
+
 class Run(dict):  #pylint: disable=too-many-public-methods
     """ Special structure for setup options commands in lcao.in """
     # __*_keys are tuples because ORDER IS IMPORTANT and these are
@@ -15,15 +17,9 @@ class Run(dict):  #pylint: disable=too-many-public-methods
     __start_str = "run phase data"
     __end_str = "end run phase data"
 
-    __spmeth_keys = (
-        "spmeth",
-        )
+    __spmeth_keys = ("spmeth", )
 
-    __spmeth_values = (
-        "SIMPLE",
-        "LINEAR",
-        None
-        )
+    __spmeth_values = ("SIMPLE", "LINEAR", None)
 
     __float_num_keys = (
         "temperature",
@@ -34,50 +30,34 @@ class Run(dict):  #pylint: disable=too-many-public-methods
         "cutfac",
         "spconv",
         "spblend",
-        )
+    )
 
-    __sci_num_keys = (
-        "cutgrd",
-        )
+    __sci_num_keys = ("cutgrd", )
 
     __int_num_keys = (
         "states",
         "iterations",
         "history",
         "spsteps",
-        )
+    )
 
     __bool_keys = (
         "no ges",
         "closed",
         "kclosed",
-        )
+    )
 
-    __dynamics_keys = (
-        "dynamics",
-        )
+    __dynamics_keys = ("dynamics", )
 
-    __geometry_keys = (
-        "geometry",
-        )
+    __geometry_keys = ("geometry", )
 
-    __runcell_keys = (
-        "cell",
-        )
+    __runcell_keys = ("cell", )
 
-    __bandstructure_keys = (
-        "bandstructure",
-        )
+    __bandstructure_keys = ("bandstructure", )
 
-    __all_keys = set(__spmeth_keys +
-                     __float_num_keys +
-                     __sci_num_keys +
-                     __int_num_keys +
-                     __bool_keys +
-                     __dynamics_keys +
-                     __geometry_keys +
-                     __runcell_keys +
-                     __bandstructure_keys)
+    __all_keys = set(__spmeth_keys + __float_num_keys + __sci_num_keys +
+                     __int_num_keys + __bool_keys + __dynamics_keys +
+                     __geometry_keys + __runcell_keys + __bandstructure_keys)
 
     @property
     def spmeth_keys(self):
@@ -139,20 +119,20 @@ class Run(dict):  #pylint: disable=too-many-public-methods
         """ view into protected member """
         return self.__end_str
 
-
     def __setitem__(self, key, value):  #pylint: disable=too-many-branches, too-many-statements
         """ Overriding default 'setitem' to prevent method writing after init """
         # check if we're 1. frozen, and 2. if the attr already exists
         if self.__is_frozen and not self.__contains__(key):
             raise TypeError(
-                "%r could not be added: %r is frozen to adding new keys" % (key, self))
+                "%r could not be added: %r is frozen to adding new keys" %
+                (key, self))
         else:
             if key in self.__spmeth_keys:
                 if not value in self.__spmeth_values:
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
                         % (key, self.__class__, value, self.__spmeth_values))
-                     # __bool_keys +
+                    # __bool_keys +
             elif key in self.__dynamics_keys:
                 if not isinstance(value, Dynamics) and value is not None:
                     raise TypeError(
@@ -172,7 +152,8 @@ class Run(dict):  #pylint: disable=too-many-public-methods
                 if not isinstance(value, Bandstructure) and value is not None:
                     raise TypeError(
                         "Key %r in %r object could not be set to %r: valid values are %r"
-                        % (key, self.__class__, value, "bandstructure objects"))
+                        %
+                        (key, self.__class__, value, "bandstructure objects"))
             elif key in self.__int_num_keys:
                 if not isinstance(value, int) and value is not None:
                     raise TypeError(
@@ -207,55 +188,56 @@ class Run(dict):  #pylint: disable=too-many-public-methods
 
     def read_stream(self, stream):  #pylint: disable=too-many-branches, too-many-statements
         """ Parse StringIO from lcao.in to _Setup object """
-        while True: #pylint: disable=too-many-nested-blocks
+        while True:  #pylint: disable=too-many-nested-blocks
             unparsed = True
             line = stream.readline()
             if line == "":
                 return
         # for line in stream:
-            # End of setup block
+        # End of setup block
             elif re.search(r"end\s*run", line, re.IGNORECASE):
                 break
             else:
                 for key in self.spmeth_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = stream.readline().strip()
                         unparsed = False
                 for key in self.int_num_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = int(stream.readline().strip())
                         unparsed = False
                 for key in self.float_num_keys + self.sci_num_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
-                        self[key] = float(stream.readline().strip().replace("d", "e"))
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
+                        self[key] = float(stream.readline().strip().replace(
+                            "d", "e"))
                         unparsed = False
                 for key in self.bool_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self[key] = True
                         unparsed = False
-                    elif re.search(r"^\s*~"+key, line, re.IGNORECASE):
+                    elif re.search(r"^\s*~" + key, line, re.IGNORECASE):
                         self[key] = False
                         unparsed = False
                 for key in self.geometry_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self.geometry = Geometry()
                         self.geometry.read_stream(stream)
                         self[key] = self.geometry
                         unparsed = False
                 for key in self.dynamics_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self.dynamics = Dynamics()
                         self.dynamics.read_stream(stream)
                         self[key] = self.dynamics
                         unparsed = False
                 for key in self.runcell_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self.runcell = Runcell()
                         self.runcell.read_stream(stream)
                         self[key] = self.runcell
                         unparsed = False
                 for key in self.bandstructure_keys:
-                    if re.search(r"^\s*"+key, line, re.IGNORECASE):
+                    if re.search(r"^\s*" + key, line, re.IGNORECASE):
                         self.bandstructure = Bandstructure()
                         self.bandstructure.read_stream(stream)
                         self[key] = self.bandstructure
@@ -267,12 +249,12 @@ class Run(dict):  #pylint: disable=too-many-public-methods
         # Update default values, scales, etc
         self._update_defaults()
 
-    def _update_defaults(self): #pylint: disable=no-self-use
+    def _update_defaults(self):  #pylint: disable=no-self-use
         """ Applies lcao.in defaults to settings """
         # all keywords are optional
         return
 
-    def construct_args(self):   #pylint: disable=too-many-branches, too-many-statements
+    def construct_args(self):  #pylint: disable=too-many-branches, too-many-statements
         """ Constructs and returns the setup block in a lcao.in file """
         arg_string = "run phase input data\n"
         if self['spmeth'] is not None:

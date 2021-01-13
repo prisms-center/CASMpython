@@ -1,6 +1,6 @@
 """implements the parent class for vasp calculations"""
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import json
@@ -11,11 +11,11 @@ import pandas
 import sys
 
 try:
-  from prisms_jobs import Job, JobDB, error_job, complete_job, JobsError, JobDBError, EligibilityError
+    from prisms_jobs import Job, JobDB, error_job, complete_job, JobsError, JobDBError, EligibilityError
 except ImportError:
-  # use of the pbs module is deprecated after CASM v0.2.1
-  from pbs import Job, JobDB, error_job, complete_job, JobDBError, EligibilityError
-  from pbs import PBSError as JobsError
+    # use of the pbs module is deprecated after CASM v0.2.1
+    from pbs import Job, JobDB, error_job, complete_job, JobDBError, EligibilityError
+    from pbs import PBSError as JobsError
 
 from casm.project import Project, Selection, attribute_info
 from casm.vasp.io import attribute_classes
@@ -39,7 +39,6 @@ class VaspCalculatorBase(object):
     sort : bool
 
     """
-
     def __init__(self, selection, calctype=None, auto=True, sort=True):
         """set up attributes for the base class"""
         self.selection = selection
@@ -50,7 +49,8 @@ class VaspCalculatorBase(object):
         self.casm_settings = self.selection.proj.settings
         if self.casm_settings is None:
             raise VaspWrapperError(
-                "Not in a CASM project. The file '.casm' directory was not found.")
+                "Not in a CASM project. The file '.casm' directory was not found."
+            )
 
         self.clex = self.casm_settings.default_clex
         if calctype:
@@ -62,16 +62,23 @@ class VaspCalculatorBase(object):
         self.append_selection_data()
 
     @classmethod
-    def from_configuration_dir(cls, configuration_dir, calctype, auto=True, sort=True):
+    def from_configuration_dir(cls,
+                               configuration_dir,
+                               calctype,
+                               auto=True,
+                               sort=True):
         """returns a instance of the Neb class instantited with a single configuration"""
         # change config_dir to configuration_dir all over
         proj = Project(configuration_dir)
         sel = Selection(proj, "EMPTY", "config", False)
         split_path = configuration_dir.split(os.path.sep)
         index = split_path.index("training_data")
-        name = '/'.join(split_path[index+1:])
-        sel.data = pandas.DataFrame(
-            {"name": name, "selected": 1}, index=range(1))
+        name = '/'.join(split_path[index + 1:])
+        sel.data = pandas.DataFrame({
+            "name": name,
+            "selected": 1
+        },
+                                    index=range(1))
         # try:
         #     os.mkdir(os.path.join(proj.path, ".casm/tmp"))
         # except:
@@ -133,9 +140,8 @@ class VaspCalculatorBase(object):
         incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile, extra_input_files = vaspfiles
         vasp.io.write_vasp_input(config_data["calcdir"], incarfile,
                                  prim_kpointsfile, prim_poscarfile,
-                                 super_poscarfile, speciesfile,
-                                 self.sort, extra_input_files,
-                                 settings["strict_kpoints"])
+                                 super_poscarfile, speciesfile, self.sort,
+                                 extra_input_files, settings["strict_kpoints"])
 
     def get_deformation(self, settings):
         """ Either reads or queries for deformation matrix from settings dict"""
@@ -146,28 +152,39 @@ class VaspCalculatorBase(object):
             configname = settings["initial_deformation"]["configname"]
             calctype = settings["initial_deformation"]["calctype"]
             sel_tmp = Selection(self.selection.proj, "EMPTY", "config", False)
-            sel_tmp.data = pandas.DataFrame({"configname": configname, "selected": 1},
-                                            index=range(1))
+            sel_tmp.data = pandas.DataFrame(
+                {
+                    "configname": configname,
+                    "selected": 1
+                }, index=range(1))
             try:
                 os.mkdir(os.path.join(self.selection.proj.path, ".casm/tmp"))
             except:
                 pass
-            sel_config = sel_tmp.saveas(os.path.join(self.selection.proj.path, ".casm/tmp",
-                                                     configname.replace('/', '.')), True)
+            sel_config = sel_tmp.saveas(
+                os.path.join(self.selection.proj.path, ".casm/tmp",
+                             configname.replace('/', '.')), True)
             sel_config.query(["relaxation_strain(U,0:5,{})".format(calctype)])
-            deformation = np.array([float(sel_config.data["relaxation_strain(U,{},{})".format(
-                i, calctype)].loc[0]) for i in range(6)])
-            if os.path.isfile(os.path.join(self.selection.proj.path, ".casm/tmp", configname.replace('/', '.'))):
-                os.remove(os.path.join(self.selection.proj.path,
-                                       ".casm/tmp", configname.replace('/', '.')))
+            deformation = np.array([
+                float(sel_config.data["relaxation_strain(U,{},{})".format(
+                    i, calctype)].loc[0]) for i in range(6)
+            ])
+            if os.path.isfile(
+                    os.path.join(self.selection.proj.path, ".casm/tmp",
+                                 configname.replace('/', '.'))):
+                os.remove(
+                    os.path.join(self.selection.proj.path, ".casm/tmp",
+                                 configname.replace('/', '.')))
         else:
             raise VaspWrapperError(
-                "use manual or auto mode to set initial deformation. see casm format --vasp for settings")
+                "use manual or auto mode to set initial deformation. see casm format --vasp for settings"
+            )
 
         if deformation.ndim == 1:
-            deformation = np.array([[deformation[0], deformation[5], deformation[4]],
-                                    [deformation[5], deformation[1], deformation[3]],
-                                    [deformation[4], deformation[3], deformation[2]]])
+            deformation = np.array(
+                [[deformation[0], deformation[5], deformation[4]],
+                 [deformation[5], deformation[1], deformation[3]],
+                 [deformation[4], deformation[3], deformation[2]]])
         return deformation
 
     def apply_deformation(self, deformation, calcdir):
@@ -205,32 +222,38 @@ class VaspCalculatorBase(object):
     def get_vasp_input_files(self, config_data, settings):
         # Find required input files in CASM project directory tree
         vaspfiles = vasp_input_file_names(self.casm_directories,
-                                          config_data["name"],
-                                          self.clex,
+                                          config_data["name"], self.clex,
                                           self.calc_subdir)
         incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile = vaspfiles
         # Find optional input files
         extra_input_files = []
         for s in settings["extra_input_files"]:
-            extra_input_files.append(self.casm_directories.settings_path_crawl(s, config_data["name"],
-                                                                               self.clex, self.calc_subdir))
+            extra_input_files.append(
+                self.casm_directories.settings_path_crawl(
+                    s, config_data["name"], self.clex, self.calc_subdir))
             if extra_input_files[-1] is None:
-                raise vasp.VaspError(
-                    "Neb.setup failed. Extra input file " + s + " not found in CASM project.")
+                raise vasp.VaspError("Neb.setup failed. Extra input file " +
+                                     s + " not found in CASM project.")
         if settings["initial"]:
-            extra_input_files += [self.casm_directories.settings_path_crawl(settings["initial"],
-                                                                            config_data["name"],
-                                                                            self.clex, self.calc_subdir)]
-            if extra_input_files[-1] is None:
-                raise vasp.VaspError("Neb.setup failed. No initial INCAR file " +
-                                     settings["initial"] + " found in CASM project.")
-        if settings["final"]:
-            extra_input_files += [self.casm_directories.settings_path_crawl(settings["final"],
-                                                                            config_data["name"],
-                                                                            self.clex, self.calc_subdir)]
+            extra_input_files += [
+                self.casm_directories.settings_path_crawl(
+                    settings["initial"], config_data["name"], self.clex,
+                    self.calc_subdir)
+            ]
             if extra_input_files[-1] is None:
                 raise vasp.VaspError(
-                    "Neb.setup failed. No final INCAR file " + settings["final"] + " found in CASM project.")
+                    "Neb.setup failed. No initial INCAR file " +
+                    settings["initial"] + " found in CASM project.")
+        if settings["final"]:
+            extra_input_files += [
+                self.casm_directories.settings_path_crawl(
+                    settings["final"], config_data["name"], self.clex,
+                    self.calc_subdir)
+            ]
+            if extra_input_files[-1] is None:
+                raise vasp.VaspError("Neb.setup failed. No final INCAR file " +
+                                     settings["final"] +
+                                     " found in CASM project.")
         return incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile, extra_input_files
 
     def is_converged(self, calculation):
@@ -238,33 +261,42 @@ class VaspCalculatorBase(object):
         # Verify that the last relaxation reached electronic convergence
         for i in range(len(calculation.rundir)):
             try:
-                print(calculation.rundir[-i-1])
-                vrun_oszicar = vasp.io.Oszicar(os.path.join(calculation.calcdir, calculation.rundir[-i-1],
-                                                            self.results_subdir, "OSZICAR"))
-                vrun_nelm = vasp.io.get_incar_tag("NELM", os.path.join(
-                    calculation.calcdir, calculation.rundir[-i-1]))
+                print(calculation.rundir[-i - 1])
+                vrun_oszicar = vasp.io.Oszicar(
+                    os.path.join(calculation.calcdir,
+                                 calculation.rundir[-i - 1],
+                                 self.results_subdir, "OSZICAR"))
+                vrun_nelm = vasp.io.get_incar_tag(
+                    "NELM",
+                    os.path.join(calculation.calcdir,
+                                 calculation.rundir[-i - 1]))
                 if vrun_nelm == None:
-                  vrun_nelm = 60  # pushing the default. may be write an addon to get it from outcar
+                    vrun_nelm = 60  # pushing the default. may be write an addon to get it from outcar
                 if len(vrun_oszicar.num_elm[-1]) >= vrun_nelm:
-                    print('The last relaxation run (' +
-                          os.path.basename(relaxation.rundir[-i-1]) +
-                          ') failed to achieve electronic convergence; properties.calc.json will not be written.\n')
-                    self.report_status(calculation.calcdir,
-                                       'failed', 'electronic_convergence')
+                    print(
+                        'The last relaxation run (' +
+                        os.path.basename(relaxation.rundir[-i - 1]) +
+                        ') failed to achieve electronic convergence; properties.calc.json will not be written.\n'
+                    )
+                    self.report_status(calculation.calcdir, 'failed',
+                                       'electronic_convergence')
                     return False
                 break
             except:
                 pass
 
         # Verify that the final static run reached electronic convergence
-        vrun_oszicar = vasp.io.Oszicar(os.path.join(calculation.calcdir, "run.final",
-                                                    self.results_subdir, "OSZICAR"))
+        vrun_oszicar = vasp.io.Oszicar(
+            os.path.join(calculation.calcdir, "run.final", self.results_subdir,
+                         "OSZICAR"))
         vrun_nelm = vasp.io.get_incar_tag(
             "NELM", os.path.join(calculation.calcdir, "run.final"))
         if vrun_nelm == None:
-          vrun_nelm = 60  # pushing the default. may be write an addon to get it from outcar
+            vrun_nelm = 60  # pushing the default. may be write an addon to get it from outcar
         if vrun_oszicar.num_elm[-1] >= vrun_nelm:
-            print('The final run failed to achieve electronic convergence; properties.calc.json will not be written.\n')
+            print(
+                'The final run failed to achieve electronic convergence; properties.calc.json will not be written.\n'
+            )
             self.report_status(calculation.calcdir, 'failed',
                                'electronic_convergence')
             return False
@@ -289,16 +321,16 @@ class VaspCalculatorBase(object):
                     for j in id:
                         job = db.select_job(j)
                         if job["jobstatus"] != "C":
-                            print(
-                                "JobID:", job["jobid"], "  Jobstatus:", job["jobstatus"], "  Not submitting.")
+                            print("JobID:", job["jobid"], "  Jobstatus:",
+                                  job["jobstatus"], "  Not submitting.")
                             sys.stdout.flush()
                             raise BreakException
             except BreakException:
                 continue
             settings = self.read_settings(config_data["setfile"])
             # construct the Relax object
-            calculation = self.calculator(
-                config_data["calcdir"], self.run_settings(settings))
+            calculation = self.calculator(config_data["calcdir"],
+                                          self.run_settings(settings))
             # check the current status
             (status, task) = calculation.status()
 
@@ -313,12 +345,15 @@ class VaspCalculatorBase(object):
                         if job["taskstatus"] == "Incomplete":
                             try:
                                 complete_job(jobid=j)
-                            except (JobsError, JobDBError, EligibilityError) as e:
+                            except (JobsError, JobDBError,
+                                    EligibilityError) as e:
                                 print(str(e))
                                 sys.stdout.flush()
 
                 # ensure results report written
-                if not os.path.isfile(os.path.join(config_data["calcdir"], "properties.calc.json")):
+                if not os.path.isfile(
+                        os.path.join(config_data["calcdir"],
+                                     "properties.calc.json")):
                     if (is_converged(calculation)):
                         self.finalize(config_data)
 
@@ -330,8 +365,8 @@ class VaspCalculatorBase(object):
                 continue
 
             elif status != "incomplete":
-                raise VaspWrapperError(
-                    "unexpected relaxation status: '" + status + "' and task: '" + task + "'")
+                raise VaspWrapperError("unexpected relaxation status: '" +
+                                       status + "' and task: '" + task + "'")
                 sys.stdout.flush()
                 continue
 
@@ -349,10 +384,9 @@ class VaspCalculatorBase(object):
             cmd = ""
             if settings["preamble"] is not None:
                 # Append any instructions given in the 'preamble' file, if given
-                preamble = self.casm_directories.settings_path_crawl(settings["preamble"],
-                                                                     config_data["name"],
-                                                                     self.clex,
-                                                                     self.calc_subdir)
+                preamble = self.casm_directories.settings_path_crawl(
+                    settings["preamble"], config_data["name"], self.clex,
+                    self.calc_subdir)
                 with open(preamble) as my_preamble:
                     cmd += "".join(my_preamble)
             # Or just execute a single prerun line, if given
@@ -367,7 +401,8 @@ class VaspCalculatorBase(object):
             # construct a pbs.Job
             job = pbs.Job(name=casm.jobname(config_data["configdir"]),
                           account=settings["account"],
-                          nodes=nodes, ppn=ppn,
+                          nodes=nodes,
+                          ppn=ppn,
                           walltime=settings["walltime"],
                           pmem=settings["pmem"],
                           qos=settings["qos"],
@@ -401,11 +436,13 @@ class VaspCalculatorBase(object):
         if settings["nodes"] != None and settings["ppn"] != None:
             return int(settings["nodes"]), int(settings["ppn"])
         elif settings["atom_per_proc"] != None and settings["ppn"] != None:
-            pos = vasp.io.Poscar(os.path.join(
-                config_data["calcdir"], "POSCAR"))
+            pos = vasp.io.Poscar(os.path.join(config_data["calcdir"],
+                                              "POSCAR"))
             num = len(pos.basis)
             nodes = int(
-                math.ceil(float(num)/float(settings["atom_per_proc"])/float(settings["ppn"])))
+                math.ceil(
+                    float(num) / float(settings["atom_per_proc"]) /
+                    float(settings["ppn"])))
             return nodes, int(settings["ppn"])
         elif settings["nodes_per_image"] != None and settings["ppn"] != None:
             nodes = int(config_data["n_images"]) * \
@@ -413,7 +450,8 @@ class VaspCalculatorBase(object):
             return nodes, int(settings["ppn"])
         else:
             raise VaspWrapperError(
-                "Not enough information to determine nodes and ppn information")
+                "Not enough information to determine nodes and ppn information"
+            )
 
     @staticmethod
     def run_settings(settings):
@@ -451,7 +489,8 @@ class VaspCalculatorBase(object):
             else:
                 settings["ncpus"] = None
 
-        if settings["run_limit"] is None or settings["run_limit"] == "CASM_DEFAULT":
+        if settings["run_limit"] is None or settings[
+                "run_limit"] == "CASM_DEFAULT":
             settings["run_limit"] = 10
 
         return settings
@@ -460,8 +499,8 @@ class VaspCalculatorBase(object):
         """run the job of a selection"""
         for index, config_data in self.selection.data.iterrows():
             settings = self.read_settings(config_data["setfile"])
-            calculation = self.calculator(
-                config_data["calcdir"], self.run_settings(settings))
+            calculation = self.calculator(config_data["calcdir"],
+                                          self.run_settings(settings))
 
             # check the current status
             (status, task) = calculation.status()
@@ -485,8 +524,8 @@ class VaspCalculatorBase(object):
 
             elif status == "not_converging":
                 print("Status:", status)
-                self.report_status(
-                    config_data["calcdir"], "failed", "run_limit")
+                self.report_status(config_data["calcdir"], "failed",
+                                   "run_limit")
                 print("Returning")
                 sys.stdout.flush()
                 continue
@@ -498,8 +537,8 @@ class VaspCalculatorBase(object):
 
             else:
                 self.report_status(config_data["calcdir"], "failed", "unknown")
-                raise VaspWrapperError(
-                    "unexpected relaxation status: '" + status + "' and task: '" + task + "'")
+                raise VaspWrapperError("unexpected relaxation status: '" +
+                                       status + "' and task: '" + task + "'")
             sys.stdout.flush()
 
             # once the run is done, update database records accordingly
@@ -516,15 +555,14 @@ class VaspCalculatorBase(object):
 
                 print("Not Converging!")
                 sys.stdout.flush()
-                self.report_status(
-                    config_data["calcdir"], "failed", "run_limit")
+                self.report_status(config_data["calcdir"], "failed",
+                                   "run_limit")
 
                 # print a local settings file, so that the run_limit can be extended if the
                 #   convergence problems are fixed
 
-                config_set_dir = self.casm_directories.configuration_calc_settings_dir(config_data["name"],
-                                                                                       self.clex,
-                                                                                       self.calc_subdir)
+                config_set_dir = self.casm_directories.configuration_calc_settings_dir(
+                    config_data["name"], self.clex, self.calc_subdir)
 
                 try:
                     os.makedirs(config_set_dir)
@@ -555,7 +593,8 @@ class VaspCalculatorBase(object):
             else:
                 self.report_status(config_data["calcdir"], "failed", "unknown")
                 raise VaspWrapperError(
-                    "vasp relaxation complete with unexpected status: '" + status + "' and task: '" + task + "'")
+                    "vasp relaxation complete with unexpected status: '" +
+                    status + "' and task: '" + task + "'")
             sys.stdout.flush()
 
     def report_status(self, calcdir, status, failure_type=None):
@@ -579,8 +618,11 @@ class VaspCalculatorBase(object):
 
         outputfile = os.path.join(calcdir, "status.json")
         with open(outputfile, 'w') as file:
-            file.write(json.dumps(
-                output, cls=noindent.NoIndentEncoder, indent=4, sort_keys=True))
+            file.write(
+                json.dumps(output,
+                           cls=noindent.NoIndentEncoder,
+                           indent=4,
+                           sort_keys=True))
         print("Wrote " + outputfile)
         sys.stdout.flush()
 
@@ -595,32 +637,35 @@ class VaspCalculatorBase(object):
         for index, config_data in self.selection.data.iterrows():
             try:
                 settings = self.read_settings(config_data["setfile"])
-                calculation = self.calculator(
-                    config_data["calcdir"], self.run_settings(settings))
+                calculation = self.calculator(config_data["calcdir"],
+                                              self.run_settings(settings))
                 if self.is_converged(calculation):
                     self.finalize(config_data)
             except:
-                print("Unable to report properties for directory {}.\n"
-                      "Please verify that it contains a completed VASP calculation.".format(config_data["configdir"]))
+                print(
+                    "Unable to report properties for directory {}.\n"
+                    "Please verify that it contains a completed VASP calculation."
+                    .format(config_data["configdir"]))
                 raise
 
     def finalize(self, config_data, super_poscarfile=None):
         # write properties.calc.json
         vaspdir = os.path.join(config_data["calcdir"], "run.final")
-        speciesfile = self.casm_directories.settings_path_crawl("SPECIES",
-                                                                config_data["name"],
-                                                                self.clex,
-                                                                self.calc_subdir)
+        speciesfile = self.casm_directories.settings_path_crawl(
+            "SPECIES", config_data["name"], self.clex, self.calc_subdir)
         #Making super_poscarfile a config.json file
         super_poscarfile = self.casm_directories.config_json(
             config_data["name"])
         output = self.properties(vaspdir, super_poscarfile, speciesfile)
 
-        outputfile = os.path.join(
-            config_data["calcdir"], "properties.calc.json")
+        outputfile = os.path.join(config_data["calcdir"],
+                                  "properties.calc.json")
         with open(outputfile, 'w') as file:
-            file.write(json.dumps(output, cls=noindent.NoIndentEncoder,
-                                  indent=4, sort_keys=True))
+            file.write(
+                json.dumps(output,
+                           cls=noindent.NoIndentEncoder,
+                           indent=4,
+                           sort_keys=True))
         print("Wrote " + outputfile)
         sys.stdout.flush()
         self.report_status(config_data["calcdir"], 'complete')
@@ -643,8 +688,9 @@ class VaspCalculatorBase(object):
         else:
             # fake unsort_dict (unsort_dict[i] == i)
             super_poscar = vasp.io.Poscar(os.path.join(vaspdir, "POSCAR"))
-            unsort_dict = dict(zip(range(0, len(super_poscar.basis)),
-                                   range(0, len(super_poscar.basis))))
+            unsort_dict = dict(
+                zip(range(0, len(super_poscar.basis)),
+                    range(0, len(super_poscar.basis))))
         super_contcar = vasp.io.Poscar(os.path.join(vaspdir, "CONTCAR"))
 
         # unsort_dict:
@@ -657,21 +703,22 @@ class VaspCalculatorBase(object):
         output["coord_mode"] = super_contcar.coord_mode
 
         # as lists
-        output["lattice"] = [noindent.NoIndent(
-            list(v)) for v in super_contcar.lattice()]
-        output["atom_coords"] = [
-            None for i in range(len(super_contcar.basis))]
+        output["lattice"] = [
+            noindent.NoIndent(list(v)) for v in super_contcar.lattice()
+        ]
+        output["atom_coords"] = [None for i in range(len(super_contcar.basis))]
         for i, ba in enumerate(super_contcar.basis):
-            output["atom_coords"][unsort_dict[i]
-                                  ] = noindent.NoIndent(list(ba.position))
+            output["atom_coords"][unsort_dict[i]] = noindent.NoIndent(
+                list(ba.position))
 
         output["atom_vals"] = {}
         output["atom_vals"]["forces"] = {}
         output["atom_vals"]["forces"]["value"] = [
-            None for i in range(len(ocar.forces))]
+            None for i in range(len(ocar.forces))
+        ]
         for i, force in enumerate(ocar.forces):
-            output["atom_vals"]["forces"]["value"][unsort_dict[i]
-                                                   ] = noindent.NoIndent(force)
+            output["atom_vals"]["forces"]["value"][
+                unsort_dict[i]] = noindent.NoIndent(force)
 
         output["global_vals"] = {}
         output["global_vals"]["energy"] = {}
@@ -694,11 +741,14 @@ class VaspCalculatorBase(object):
                     if ocar.lorbit in [1, 2, 11, 12]:
                         output["atom_vals"]["Cmagmom"] = {}
                         output["atom_vals"]["Cmagmom"]["value"] = [
-                            None for i in range(len(super_contcar.basis))]
+                            None for i in range(len(super_contcar.basis))
+                        ]
 
                         for i, v in enumerate(super_contcar.basis):
-                            output["atom_vals"]["Cmagmom"]["value"][unsort_dict[i]
-                                                                    ] = [noindent.NoIndent(ocar.mag[i])]
+                            output["atom_vals"]["Cmagmom"]["value"][
+                                unsort_dict[i]] = [
+                                    noindent.NoIndent(ocar.mag[i])
+                                ]
 
         #TODO: Code duplication here. If you have a magnetic calculation without dofs, you still need to write magmom values. This can be removed if you run all the magnetic calculations as Cmagspin dof calculations.
         #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
@@ -708,11 +758,12 @@ class VaspCalculatorBase(object):
                 if ocar.lorbit in [1, 2, 11, 12]:
                     output["atom_vals"]["Cmagmom"] = {}
                     output["atom_vals"]["Cmagmom"]["value"] = [
-                        None for i in range(len(super_contcar.basis))]
+                        None for i in range(len(super_contcar.basis))
+                    ]
 
                     for i, v in enumerate(super_contcar.basis):
-                        output["atom_vals"]["Cmagmom"]["value"][unsort_dict[i]] = [
-                            noindent.NoIndent(ocar.mag[i])]
+                        output["atom_vals"]["Cmagmom"]["value"][
+                            unsort_dict[i]] = [noindent.NoIndent(ocar.mag[i])]
 
         return output
 

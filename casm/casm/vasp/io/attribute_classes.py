@@ -1,7 +1,5 @@
 class DofClassError(Exception):
-
     """Exception handling"""
-
     def __init__(self, message):
         self.message = message
 
@@ -17,7 +15,6 @@ class DofClassError(Exception):
 
 
 class CmagspinAttr:
-
     """Class containing information specific to Cmagspin dof.
        This object will be constructed from casm.project.attribute_info.AttributeInfo class
        which digests its information.
@@ -27,7 +24,6 @@ class CmagspinAttr:
 
        Consider the example of NaFeO2 with Fe having a +5 magnetic moment and rest all being 0
        self.atom_props: [{"site_index":0, "atom": "Na", "value":0},{"site_index":1,"atom":"Fe", "value":5},{"site_index":2, "atom":"O","value":0},{"site_index":3, "atom":"O","value":0}]"""
-
     def __init__(self, dof_info):
         """Constructs the CmagspinAttr object from AttributeInfo object
 
@@ -37,11 +33,18 @@ class CmagspinAttr:
 
         """
         try:
-            self.atom_props = [{"site_index": x, "atom": dof_info.atom_type[x], "value": dof_info.atom_dofs["Cmagspin"]
-                                ["value"][x]} for x in range(0, len(dof_info.atom_type))]
+            self.atom_props = [{
+                "site_index":
+                x,
+                "atom":
+                dof_info.atom_type[x],
+                "value":
+                dof_info.atom_dofs["Cmagspin"]["value"][x]
+            } for x in range(0, len(dof_info.atom_type))]
         except:
             raise DofClassError(
-                "Could not construct CmagspinAttr class!! Check if you're dealing with Cmagspin dof calculations")
+                "Could not construct CmagspinAttr class!! Check if you're dealing with Cmagspin dof calculations"
+            )
 
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of VASP input tags specific to collinear magnetic spin calculations.
@@ -92,11 +95,12 @@ class CmagspinAttr:
             self.atom_props.sort(key=lambda x: x["atom"])
 
         permutation_vector_to_unsort = [
-            x["site_index"] for x in self.atom_props]
+            x["site_index"] for x in self.atom_props
+        ]
 
         output = {}
         output["Cmagspin"] = {}
-        output["Cmagspin"]["value"] = [[mag]
-                                       for site_index, mag in sorted(zip(permutation_vector_to_unsort, outcar.mag))]
+        output["Cmagspin"]["value"] = [[mag] for site_index, mag in sorted(
+            zip(permutation_vector_to_unsort, outcar.mag))]
 
         return output

@@ -3,9 +3,7 @@ import os
 
 
 class AttributeInfoError(Exception):
-
     """Exception handling"""
-
     def __init__(self, message):
         self.message = message
 
@@ -21,7 +19,6 @@ class AttributeInfoError(Exception):
 
 
 class AttributeInfo:
-
     """Contains the atom and molecule attributes' information
        self.atom_type: List[str] - Contains the atom types
        self.atom_dofs: Dict{Dict{List[float or int]}} - Contains dofs for all the atoms in the config.json
@@ -34,7 +31,6 @@ class AttributeInfo:
        self.atom_dofs: {'Cmagspin':{'value': [[0],[-1],[0],[0]]}}
        self.mol_type: [Na, Fe-, O, O]
        self.mol_dofs: {'Cmagspin': {'value': [[0],[0],[0],[0]]}}"""
-
     def __init__(self, filename):
         """Constructs the AttributeInfo object by reading the config.json file
 

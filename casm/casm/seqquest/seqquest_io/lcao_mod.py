@@ -1,5 +1,6 @@
 """ lcaoMOD class and associated functions, methods, and error class """
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 import re
@@ -8,7 +9,8 @@ from StringIO import StringIO
 
 from .lcao_in.commands import Commands
 
-class LcaoMOD(object):   #pylint: disable=too-few-public-methods
+
+class LcaoMOD(object):  #pylint: disable=too-few-public-methods
     """ Container object for reading and parsing lcao.mod files
 
         lcao.mod files provide a means of modifying a lcao.in file
@@ -18,7 +20,6 @@ class LcaoMOD(object):   #pylint: disable=too-few-public-methods
             \n end run phase data' if there are no tags to be modified),
             and care needs to be taken to not set contradictory tags (e.g.,
             if you set 'kclosed', you must unset 'closed'!)."""
-
     def __init__(self, filename="lcao.mod"):
         self.filename = filename
         self.tags = dict()
@@ -48,8 +49,6 @@ class LcaoMOD(object):   #pylint: disable=too-few-public-methods
                 if re.search(r"setup\s*data", line, re.IGNORECASE):
                     pass
 
-
-
     def _read_command(self, stream):
         """ todo """
         pass
@@ -60,13 +59,13 @@ class LcaoMOD(object):   #pylint: disable=too-few-public-methods
 
     def _read_run(self, stream):
         """ todo """
-        if False:     # Check for bandstructure block
+        if False:  # Check for bandstructure block
             self._read_bandstructure(stream)
-        elif False:       # Check for dynamics block
+        elif False:  # Check for dynamics block
             self._read_dynamics(stream)
-        elif False:     # Check for geometry block
+        elif False:  # Check for geometry block
             self._read_geometry(stream)
-        elif False:     # Check for cell block
+        elif False:  # Check for cell block
             self._read_cell(stream)
         pass
 

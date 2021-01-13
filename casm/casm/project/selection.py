@@ -1,4 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import *
 
 # conda's current version of pandas raises these warnings, but they are safe
@@ -20,6 +21,7 @@ import six
 from casm.project.project import Project
 from casm.project.query import query
 from casm.misc import compat
+
 
 class Selection(object):
     """
@@ -66,14 +68,16 @@ class Selection(object):
 
         """
         if proj == None:
-          proj = Project()
+            proj = Project()
         elif not isinstance(proj, Project):
-          raise Exception("Error constructing Selection: proj argument is not a CASM project")
+            raise Exception(
+                "Error constructing Selection: proj argument is not a CASM project"
+            )
         self.proj = proj
 
         self.path = path
         if os.path.isfile(path):
-          self.path = os.path.abspath(path)
+            self.path = os.path.abspath(path)
 
         self.type = type
         self.all = all
@@ -83,7 +87,6 @@ class Selection(object):
         # reserved for use by casm.plotting
         self.src = None
 
-
     @property
     def data(self):
         """
@@ -92,30 +95,32 @@ class Selection(object):
         If the data is modified, 'save' must be called for CASM to use the modified selection.
         """
         if self._data is None:
-          if self.path in ["MASTER", "ALL", "CALCULATED"]:
-            self._data = query(self.proj, ['name', 'selected'], self, all=self.all)
-          elif self._is_json():
-            self._data = pandas.read_json(self.path, 'r', orient='records')
-          else:
-            with open(self.path, compat.pandas_rmode()) as f:
-                if compat.peek(f) == '#':
-                    f.read(1)
-                self._data = pandas.read_csv(f, sep=compat.str(' +'), engine='python')
+            if self.path in ["MASTER", "ALL", "CALCULATED"]:
+                self._data = query(self.proj, ['name', 'selected'],
+                                   self,
+                                   all=self.all)
+            elif self._is_json():
+                self._data = pandas.read_json(self.path, 'r', orient='records')
+            else:
+                with open(self.path, compat.pandas_rmode()) as f:
+                    if compat.peek(f) == '#':
+                        f.read(1)
+                    self._data = pandas.read_csv(f,
+                                                 sep=compat.str(' +'),
+                                                 engine='python')
 
-          self._clean_data()
+            self._clean_data()
 
-          if not self.all:
-            self._data = self._data[self._data['selected']==True]
+            if not self.all:
+                self._data = self._data[self._data['selected'] == True]
 
         return self._data
-
 
     @data.setter
     def data(self, input):
         self._data = input
 
-
-    def save(self, data=None, force=False): #make it generalized ##todo
+    def save(self, data=None, force=False):  #make it generalized ##todo
         """
         Save the current selection. Also allows completely replacing the 'data'
         describing the selected configurations.
@@ -127,67 +132,72 @@ class Selection(object):
           force: Boolean, force overwrite existing files
         """
         if self.path == "MASTER":
-          
-          raise Exception("Saving the MASTER selection is under construction!")
-          
-          if data is not None:
-            self._data = data.copy()
-            self._clean_data()
 
-          if self._data is None:
-            return
+            raise Exception(
+                "Saving the MASTER selection is under construction!")
 
-          clist = self.proj.dir.config_list()
-          backup = clist + ".tmp"
-          if os.path.exists(backup):
-            raise Exception("File: " + backup + " already exists")
+            if data is not None:
+                self._data = data.copy()
+                self._clean_data()
 
-          # read
-          with open(clist, 'rb') as f:
-              j = json.loads(f.read().decode('utf-8'))
+            if self._data is None:
+                return
 
-          for sk, sv in six.iteritems(j["supercells"]):
-            for ck, cv in six.iteritems(sv):
-              sv[ck]["selected"] = False
+            clist = self.proj.dir.config_list()
+            backup = clist + ".tmp"
+            if os.path.exists(backup):
+                raise Exception("File: " + backup + " already exists")
 
-          # set selection
-          for index, row in self._data.iterrows():
-            scelname, configid = row["configname"].split('/')
-            j["supercells"][scelname][configid]["selected"] = row["selected"]
+            # read
+            with open(clist, 'rb') as f:
+                j = json.loads(f.read().decode('utf-8'))
 
-          # write
-          with open(backup, 'wb') as f:
-              f.write(six.u(json.dumps(j, indent=2)).encode('utf-8'))
-          os.rename(backup, clist)
+            for sk, sv in six.iteritems(j["supercells"]):
+                for ck, cv in six.iteritems(sv):
+                    sv[ck]["selected"] = False
 
-          # refresh proj config list
-          self.proj.refresh(read_configs=True)
+            # set selection
+            for index, row in self._data.iterrows():
+                scelname, configid = row["configname"].split('/')
+                j["supercells"][scelname][configid]["selected"] = row[
+                    "selected"]
+
+            # write
+            with open(backup, 'wb') as f:
+                f.write(six.u(json.dumps(j, indent=2)).encode('utf-8'))
+            os.rename(backup, clist)
+
+            # refresh proj config list
+            self.proj.refresh(read_configs=True)
 
         elif self.path in ["ALL", "CALCULATED"]:
-          raise Exception("Cannot save the '" + self.path + "' Selection")
+            raise Exception("Cannot save the '" + self.path + "' Selection")
 
         else:
 
-          if data is not None:
-            self._data = data.copy()
-            self._clean_data()
+            if data is not None:
+                self._data = data.copy()
+                self._clean_data()
 
-          if os.path.exists(self.path) and not force:
-            raise Exception("File: " + self.path + " already exists")
+            if os.path.exists(self.path) and not force:
+                raise Exception("File: " + self.path + " already exists")
 
-          backup = self.path + ".tmp"
-          if os.path.exists(backup):
-            raise Exception("File: " + backup + " already exists")
+            backup = self.path + ".tmp"
+            if os.path.exists(backup):
+                raise Exception("File: " + backup + " already exists")
 
-          if self._is_json():
-            self._data.to_json(backup, orient='records')
-          else:
-            self.data.loc[:,"selected"] = self.data.loc[:,"selected"].astype(np.int_)
-            with open(backup, compat.pandas_wmode()) as f:
-                f.write('# ')  # will make this optional in a future version
-                self._data.to_csv(f, sep=compat.str(' '), index=False)
-          os.rename(backup, self.path)
-
+            if self._is_json():
+                self._data.to_json(backup, orient='records')
+            else:
+                self.data.loc[:,
+                              "selected"] = self.data.loc[:,
+                                                          "selected"].astype(
+                                                              np.int_)
+                with open(backup, compat.pandas_wmode()) as f:
+                    f.write(
+                        '# ')  # will make this optional in a future version
+                    self._data.to_csv(f, sep=compat.str(' '), index=False)
+            os.rename(backup, self.path)
 
     def saveas(self, path, force=False):
         """
@@ -205,14 +215,12 @@ class Selection(object):
         sel.save(force=force)
         return sel
 
-
     def _is_json(self):
         return self.path[-5:].lower() == ".json"
 
-
     def _clean_data(self):
-        self._data.loc[:,'selected'] = self._data.loc[:,'selected'].astype(bool)
-
+        self._data.loc[:, 'selected'] = self._data.loc[:,
+                                                       'selected'].astype(bool)
 
     def query(self, columns, force=False, verbose=False):
         """
@@ -224,36 +232,37 @@ class Selection(object):
         """
 
         if force == False:
-          _col = [x for x in columns if x not in self.data.columns]
+            _col = [x for x in columns if x not in self.data.columns]
         else:
-          _col = columns
+            _col = columns
 
         if verbose:
-          print("# Query requested:", columns)
-          if force == False:
-            print("# Use existing:", [x for x in columns if x in self.data.columns])
-          else:
-            print("# Overwrite existing:", [x for x in columns if x in self.data.columns])
-          if len(_col) == 0:
-            print("# No query necessary")
-          else:
-            print("# Querying:", _col)
+            print("# Query requested:", columns)
+            if force == False:
+                print("# Use existing:",
+                      [x for x in columns if x in self.data.columns])
+            else:
+                print("# Overwrite existing:",
+                      [x for x in columns if x in self.data.columns])
+            if len(_col) == 0:
+                print("# No query necessary")
+            else:
+                print("# Querying:", _col)
 
         if len(_col) == 0:
-          return
+            return
 
         df = query(self.proj, _col, self, all=self.all)
 
         if verbose:
-          print("#   DONE\n")
+            print("#   DONE\n")
 
         msg = "querying different numbers of records: {0}, {1}".format(
-          self.data.shape, df.shape)
+            self.data.shape, df.shape)
         assert self.data.shape[0] == df.shape[0], msg
 
         for c in df.columns:
-          self.data.loc[:,c] = df.loc[:,c].values
-
+            self.data.loc[:, c] = df.loc[:, c].values
 
     def write_pos(self, all=False):
         """
@@ -269,7 +278,6 @@ class Selection(object):
         """
         self.proj.capture("query -c " + self.path + " --write-pos")
 
-
     def add_data(self, name, data=None, force=False):
         """
         Equivalent to:
@@ -280,7 +288,7 @@ class Selection(object):
             sel.data.loc[:,name] = data
         """
         if name not in self.data.columns or force == True:
-          if data is None:
-            self.query([name], force)
-          else:
-            self.data.loc[:,name] = data
+            if data is None:
+                self.query([name], force)
+            else:
+                self.data.loc[:, name] = data

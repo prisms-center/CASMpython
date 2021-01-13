@@ -15,7 +15,7 @@ import six
 #     df = pandas.read_csv(f, sep=compat.str(' +'), engine='python')
 #     print(df)
 
-# For json files: 
+# For json files:
 # with open('test.json', 'wb') as f:
 #     f.write(six.u(json.dumps(data, indent=2)).encode('utf-8'))
 #
@@ -31,6 +31,7 @@ import six
 #     data = pickle.load(f)
 #     print(data)
 
+
 def str(val):
     """Convert to text to Python2/3 native string literal type"""
     if six.PY2:
@@ -38,11 +39,13 @@ def str(val):
     else:
         return val
 
+
 def peek(f, size=1):
     pos = f.tell()
     data = f.read(size)
     f.seek(pos)
     return data
+
 
 def pandas_wmode():
     if six.PY2:
@@ -50,8 +53,10 @@ def pandas_wmode():
     else:
         return 'w'
 
+
 def pandas_rmode():
     return 'r'
+
 
 def native_io():
     """Return Python2/3 IO stream (BytesIO or StringIO)"""
@@ -59,4 +64,3 @@ def native_io():
         return io.BytesIO()
     else:
         return io.StringIO()
-
