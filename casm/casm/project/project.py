@@ -498,19 +498,19 @@ class Project(object):
     """
     def __init__(self, path=None, verbose=True):
         """
-      Construct a CASM Project representation.
+        Construct a CASM Project representation.
 
-      Arguments
-      ----------
+        Arguments
+        ----------
 
-        path: str, optional, default=None
-          Path to project root directory. Default=None uses project containing
-          current working directory
+          path: str, optional, default=None
+            Path to project root directory. Default=None uses project containing
+            current working directory
 
-        verbose: bool, optional, default=True
-          How much to print to stdout
+          verbose: bool, optional, default=True
+            How much to print to stdout
 
-      """
+        """
 
         # will hold a ctypes.c_void_p when loading CASM project into memory
         self._ptr = None
@@ -527,7 +527,10 @@ class Project(object):
 
         self.path = project_path(path)
         self.__refresh()
+
         self.verbose = verbose
+        self._streamptr = None
+        self._errstreamptr = None
 
         self.all_composition_axes = {}
         if os.path.exists(self.dir.composition_axes()):
@@ -551,38 +554,38 @@ class Project(object):
 
     def __load(self):
         """
-      Explicitly load CASM project into memory.
-      """
+        Explicitly load CASM project into memory.
+        """
         if self._ptr is None:
             self._api = API()
             if self.verbose:
-                streamptr = self._api.stdout()
+                self._streamptr = self._api.stdout()
             else:
-                streamptr = self._api.nullstream()
+                self._streamptr = self._api.nullstream()
 
             if self.verbose:
-                errstreamptr = self._api.stderr()
+                self._errstreamptr = self._api.stderr()
             else:
-                errstreamptr = self._api.nullstream()
+                self._errstreamptr = self._api.nullstream()
 
-            self._ptr = self._api.primclex_new(self.path, streamptr, streamptr,
-                                               errstreamptr)
+            self._ptr = self._api.primclex_new(self.path, self._streamptr,
+                                               self._errstreamptr)
 
     def __unload(self):
         """
-      Explicitly unload CASM project from memory.
-      """
+        Explicitly unload CASM project from memory.
+        """
         if self._ptr is not None:
             self._api.primclex_delete(self._ptr)
             self._ptr = None
 
     def __refresh(self):
         """
-      Reload self.settings and self.dir
+        Reload self.settings and self.dir
 
-      Use this after adding or modifying files in the CASM project but no
-      special call to refresh PrimClex properties is required
-      """
+        Use this after adding or modifying files in the CASM project but no
+        special call to refresh PrimClex properties is required
+        """
         self.dir = DirectoryStructure(self.path)
         self.settings = ProjectSettings(self.path)
         self._prim = None
@@ -604,70 +607,69 @@ class Project(object):
                 read_configs=False,
                 clear_clex=False):
         """
-      Refresh PrimClex properties to reflect changes to CASM project files.
-      """
+        Refresh PrimClex properties to reflect changes to CASM project files.
+        """
         if read_settings:
             self.__refresh()
         if self._ptr is not None:
-            self._api.primclex_refresh(self.data(), read_settings,
+            self._api.primclex_refresh(self.data(), self._streamptr,
+                                       self._errstreamptr, read_settings,
                                        read_composition, read_chem_ref,
                                        read_configs, clear_clex)
 
     def data(self):
         """
-      Returns a 'ctypes.c_void_p' that points to a CASM project. (PrimClex)
-      """
+        Returns a 'ctypes.c_void_p' that points to a CASM project. (PrimClex)
+        """
         self.__load()
         return self._ptr
 
     def command(self, args):
         """
-      Execute a command via the c api, writing output to stdout/stderr.
+        Execute a command via the c api, writing output to stdout/stderr.
 
-      Args:
-        args: A string containing the command to be executed. Ex: "select --set-on -o
-            /abspath/to/my_selection"
+        Args:
+          args: A string containing the command to be executed.
+            Ex: "select --set-on -o /abspath/to/my_selection"
 
-      Returns:
-        returncode: The returncode of the command via the
-            CASM C API.
+        Returns:
+          returncode: The returncode of the command via the CASM C API.
 
-      """
+        """
         # this also ensures self._api is not None
         data = self.data()
-        returncode = self._api.capi_call(args, self.data())
+
+        returncode = self._api.capi_call(args, self.data(), self.path,
+                                         self._streamptr, self._errstreamptr)
         self.__refresh()
         return returncode
 
     def capture(self, args, combine_output=False):
         """
-      Execute a command via the c api and store stdout/stderr result as str.
+        Execute a command via the c api and store stdout/stderr result as str.
 
-      Args:
-        args: A string containing the command to be executed. Ex: "select --set-on -o
-        /abspath/to/my_selection"
+        Args:
+          args: A string containing the command to be executed.
+            Ex: "select --set-on -o /abspath/to/my_selection"
 
-      Returns
-      -------
-        (stdout, stderr, returncode): The result of running the command via the
+        Returns
+        -------
+          (stdout, stderr, returncode): The result of running the command via the
             command line iterface. 'stdout' and 'stderr' are in text type ('unicode'/'str'). If
             'combine_output' is True, then returns (combined_output, returncode).
 
-      """
+        """
         # this also ensures self._api is not None
         data = self.data()
 
         # construct stringstream objects to capture stdout, debug, stderr
         ss = self._api.ostringstream_new()
         if combine_output:
-            ss_debug = ss
             ss_err = ss
         else:
-            ss_debug = self._api.ostringstream_new()
             ss_err = self._api.ostringstream_new()
 
-        self._api.primclex_set_logging(self.data(), ss, ss_debug, ss_err)
-        returncode = self._api.capi_call(args, self.data())
+        returncode = self._api.capi(args, self.data(), self.path, ss, ss_err)
 
         # copy strings and delete stringstreams
         stdout = self._api.ostringstream_to_str(ss)
@@ -680,10 +682,6 @@ class Project(object):
             self._api.ostringstream_delete(ss_err)
 
             res = (stdout.decode('utf-8'), stderr.decode('utf-8'), returncode)
-
-        # reset logging to write to stdout/stderr
-        self._api.primclex_set_logging(self.data(), self._api.stdout(),
-                                       self._api.stdout(), self._api.stderr())
 
         self.__refresh()
         return res
