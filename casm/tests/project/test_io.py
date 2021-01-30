@@ -43,7 +43,9 @@ def test_write_eci(ZrO_project_with_basis_functions):
         if i > 1:
             assert "eci" not in eci_json["orbits"][i]
 
-    # TODO:
-    # sel = casm.project.Selection(proj, path="ALL")
-    # sel.query(['clex("formation_energy")'])
-    # print(sel.data)
+    # TODO: separate test_use_eci
+    sel = casm.project.Selection(proj, path="ALL")
+    sel.query(['corr'])
+    assert sel.data.shape == (336, 76)
+    sel.query(['clex(formation_energy)'])
+    assert sel.data.shape == (336, 77)
