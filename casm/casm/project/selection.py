@@ -36,13 +36,16 @@ class Selection(object):
       path: string, optional, default="MASTER"
         path to selection file, or "MASTER" (Default="MASTER")
 
+      type: string, optional, default="config"
+        type of selected object: "config" or "scel"
+
       all: bool, optional, default=True
         if True, self.data will include all configurations, whether selected or
         not. If False, only selected configurations will be included.
 
       data: pandas.DataFrame
         A pandas.DataFrame describing the selected configurations. Has at least
-        'configname' and 'selected' (as bool) columns.
+        'configname' and 'selected' (automatically converted to bool) columns.
 
     """
     def __init__(self, proj=None, path="MASTER", type="config", all=True):
@@ -59,7 +62,7 @@ class Selection(object):
             path to selection file, or "MASTER" (Default="MASTER")
 
           type: string, optional, default="config"
-            type of configuration "config"(Default), "scel", "diff_trans" etc
+            type of selected object: "config" or "scel"
 
           all: bool, optional, default=True
             if True, self.data will include all configurations, whether selected or
@@ -97,10 +100,12 @@ class Selection(object):
         if self._data is None:
             if self.path in ["MASTER", "ALL", "CALCULATED"]:
                 self._data = query(self.proj, ['name', 'selected'],
-                                   self,
+                                   self.path,
+                                   self.type,
+                                   verbatim=True,
                                    all=self.all)
             elif self._is_json():
-                self._data = pandas.read_json(self.path, 'r', orient='records')
+                self._data = pandas.read_json(self.path, orient='records')
             else:
                 with open(self.path, compat.pandas_rmode()) as f:
                     if compat.peek(f) == '#':
@@ -121,54 +126,29 @@ class Selection(object):
         self._data = input
 
     def save(self, data=None, force=False):  #make it generalized ##todo
-        """
-        Save the current selection. Also allows completely replacing the 'data'
-        describing the selected configurations.
+        """Save the current selection.
 
-        Args:
-          data: None (default), or pandas.DataFrame describing the Selection with
-            'configname' and 'selected' columns. If path=="MASTER", Configurations
-            not included in 'data' will be set to not selected.
-          force: Boolean, force overwrite existing files
+        This method also allows completely replacing the 'data' describing the selected configurations.
+
+        Arguments
+        ---------
+        data: pandas.DataFrame
+            If provided, it replaces `self.data` before writing. It must have `"name"` and `"selected"` columns to be opened later.
+
+        force: bool
+            Force overwrite existing files
+
+        Raises
+        ------
+        Exception
+            - If attempting to overwrite an existing file and `force==False`
+            - If `self.path in ["ALL", "CALCULATED"]`
         """
         if self.path == "MASTER":
 
-            raise Exception(
-                "Saving the MASTER selection is under construction!")
-
-            if data is not None:
-                self._data = data.copy()
-                self._clean_data()
-
-            if self._data is None:
-                return
-
-            clist = self.proj.dir.config_list()
-            backup = clist + ".tmp"
-            if os.path.exists(backup):
-                raise Exception("File: " + backup + " already exists")
-
-            # read
-            with open(clist, 'rb') as f:
-                j = json.loads(f.read().decode('utf-8'))
-
-            for sk, sv in six.iteritems(j["supercells"]):
-                for ck, cv in six.iteritems(sv):
-                    sv[ck]["selected"] = False
-
-            # set selection
-            for index, row in self._data.iterrows():
-                scelname, configid = row["configname"].split('/')
-                j["supercells"][scelname][configid]["selected"] = row[
-                    "selected"]
-
-            # write
-            with open(backup, 'wb') as f:
-                f.write(six.u(json.dumps(j, indent=2)).encode('utf-8'))
-            os.rename(backup, clist)
-
-            # refresh proj config list
-            self.proj.refresh(read_configs=True)
+            self.path = self.proj.dir.master_selection(self.type)
+            self.save(data=data, force=force)
+            self.path = "MASTER"
 
         elif self.path in ["ALL", "CALCULATED"]:
             raise Exception("Cannot save the '" + self.path + "' Selection")
@@ -178,6 +158,13 @@ class Selection(object):
             if data is not None:
                 self._data = data.copy()
                 self._clean_data()
+
+            if self._data.columns[0] != "name":
+                raise Exception(
+                    "The first column in Selection.data must be 'name'")
+            if self._data.columns[1] != "selected":
+                raise Exception(
+                    "The second column in Selection.data must be 'selected'")
 
             if os.path.exists(self.path) and not force:
                 raise Exception("File: " + self.path + " already exists")
@@ -189,28 +176,31 @@ class Selection(object):
             if self._is_json():
                 self._data.to_json(backup, orient='records')
             else:
-                self.data.loc[:,
-                              "selected"] = self.data.loc[:,
-                                                          "selected"].astype(
-                                                              np.int_)
+                self.astype("selected", np.int_)
                 with open(backup, compat.pandas_wmode()) as f:
-                    f.write(
-                        '# ')  # will make this optional in a future version
+                    f.write('# ')  # TODO: make this optional
                     self._data.to_csv(f, sep=compat.str(' '), index=False)
+                self.astype("selected", bool)
             os.rename(backup, self.path)
 
-    def saveas(self, path, force=False):
+    def saveas(self, path="MASTER", force=False):
         """
         Create a new Selection from this one, save and return it
 
-        Args:
-          path: path to selection file (Default="MASTER")
-          force: Boolean, force overwrite existing files
+        Arguments
+        ---------
+        path: str
+            Path to a selection file or standard selection name.
 
-        Returns:
-          sel: the new Selection created from this one
+        force: bool
+            Force overwrite existing files
+
+        Returns
+        -------
+        sel: Selection
+            The new Selection created from this one
         """
-        sel = Selection(self.proj, path, all=self.all)
+        sel = Selection(self.proj, path, type=self.type, all=self.all)
         sel._data = self.data.copy()
         sel.save(force=force)
         return sel
@@ -218,17 +208,44 @@ class Selection(object):
     def _is_json(self):
         return self.path[-5:].lower() == ".json"
 
+    def astype(self, columnname, dtype):
+        """Convert a column to another type
+
+        Example: Convert column of int (0 / 1) to bool:
+
+            selection.astype('selected', bool)
+
+        Arguments
+        ---------
+        columns: List(str)
+            Data requested, will be added as columns in `self.data`. This corresponds to the `-k` option of `casm query`. A list of options can be obtained from `casm query --help properties`.
+
+        force: bool
+            If `force==False`, input `columns` that already exist in `self.data.columns` will be ignored and those columns will not be updated. If `force==True`, those columns will be overwritten with new data.
+
+        """
+        self._data.loc[:,
+                       columnname] = self._data.loc[:,
+                                                    columnname].astype(dtype)
+
     def _clean_data(self):
-        self._data.loc[:, 'selected'] = self._data.loc[:,
-                                                       'selected'].astype(bool)
+        self.astype('selected', bool)
 
     def query(self, columns, force=False, verbose=False):
-        """
-        Query requested columns and store them in 'data'. Will not overwrite
-        columns that already exist, unless 'force'==True.
+        """ Query requested columns and store them in 'data'.
 
-        Will query data for all configurations, whether selected or not, if
-        self.all == True.
+        Will not overwrite columns that already exist, unless 'force'==True. Will query data for all configurations, whether selected or not, if `self.all == True`.
+
+        Arguments
+        ---------
+        columns: List(str)
+            Data requested, will be added as columns in `self.data`. This corresponds to the `-k` option of `casm query`. A list of options can be obtained from `casm query --help properties`.
+
+        force: bool
+            If `force==False`, input `columns` that already exist in `self.data.columns` will be ignored and those columns will not be updated. If `force==True`, those columns will be overwritten with new data.
+
+        verbose: bool
+            How much to print to stdout.
         """
 
         if force == False:
@@ -252,7 +269,12 @@ class Selection(object):
         if len(_col) == 0:
             return
 
-        df = query(self.proj, _col, self, all=self.all)
+        df = query(self.proj,
+                   _col,
+                   self.path,
+                   self.type,
+                   verbatim=True,
+                   all=self.all)
 
         if verbose:
             print("#   DONE\n")
@@ -265,27 +287,39 @@ class Selection(object):
             self.data.loc[:, c] = df.loc[:, c].values
 
     def write_pos(self, all=False):
-        """
-        Write POS file for configurations
+        """Write POS file for selected configurations
+
+        Equivalent to `casm query -c <selection> --write-pos`. This writes a POS file for selected configurations at `<root>/training_data/<configname>/POS`.
 
         Arguments
         ---------
 
-          all: bool, optional, default=False
-            if True, will write POS file for all configurations in the selection
-            whether selected or not. If False, only write POS file for selected
-            configurations.
+        all: bool, optional, default=False
+            If True, will write POS file for all configurations in the selection whether selected or not. If False, only write POS file for selected configurations.
         """
         self.proj.capture("query -c " + self.path + " --write-pos")
 
     def add_data(self, name, data=None, force=False):
-        """
+        """Add selection data, either by query or from an existing DataFrame
+
         Equivalent to:
-        if name not in sel.data.columns or force == True:
-          if data is None:
-            sel.query([name], force)
-          else:
-            sel.data.loc[:,name] = data
+
+            if name not in sel.data.columns or force == True:
+                if data is None:
+                    sel.query([name], force)
+                else:
+                    sel.data.loc[:,name] = data
+
+        Arguments
+        ---------
+        columns: List(str)
+            The data requested. This corresponds to the `-k` option of `casm query`, or a column in `data`. A list of options can be obtained from `casm query --help properties`.
+
+        data: pandas.DataFrame
+            May be provided as a data source as an alternative to `casm query`.
+
+        force: bool
+            If True, overwrite existing data in `self.data`.
         """
         if name not in self.data.columns or force == True:
             if data is None:

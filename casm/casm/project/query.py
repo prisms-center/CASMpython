@@ -1,35 +1,52 @@
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from builtins import *
-
-# conda's current version of pandas raises these warnings, but they are safe
-# see: https://stackoverflow.com/questions/40845304
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+# # conda's current version of pandas raises these warnings, but they are safe
+# # see: https://stackoverflow.com/questions/40845304
+# import warnings
+# warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+# warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 from io import StringIO
 import pandas
-import six
 import casm
 from casm.misc import compat
 
 
-def query(proj, columns, selection=None, verbatim=True, all=False):
-    """Return a pandas DataFrame object containing the output of a
-     'casm query' command.
+def query(proj,
+          columns,
+          selection_path,
+          selection_type,
+          verbatim=True,
+          all=False):
+    """Return a pandas.DataFrame with `casm query` output
 
-     Args:
-       proj: Project to query (default is CASM project containing the current working directory)
-       columns: iterable of strings corresponding to 'casm query -k' args
-       selection: a Selection to query (default is "MASTER" selection)
-       verbatim: if True, use 'casm query --verbatim' option (default is True)
-       all: if True, use 'casm query --all' option (default is False)
+    Arguments
+    ---------
+    proj: casm.project.Project
+        The project to query
 
-     Returns:
-       data: a pandas DataFrame containing the query results
-  """
-    args = _query_args(proj, columns, selection, verbatim, all, api=True)
+    columns: iterable of str
+        Corresponds to `casm query -k` arguments listing the values to be queried. Use `casm query --help properties` and `casm query --help operators` to list options.
+
+    selection_path: str
+        The `-c,--selection` option, a path to a selection file, or a standard selection name ("MASTER", "ALL", "CALCULATED", "NONE")
+
+    selection_type: str
+        The `-t,--type` option, indicates the type of object being selected. Expected to be one of:
+
+            "config": to select configurations
+            "scel": to select supercells
+
+    verbatim: bool
+        If True, use `-v,--verbatim` option to exclude 'name' and 'selected' columns from the query output.
+
+    all: bool
+        If True, use `-a,--all` to include unselected objects in the output
+
+    Returns
+    -------
+    data: pandas.DataFrame
+        A DataFrame containing the query results. Note that no columns are loaded as bool dtype.
+    """
+    args = query_args(columns, selection_path, selection_type, verbatim, all)
 
     stdout, stderr, returncode = proj.capture(args)
 
@@ -50,39 +67,50 @@ def query(proj, columns, selection=None, verbatim=True, all=False):
         raise
 
 
-def _query_args(proj,
-                columns,
-                selection=None,
-                verbatim=True,
-                all=False,
-                api=False):
-    """
-  Args:
-       columns: iterable of strings corresponding to 'casm query -k' args
-       selection: a Selection to query (default is "MASTER" selection)
-       verbatim: if True, use 'casm query --verbatim' option (default is True)
-       all: if True, use 'casm query --all' option (default is False)
-       api: if True, args string as if for query_via_api, else as if for query_via_cli
-  """
-    if selection == None:
-        selection = casm.project.Selection(proj)
-    elif not isinstance(selection, casm.project.Selection):
-        raise Exception(
-            "Error, argument 'selection' must be None or a Selection")
+def query_args(columns,
+               selection_path,
+               selection_type,
+               verbatim=True,
+               all=False):
+    """Constructs a string appropriate for use by `casm query`
 
+    Arguments
+    ---------
+    columns: iterable of str
+        Corresponds to `casm query -k` arguments listing the values to be queried. Use `casm query --help properties` and `casm query --help operators` to list options.
+
+    selection_path: str
+        The `-c,--selection` option, a path to a selection file, or a standard selection name ("MASTER", "ALL", "CALCULATED", "NONE")
+
+    selection_type: str
+        The `-t,--type` option, indicates the type of object being selected. Expected to be one of:
+
+            "config": to select configurations
+            "scel": to select supercells
+
+    verbatim: bool
+        If True, use `-v,--verbatim` option to exclude 'name' and 'selected' columns from the query output.
+
+    all: bool
+        If True, use `-a,--all` to include unselected objects in the output
+
+    Returns
+    -------
+    args: str
+        A string appropriate for use by `casm query`. The `-o STDOUT` option is always included. Example:
+
+            "query -k 'comp_n scel_size' -c MASTER -t config -v -o STDOUT"
+    """
     args = "query -k "
-    if api:
-        args += "'"
+    args += "'"
     for k in columns:
         args += k + " "
-    if api:
-        args += "'"
-    if selection.path != "MASTER":
-        args += " -c " + selection.path
-    args += " -t " + selection.type
+    args += "'"
+    args += " -c " + selection_path
+    args += " -t " + selection_type
     if verbatim == True:
         args += " -v"
-    if all and (selection.path not in ["CALCULATED", "ALL"]):
+    if all:
         args += " -a"
     args += " -o STDOUT"
     return args

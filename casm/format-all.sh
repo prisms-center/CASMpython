@@ -1,12 +1,6 @@
-git_root()
-{
-    git rev-parse --show-toplevel
-}
-
 find_py_source_files()
 {
-    cd $(git_root)
-    for d in ./casm/; do
+    for d in .; do
         find $d -type f -name "*.py"
     done
 }
