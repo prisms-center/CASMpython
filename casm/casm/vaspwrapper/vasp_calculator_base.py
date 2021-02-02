@@ -137,10 +137,10 @@ class VaspCalculatorBase(object):
         """
         settings = self.read_settings(config_data["setfile"])
         vaspfiles = self.get_vasp_input_files(config_data, settings)
-        incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile, extra_input_files = vaspfiles
+        incarfile, ref_kpointsfile, ref_structurefile, structurefile, speciesfile, extra_input_files = vaspfiles
         vasp.io.write_vasp_input(config_data["calcdir"], incarfile,
-                                 prim_kpointsfile, prim_poscarfile,
-                                 super_poscarfile, speciesfile, self.sort,
+                                 ref_kpointsfile, ref_structurefile,
+                                 structurefile, speciesfile, self.sort,
                                  extra_input_files, settings["strict_kpoints"])
 
     def get_deformation(self, settings):
@@ -224,7 +224,7 @@ class VaspCalculatorBase(object):
         vaspfiles = vasp_input_file_names(self.casm_directories,
                                           config_data["name"], self.clex,
                                           self.calc_subdir)
-        incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile = vaspfiles
+        incarfile, ref_kpointsfile, ref_structurefile, structurefile, speciesfile = vaspfiles
         # Find optional input files
         extra_input_files = []
         for s in settings["extra_input_files"]:
@@ -254,7 +254,7 @@ class VaspCalculatorBase(object):
                 raise vasp.VaspError("Neb.setup failed. No final INCAR file " +
                                      settings["final"] +
                                      " found in CASM project.")
-        return incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile, speciesfile, extra_input_files
+        return incarfile, ref_kpointsfile, ref_structurefile, structurefile, speciesfile, extra_input_files
 
     def is_converged(self, calculation):
         # Check for electronic convergence in completed calculations. Returns True or False.
@@ -648,15 +648,15 @@ class VaspCalculatorBase(object):
                     .format(config_data["configdir"]))
                 raise
 
-    def finalize(self, config_data, super_poscarfile=None):
+    def finalize(self, config_data, structurefile=None):
         # write properties.calc.json
         vaspdir = os.path.join(config_data["calcdir"], "run.final")
         speciesfile = self.casm_directories.settings_path_crawl(
             "SPECIES", config_data["name"], self.clex, self.calc_subdir)
-        #Making super_poscarfile a config.json file
-        super_poscarfile = self.casm_directories.config_json(
+        #Making structurefile from a structure.json file
+        structurefile = self.casm_directories.structure_json(
             config_data["name"])
-        output = self.properties(vaspdir, super_poscarfile, speciesfile)
+        output = self.properties(vaspdir, structurefile, speciesfile)
 
         outputfile = os.path.join(config_data["calcdir"],
                                   "properties.calc.json")
@@ -671,9 +671,9 @@ class VaspCalculatorBase(object):
         self.report_status(config_data["calcdir"], 'complete')
 
     @staticmethod
-    def properties(vaspdir, super_poscarfile=None, speciesfile=None):
+    def properties(vaspdir, initial_structurefile=None, speciesfile=None):
         """ return a dict of output form a vasp directory"""
-        dof_info = attribute_info.AttributeInfo(super_poscarfile)
+        dof_info = attribute_info.AttributeInfo(initial_structurefile)
         output = dict()
         # load the OSZICAR and OUTCAR
         zcar = vasp.io.Oszicar(os.path.join(vaspdir, "OSZICAR"))
@@ -681,33 +681,34 @@ class VaspCalculatorBase(object):
 
         # the calculation is run on the 'sorted' POSCAR, need to report results 'unsorted'
 
-        if (super_poscarfile is not None) and (speciesfile is not None):
+        if (initial_structurefile is not None) and (speciesfile is not None):
             species_settings = vasp.io.species_settings(speciesfile)
-            super_poscar = vasp.io.Poscar(super_poscarfile, species_settings)
-            unsort_dict = super_poscar.unsort_dict()
+            initial_structure = vasp.io.Poscar(initial_structurefile,
+                                               species_settings)
+            unsort_dict = initial_structure.unsort_dict()
         else:
             # fake unsort_dict (unsort_dict[i] == i)
-            super_poscar = vasp.io.Poscar(os.path.join(vaspdir, "POSCAR"))
+            initial_structure = vasp.io.Poscar(os.path.join(vaspdir, "POSCAR"))
             unsort_dict = dict(
-                zip(range(0, len(super_poscar.basis)),
-                    range(0, len(super_poscar.basis))))
-        super_contcar = vasp.io.Poscar(os.path.join(vaspdir, "CONTCAR"))
+                zip(range(0, len(structure.basis)),
+                    range(0, len(structure.basis))))
+        contcar = vasp.io.Poscar(os.path.join(vaspdir, "CONTCAR"))
 
         # unsort_dict:
         #   Returns 'unsort_dict', for which: unsorted_dict[orig_index] == sorted_index;
         #   unsorted_dict[sorted_index] == orig_index
         #   For example:
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
-        output["atom_type"] = super_poscar.atom_type
-        #output["atoms_per_type"] = super_poscar.num_atoms
-        output["coord_mode"] = super_contcar.coord_mode
+        output["atom_type"] = initial_structure.atom_type
+        #output["atoms_per_type"] = initial_structure.num_atoms
+        output["coord_mode"] = contcar.coord_mode
 
         # as lists
         output["lattice"] = [
-            noindent.NoIndent(list(v)) for v in super_contcar.lattice()
+            noindent.NoIndent(list(v)) for v in contcar.lattice()
         ]
-        output["atom_coords"] = [None for i in range(len(super_contcar.basis))]
-        for i, ba in enumerate(super_contcar.basis):
+        output["atom_coords"] = [None for i in range(len(contcar.basis))]
+        for i, ba in enumerate(contcar.basis):
             output["atom_coords"][unsort_dict[i]] = noindent.NoIndent(
                 list(ba.position))
 
@@ -741,10 +742,10 @@ class VaspCalculatorBase(object):
                     if ocar.lorbit in [1, 2, 11, 12]:
                         output["atom_dofs"]["Cmagmom"] = {}
                         output["atom_dofs"]["Cmagmom"]["value"] = [
-                            None for i in range(len(super_contcar.basis))
+                            None for i in range(len(contcar.basis))
                         ]
 
-                        for i, v in enumerate(super_contcar.basis):
+                        for i, v in enumerate(contcar.basis):
                             output["atom_dofs"]["Cmagmom"]["value"][
                                 unsort_dict[i]] = [
                                     noindent.NoIndent(ocar.mag[i])
@@ -758,10 +759,10 @@ class VaspCalculatorBase(object):
                 if ocar.lorbit in [1, 2, 11, 12]:
                     output["atom_dofs"]["Cmagmom"] = {}
                     output["atom_dofs"]["Cmagmom"]["value"] = [
-                        None for i in range(len(super_contcar.basis))
+                        None for i in range(len(contcar.basis))
                     ]
 
-                    for i, v in enumerate(super_contcar.basis):
+                    for i, v in enumerate(contcar.basis):
                         output["atom_dofs"]["Cmagmom"]["value"][
                             unsort_dict[i]] = [noindent.NoIndent(ocar.mag[i])]
         return output

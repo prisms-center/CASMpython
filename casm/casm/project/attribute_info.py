@@ -21,7 +21,7 @@ class AttributeInfoError(Exception):
 class AttributeInfo:
     """Contains the atom and molecule attributes' information
        self.atom_type: List[str] - Contains the atom types
-       self.atom_dofs: Dict{Dict{List[float or int]}} - Contains dofs for all the atoms in the config.json
+       self.atom_dofs: Dict{Dict{List[float or int]}} - Contains dofs for all the atoms in the structure.json
        self.mol_type: List[str] - Contains the molecule types
        self.mol_dofs: Dict{Dict{List[float or int]}} - Contains dofs for the molecules
        Look the example below for clarity regarding object properties
@@ -32,33 +32,29 @@ class AttributeInfo:
        self.mol_type: [Na, Fe-, O, O]
        self.mol_dofs: {'Cmagspin': {'value': [[0],[0],[0],[0]]}}"""
     def __init__(self, filename):
-        """Constructs the AttributeInfo object by reading the config.json file
+        """Constructs the AttributeInfo object by reading the structure.json file
 
         Parameters
         ----------
-        filename : string (config.json file)
+        filename : string (structure.json file)
 
         """
         self.read(filename)
 
     def read(self, filename):
-        """Reads the attribute information from the provided config.json file name
-        and populates the AttributeInfo object
+        """Reads the attribute information from a CASM structure.json file
+
+        Will set attributes to None, with message "No dof information found in <filename>", if the file cannot be read as a CASM structure.json file.
 
         Parameters
         ----------
-        filename : string (config.json file)
+        filename : string (structure.json file)
 
         """
         try:
-            file = open(filename, 'r')
-        except IOError:
-            raise AttributeInfoError("Could not read " + filename)
+            with open(filename, 'r') as f:
+                conda_data = json.load(f)
 
-        config_data = json.load(file)
-        file.close()
-
-        try:
             self.atom_dofs = config_data["atom_dofs"]
             self.atom_type = config_data["atom_type"]
             self.mol_dofs = config_data["mol_dofs"]

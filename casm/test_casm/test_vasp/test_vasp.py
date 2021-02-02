@@ -47,14 +47,14 @@ class TestCasmVaspReadStructureFromConfigJson(CasmVaspTestCase):
         """Read test case data"""
         with open(join(self.classdir, 'test_cases.json'), 'r') as f:
             self.cases = json.load(
-                f)['vasp']['read_structure_from_config_json']
+                f)['vasp']['read_structure_from_structure_json']
 
     def test_run(self):
-        """Test read_config_json function"""
+        """Test read_structure_json function"""
         for i, case in enumerate(self.cases[1:]):
             test_poscar = Poscar(
                 join(self.classdir, 'input_data', case['input_data'],
-                     'config.json'))
+                     'structure.json'))
             self.assertTrue(test_poscar.lattice().tolist() == case['lattice'])
             self.assertTrue(test_poscar.coord_mode == 'Cartesian')
             self.assertTrue(test_poscar.scaling == 1.0)

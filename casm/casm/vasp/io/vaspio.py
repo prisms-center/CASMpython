@@ -8,7 +8,7 @@ from casm.vasp.io import poscar, kpoints, species, incar
 
 class VaspIO:
     """ Generate a set of VASP input files from settings files
-       
+
         Contains:
             self.incar: Incar object
             self.poscar: Poscar object
@@ -17,30 +17,30 @@ class VaspIO:
     """
     def __init__(self,
                  incarfile,
-                 prim_kpointsfile,
-                 prim_poscarfile,
-                 super_poscarfile,
+                 ref_kpointsfile,
+                 ref_structurefile,
+                 structurefile,
                  speciesfile,
                  sort=False):
         """ Construct a VaspIO object
-           
+
             Args:
                 incarfile:  path to INCAR file
-                prim_kpointsfile: path to primitive KPOINTS file
-                prim_poscarfile: path to primitive POSCAR file
-                super_poscarfile: path to POSCAR file for this configuration
+                ref_kpointsfile: path to a reference KPOINTS file
+                ref_structurefile: path to a reference CASM structure.json or VASP POSCAR file, used for scaling k-points
+                structurefile: path to CASM structure.json or VASP POSCAR file
+                    for the configuration
                 speciesfile: path to SPECIES file
-             
-            This functions reads the input files and generates self.kpoints appropriate for self.poscar 
-            given that 'prim_kpointsfile' is for 'prim_poscarfile'.
+
+            This functions reads the input files and generates self.kpoints appropriate for self.poscar given that 'ref_kpointsfile' is for 'ref_structurefile'.
         """
-        prim = poscar.Poscar(prim_poscarfile)
-        prim_kpoints = kpoints.Kpoints(prim_kpointsfile)
+        ref_structure = poscar.Poscar(ref_structurefile)
+        ref_kpoints = kpoints.Kpoints(ref_kpointsfile)
 
         self.species = species.species_settings(speciesfile)
-        self.poscar = poscar.Poscar(super_poscarfile, self.species)
+        self.poscar = poscar.Poscar(structurefile, self.species)
         self.incar = incar.Incar(incarfile, self.species, self.poscar, sort)
-        self.kpoints = prim_kpoints.super_kpoints(prim, self.poscar)
+        self.kpoints = ref_kpoints.super_kpoints(ref_structure, self.poscar)
 
     def write_potcar(self, filename, sort=False):
         """ Write an appropriate POTCAR """

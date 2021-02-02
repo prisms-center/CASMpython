@@ -65,11 +65,11 @@ class Poscar:
         """ Construct a Poscar object from 'filename'
 
             Args:
-                filename = POS/POSCAR file or config.json file to read
+                filename = POS/POSCAR file or structure.json file to read
                 species = (default None) If given a Species dict, it is used to set self.type_atoms_alias for determining which POTCARs to use
         """
         if os.path.splitext(filename)[1] == '.json':
-            self.read_config_json(filename, species)
+            self.read_structure_json(filename, species)
         else:
             self.read(filename, species, legacy_support)
 
@@ -113,9 +113,9 @@ class Poscar:
         if species != None:
             self.update(species)
 
-    def read_config_json(self, filename, species=None):
+    def read_structure_json(self, filename, species=None):
         """
-            Reads a structure from config.json file 'filename'
+            Reads a structure from structure.json file 'filename'
             Assumes that the basis sites are grouped by atom label
         """
         self.header = ""
@@ -152,7 +152,7 @@ class Poscar:
         if species != None:
             self.update(species)
 
-        # Storing the atom_type as listed in config.json which can be used while printing out
+        # Storing the atom_type as listed in structure.json which can be used while printing out
         self.atom_type = config_data['atom_type']
 
     def write(self, filename, sort=True):

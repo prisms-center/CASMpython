@@ -146,61 +146,72 @@ def write_stopcar(mode='e', jobdir=None):
 
 def write_vasp_input(dirpath,
                      incarfile,
-                     prim_kpointsfile,
-                     prim_poscarfile,
-                     super_poscarfile,
+                     ref_kpointsfile,
+                     ref_structurefile,
+                     structurefile,
                      speciesfile,
                      sort=True,
                      extra_input_files=[],
                      strict_kpoints=False):
-    """ Write VASP input files in directory 'dirpath' """
+    """ Write VASP input files in directory 'dirpath'
+
+    Parameters
+    ----------
+
+    ref_structurefile: str
+        Path to a CASM structure.json file or VASP POS/POSCAR file representing a reference structure used for scaling incar and k-point parameters.
+
+    structurefile: str
+        Path to a CASM structure.json file or VASP POS/POSCAR file representing the structure to be calculated.
+    """
     print("Setting up VASP input files:", dirpath)
 
-    # read prim and prim kpoints
-    print("  Reading KPOINTS:", prim_kpointsfile)
-    prim_kpoints = kpoints.Kpoints(prim_kpointsfile)
-    if prim_poscarfile != None:
-        print("  Reading KPOINTS reference POSCAR:", prim_poscarfile)
-        prim = poscar.Poscar(prim_poscarfile)
+    # read reference structure and kpoints
+    print("  Reading reference KPOINTS:", ref_kpointsfile)
+    ref_kpoints = kpoints.Kpoints(ref_kpointsfile)
+    if ref_structurefile != None:
+        print("  Reading reference POSCAR:", ref_structurefile)
+        ref_structure = poscar.Poscar(ref_structurefile)
     else:
-        prim = None
+        ref_structure = None
 
-    # read species, super poscar, incar, and generate super kpoints
+    # read species, prim structure.json/POS, and to-be-calculated
+    # structure.json/POS, and use to construct incar and kpoints for
+    # the to-be-calculated structure
     print("  Reading SPECIES:", speciesfile)
     species_settings = species.species_settings(speciesfile)
-    if super_poscarfile != None:
-        print("  Reading supercell POS:", super_poscarfile)
-        super_poscar = poscar.Poscar(super_poscarfile, species_settings)
+    if structurefile != None:
+        print("  Reading structure:", structurefile)
+        structure = poscar.Poscar(structurefile, species_settings)
     else:
-        super_poscar = None
+        structure = None
 
-    ## Reading DOF information present in the config.json file
+    ## Reading DOF information present in the structure.json file
     ## Examples include: Cmagspin, NCmagspin, SOmagspin, etc
     ## Also contains information about atom types, and mol types
-    print(" Reading DOF information from config.json: ", super_poscarfile)
-    dof_info = attribute_info.AttributeInfo(super_poscarfile)
+    print(" Reading DOF information from structure: ", structurefile)
+    dof_info = attribute_info.AttributeInfo(structurefile)
 
     print("  Reading INCAR:", incarfile)
-    super_incar = incar.Incar(incarfile, species_settings, super_poscar, sort,
-                              dof_info)
+    incar = incar.Incar(incarfile, species_settings, structure, sort, dof_info)
 
-    print("  Generating supercell KPOINTS")
+    print("  Generating KPOINTS")
     if strict_kpoints:
-        super_kpoints = prim_kpoints
+        kpoints = ref_kpoints
     else:
-        super_kpoints = prim_kpoints.super_kpoints(prim, super_poscar)
+        kpoints = ref_kpoints.super_kpoints(ref_structure, structure)
 
     # write main input files
-    if super_poscarfile != None:
-        print("  Writing supercell POSCAR:", os.path.join(dirpath, 'POSCAR'))
-        super_poscar.write(os.path.join(dirpath, 'POSCAR'), sort)
+    if structurefile != None:
+        print("  Writing POSCAR:", os.path.join(dirpath, 'POSCAR'))
+        structure.write(os.path.join(dirpath, 'POSCAR'), sort)
     print("  Writing INCAR:", os.path.join(dirpath, 'INCAR'))
-    super_incar.write(os.path.join(dirpath, 'INCAR'))
-    print("  Writing supercell KPOINTS:", os.path.join(dirpath, 'KPOINTS'))
-    super_kpoints.write(os.path.join(dirpath, 'KPOINTS'))
-    if super_poscarfile != None:
+    incar.write(os.path.join(dirpath, 'INCAR'))
+    print("  Writing KPOINTS:", os.path.join(dirpath, 'KPOINTS'))
+    kpoints.write(os.path.join(dirpath, 'KPOINTS'))
+    if structurefile != None:
         print("  Writing POTCAR:", os.path.join(dirpath, 'POTCAR'))
-        write_potcar(os.path.join(dirpath, 'POTCAR'), super_poscar,
+        write_potcar(os.path.join(dirpath, 'POTCAR'), structure,
                      species_settings, sort)
     # copy extra input files
     if len(extra_input_files):
