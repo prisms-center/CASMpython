@@ -711,41 +711,41 @@ class VaspCalculatorBase(object):
             output["atom_coords"][unsort_dict[i]] = noindent.NoIndent(
                 list(ba.position))
 
-        output["atom_vals"] = {}
-        output["atom_vals"]["forces"] = {}
-        output["atom_vals"]["forces"]["value"] = [
+        output["atom_dofs"] = {}
+        output["atom_dofs"]["forces"] = {}
+        output["atom_dofs"]["forces"]["value"] = [
             None for i in range(len(ocar.forces))
         ]
         for i, force in enumerate(ocar.forces):
-            output["atom_vals"]["forces"]["value"][
+            output["atom_dofs"]["forces"]["value"][
                 unsort_dict[i]] = noindent.NoIndent(force)
 
-        output["global_vals"] = {}
-        output["global_vals"]["energy"] = {}
-        output["global_vals"]["energy"]["value"] = zcar.E[-1]
-        output["global_vals"]["Cmagmom"] = {}
+        output["global_dofs"] = {}
+        output["global_dofs"]["energy"] = {}
+        output["global_dofs"]["energy"]["value"] = zcar.E[-1]
+        output["global_dofs"]["Cmagmom"] = {}
 
         if dof_info.atom_dofs is not None:
             if "Cmagspin" in list(dof_info.atom_dofs.keys()):
                 cmagspin_specific_output = attribute_classes.CmagspinAttr(
                     dof_info).vasp_output_dictionary(ocar)
-                output["atom_vals"].update(cmagspin_specific_output)
+                output["atom_dofs"].update(cmagspin_specific_output)
                 #TODO: Need a better way to write global magmom. I don't like what I did here
-                output["global_vals"]["Cmagmom"]["value"] = zcar.mag[-1]
+                output["global_dofs"]["Cmagmom"]["value"] = zcar.mag[-1]
 
             #TODO: When you don't have Cmagspin but have magnetic calculations. This part can be removed if you runall magnetic calculations as Cmagspin calculations.
             #TODO: Need a better way of doing this. Some code duplication here.
             else:
                 if ocar.ispin == 2:
-                    output["global_vals"]["Cmagmom"]["value"] = zcar.mag[-1]
+                    output["global_dofs"]["Cmagmom"]["value"] = zcar.mag[-1]
                     if ocar.lorbit in [1, 2, 11, 12]:
-                        output["atom_vals"]["Cmagmom"] = {}
-                        output["atom_vals"]["Cmagmom"]["value"] = [
+                        output["atom_dofs"]["Cmagmom"] = {}
+                        output["atom_dofs"]["Cmagmom"]["value"] = [
                             None for i in range(len(super_contcar.basis))
                         ]
 
                         for i, v in enumerate(super_contcar.basis):
-                            output["atom_vals"]["Cmagmom"]["value"][
+                            output["atom_dofs"]["Cmagmom"]["value"][
                                 unsort_dict[i]] = [
                                     noindent.NoIndent(ocar.mag[i])
                                 ]
@@ -754,15 +754,15 @@ class VaspCalculatorBase(object):
         #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
         else:
             if ocar.ispin == 2:
-                output["global_vals"]["Cmagmom"]["value"] = zcar.mag[-1]
+                output["global_dofs"]["Cmagmom"]["value"] = zcar.mag[-1]
                 if ocar.lorbit in [1, 2, 11, 12]:
-                    output["atom_vals"]["Cmagmom"] = {}
-                    output["atom_vals"]["Cmagmom"]["value"] = [
+                    output["atom_dofs"]["Cmagmom"] = {}
+                    output["atom_dofs"]["Cmagmom"]["value"] = [
                         None for i in range(len(super_contcar.basis))
                     ]
 
                     for i, v in enumerate(super_contcar.basis):
-                        output["atom_vals"]["Cmagmom"]["value"][
+                        output["atom_dofs"]["Cmagmom"]["value"][
                             unsort_dict[i]] = [noindent.NoIndent(ocar.mag[i])]
         return output
 
