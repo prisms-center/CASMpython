@@ -53,7 +53,7 @@ class AttributeInfo:
         """
         try:
             with open(filename, 'r') as f:
-                conda_data = json.load(f)
+                config_data = json.load(f)
 
             self.atom_dofs = config_data["atom_dofs"]
             self.atom_type = config_data["atom_type"]
