@@ -9,11 +9,9 @@ import casm.project
 def test_read_basis(ZrO_project_with_basis_functions):
     proj = ZrO_project_with_basis_functions
     basis_file = proj.dir.basis(proj.settings.default_clex)
-    #print(basis_file)
 
     with open(basis_file, 'r') as f:
         basis_json = json.load(f)
-    #print(basis_json)
 
     assert True
 
@@ -23,9 +21,6 @@ def test_write_eci(ZrO_project_with_basis_functions):
     clex = proj.settings.default_clex
     basis_file = proj.dir.basis(clex)
     eci_file = proj.dir.eci(clex)
-
-    #print(basis_file)
-    #print(eci_file)
 
     # eci list: list of (basis function index, coefficient value)
     eci = [(0, random.random()), (1, 0.)]
