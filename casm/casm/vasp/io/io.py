@@ -7,7 +7,9 @@ import re
 import shutil
 import six
 import sys
-from casm.vasp.io import incar, kpoints, oszicar, outcar, species, poscar
+from casm.vasp.io import oszicar, outcar, species, poscar
+from casm.vasp.io import kpoints as kp
+from casm.vasp.io import incar as inc
 from casm.project import attribute_info
 
 VASP_INPUT_FILE_LIST = [
@@ -50,7 +52,7 @@ def get_incar_tag(key, jobdir=None):
     """Opens INCAR in 'jobdir' and returns 'key' value."""
     if jobdir is None:
         jobdir = os.getcwd()
-    tincar = incar.Incar(os.path.join(jobdir, "INCAR"))
+    tincar = inc.Incar(os.path.join(jobdir, "INCAR"))
     for k in tincar.tags:
         if key.lower() == k.lower():
             return tincar.tags[k]
@@ -66,7 +68,7 @@ def set_incar_tag(tag_dict, jobdir=None, name=None):
     if jobdir is None:
         jobdir = os.getcwd()
     incarfile = os.path.join(jobdir, name)
-    tincar = incar.Incar(incarfile)
+    tincar = inc.Incar(incarfile)
 
     for key, val in six.iteritems(tag_dict):
         for k in tincar.tags:
@@ -168,7 +170,7 @@ def write_vasp_input(dirpath,
 
     # read reference structure and kpoints
     print("  Reading reference KPOINTS:", ref_kpointsfile)
-    ref_kpoints = kpoints.Kpoints(ref_kpointsfile)
+    ref_kpoints = kp.Kpoints(ref_kpointsfile)
     if ref_structurefile != None:
         print("  Reading reference POSCAR:", ref_structurefile)
         ref_structure = poscar.Poscar(ref_structurefile)
@@ -193,7 +195,7 @@ def write_vasp_input(dirpath,
     dof_info = attribute_info.AttributeInfo(structurefile)
 
     print("  Reading INCAR:", incarfile)
-    incar = incar.Incar(incarfile, species_settings, structure, sort, dof_info)
+    incar = inc.Incar(incarfile, species_settings, structure, sort, dof_info)
 
     print("  Generating KPOINTS")
     if strict_kpoints:
