@@ -4,31 +4,41 @@ from builtins import *
 
 import re
 from casm.wrapper.misc import remove_chars
+from casm.vasp.io import attribute_classes
 
 # List of tags in VASP sorted by the data type associated with it
-VASP_TAG_INT_LIST = ['ialgo','ibrion','icharg','images','ismear','ispin',\
-                     'istart','isym','lorbit','nbands','ndav','ngx','ngxf',\
-                     'ngy','ngyf','ngz','ngzf','npar','ncore','spind','nsw',\
-                     'isif', 'kpar', 'voskown', 'nsim', 'nedos', 'lmaxfock',\
-                     'lmaxmix', 'nkred','ivdw','nelmin', 'nelm', 'nelmdl',\
-                     'ldautype','ldauprint', 'ldauprint', 'ichain']
-VASP_TAG_FLOAT_LIST = ['ediff','ediffg','emax','emin','encut','potim','sigma',\
-                       'enmax','symprec', 'time', 'hfscreen','amix','bmix',\
-                       'amix_mag', 'bmix_mag', 'spring']
-VASP_TAG_BOOL_LIST = ['lcharg','lsorbit','lwave','lscalapack', 'lscalu',\
-                     'lplane', 'lhfcalc', 'shiftred', 'evenonly', 'oddonly',\
-                      'addgrid', 'ldau', 'lasph', 'lclimb', 'ldneb',\
-                      'lnebcell', 'ltangentold']
+VASP_TAG_INT_LIST = [
+    'ialgo', 'ibrion', 'icharg', 'images', 'ismear', 'ispin', 'istart', 'isym',
+    'lorbit', 'nbands', 'ndav', 'ngx', 'ngxf', 'ngy', 'ngyf', 'ngz', 'ngzf',
+    'npar', 'ncore', 'spind', 'nsw', 'isif', 'kpar', 'voskown', 'nsim',
+    'nedos', 'lmaxfock', 'lmaxmix', 'nkred', 'ivdw', 'nelmin', 'nelm',
+    'nelmdl', 'ldautype', 'ldauprint', 'ldauprint', 'ichain'
+]
+VASP_TAG_FLOAT_LIST = [
+    'ediff', 'ediffg', 'emax', 'emin', 'encut', 'potim', 'sigma', 'enmax',
+    'symprec', 'time', 'hfscreen', 'amix', 'bmix', 'amix_mag', 'bmix_mag',
+    'spring'
+]
+VASP_TAG_BOOL_LIST = [
+    'lcharg', 'lsorbit', 'lwave', 'lscalapack', 'lscalu', 'lplane', 'lhfcalc',
+    'shiftred', 'evenonly', 'oddonly', 'addgrid', 'ldau', 'lasph', 'lclimb',
+    'ldneb', 'lnebcell', 'ltangentold'
+]
 # Site-wise list of arrays of FLOAT
 VASP_TAG_SITEF_LIST = ['magmom', 'rwigs']
 # Species-wise list of arrays of FLOAT
 VASP_TAG_SPECF_LIST = ['ldauu', 'ldauj']
 # Site-wise list of arrays of INT
 VASP_TAG_SPECI_LIST = ['ldaul']
-VASP_TAG_STRING_LIST = ['algo', 'prec', 'system', 'precfock', 'lreal']
+
+VASP_TAG_STRING_LIST = [
+    'algo', 'prec', 'system', 'precfock', 'lreal', 'metagga'
+]
 
 # The master list of VASP tags is a union of the above -> need to allow for 'miscellaneous' ?
-VASP_TAG_LIST = VASP_TAG_INT_LIST + VASP_TAG_SITEF_LIST + VASP_TAG_SPECI_LIST + VASP_TAG_BOOL_LIST + VASP_TAG_FLOAT_LIST + VASP_TAG_STRING_LIST + VASP_TAG_SPECF_LIST
+VASP_TAG_LIST = VASP_TAG_INT_LIST + VASP_TAG_SITEF_LIST + VASP_TAG_SPECI_LIST + \
+    VASP_TAG_BOOL_LIST + VASP_TAG_FLOAT_LIST + \
+    VASP_TAG_STRING_LIST + VASP_TAG_SPECF_LIST
 
 
 class IncarError(Exception):
@@ -46,11 +56,21 @@ class Incar(object):
 
     All input tags and associated values are stored as key-value pairs in the dicionary called 'tags'.
    """
-    def __init__(self, filename, species=None, poscar=None, sort=True):
+    def __init__(self,
+                 filename,
+                 species=None,
+                 poscar=None,
+                 sort=True,
+                 dof_info=None):
         """ Construct an Incar object from 'filename'"""
-        self.read(filename, species, poscar, sort)
+        self.read(filename, species, poscar, sort, dof_info)
 
-    def read(self, filename, species=None, poscar=None, sort=True):
+    def read(self,
+             filename,
+             species=None,
+             poscar=None,
+             sort=True,
+             dof_info=None):
         """ Read an INCAR file """
         self.tags = dict()
         try:
@@ -67,7 +87,7 @@ class Incar(object):
         self._make_natural_type()
 
         if species != None:
-            self.update(species, poscar, sort)
+            self.update(species, poscar, sort, dof_info)
 
         file.close()
 
@@ -152,8 +172,17 @@ class Incar(object):
                 print(("Warning: unknown INCAR tag '" + tag +
                        "' with value '" + str(self.tags[tag]) + "'"))
 
-    def update(self, species, poscar, sort=True):
+    def update(self, species, poscar, sort=True, dof_info=None):
         """ Update Incar object to reflect Species settings """
+
+        #TODO: Need a way to deal with conflicting dof setups. There won't be an issue if user isn't stupid.
+        #TODO: Need a better update function, it's very construed and difficult to understand. Apologies!
+
+        if dof_info is not None and dof_info.atom_dofs is not None:
+            if "Cmagspin" in list(dof_info.atom_dofs.keys()):
+                vasp_input_tags_to_append = attribute_classes.CmagspinAttr(
+                    dof_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
 
         if sort == False:
             # for each 'tag' in the IndividualSpecies, create a list in self.tags

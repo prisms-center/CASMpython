@@ -18,8 +18,7 @@ from casm.vasp import Relax as calculator
 from casm import vasp, wrapper
 from casm.misc import noindent
 from casm.project import DirectoryStructure, ProjectSettings
-from casm.vaspwrapper import VaspWrapperError, read_settings, write_settings, \
-  vasp_input_file_names
+from casm.vaspwrapper import VaspWrapperError, read_settings, write_settings
 from casm.vaspwrapper.vasp_calculator_base import VaspCalculatorBase
 
 

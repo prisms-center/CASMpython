@@ -4,6 +4,8 @@ from builtins import *
 
 import numpy as np
 import math
+import os.path
+import json
 
 
 class PoscarError(Exception):
@@ -63,10 +65,13 @@ class Poscar:
         """ Construct a Poscar object from 'filename'
 
             Args:
-                filename = POS/POSCAR file to read
+                filename = POS/POSCAR file or structure.json file to read
                 species = (default None) If given a Species dict, it is used to set self.type_atoms_alias for determining which POTCARs to use
         """
-        self.read(filename, species, legacy_support)
+        if os.path.splitext(filename)[1] == '.json':
+            self.read_structure_json(filename, species)
+        else:
+            self.read(filename, species, legacy_support)
 
     def read(self, filename, species=None, legacy_support=True):
         """ Reads a POS/POSCAR from 'filename'"""
@@ -107,6 +112,48 @@ class Poscar:
         # set type alias
         if species != None:
             self.update(species)
+
+    def read_structure_json(self, filename, species=None):
+        """
+            Reads a structure from structure.json file 'filename'
+            Assumes that the basis sites are grouped by atom label
+        """
+        self.header = ""
+        try:
+            file = open(filename, 'r')
+        except IOError:
+            raise PoscarError("Could not read file: " + filename)
+        config_data = json.loads(file.read())
+        file.close()
+
+        # read lattice
+        self.scaling = 1.0
+        self._lattice = np.array(config_data['lattice'])
+        self._compute_reciprocal_lattice()
+
+        # read basis
+        self.SD_FLAG = False
+        self.coord_mode = config_data['coord_mode']
+        self.basis = []
+        cart = self.coord_mode[0].lower() == 'c'
+        self.num_atoms = []
+        self.type_atoms = []
+        for i, pos in enumerate(config_data['atom_coords']):
+            atom_name = config_data['atom_type'][i]
+            if not atom_name in self.type_atoms:
+                self.type_atoms.append(atom_name)
+                self.num_atoms.append(0)
+            self.num_atoms[-1] += 1
+            self.basis.append(
+                Site(cart, np.array(pos), '', atom_name, atom_name))
+        self.type_atoms_alias = list(self.type_atoms)
+
+        # set type alias
+        if species != None:
+            self.update(species)
+
+        # Storing the atom_type as listed in structure.json which can be used while printing out
+        self.atom_type = config_data['atom_type']
 
     def write(self, filename, sort=True):
         """ Write Poscar to 'filename'.
@@ -203,7 +250,6 @@ class Poscar:
                 basis_dict[atom] = range(start, end)
             else:
                 basis_dict[atom] += range(start, end)
-
         # print(basis_dict)
 
         orig_pos = []
@@ -215,6 +261,12 @@ class Poscar:
         new_pos = range(0, len(self.basis))
 
         return dict(zip(new_pos, orig_pos))
+
+    def _compute_reciprocal_lattice(self):
+        """ Compute the reciprocal lattice based on the current lattice and store it"""
+        self._reciprocal_lattice = 2.0*math.pi * \
+            np.linalg.inv(np.transpose(self._lattice))
+        return
 
     def _read_lattice(self, file):
         """ Called by self.read() to read the lattice into self._lattice
@@ -241,8 +293,7 @@ class Poscar:
         if self._lattice.shape != (3, 3):
             raise PoscarError("Lattice shape error: " +
                               np.array_str(self._lattice))
-        self._reciprocal_lattice = 2.0 * math.pi * np.linalg.inv(
-            np.transpose(self._lattice))
+        self._compute_reciprocal_lattice()
         self.scaling = 1.0
         return
 

@@ -63,22 +63,3 @@ def test_project_init(initialized_ZrO_project):
     assert proj.composition_axes is None
     assert isinstance(proj.all_composition_axes, dict)
     assert len(proj.all_composition_axes) == 0
-
-
-#     def test_composition_axes(self):
-#         """Test CompositionAxes"""
-#         if not self.has_projects:
-#             pytest.skip("No test projects")
-#         proj = project.Project(self.ZrO_dir, verbose=False)
-#         comp_axes = proj.composition_axes
-#         self.assertIs(proj.composition_axes, comp_axes)
-#         self.assertEqual(comp_axes.name, '0')
-#         self.assertEqual(comp_axes.components, ['Zr', 'Va', 'O'])
-#         self.assertEqual(comp_axes.n_independent_compositions, 1)
-#         self.assertEqual(comp_axes.mol_formula, 'Zr(2)Va(2-2a)O(2a)')
-#         self.assertEqual(comp_axes.param_formula, 'a(0.5-0.25Va+0.25O)')
-#         self.assertTrue(
-#             np.allclose(comp_axes.end_members['origin'],
-#                         np.array([2., 2., 0.])))
-#         self.assertTrue(
-#             np.allclose(comp_axes.end_members['a'], np.array([2., 0., 2.])))

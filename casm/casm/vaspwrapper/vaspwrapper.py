@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from builtins import *
+from casm import vasp
 
 from casm import vasp
 import os, shutil, six, re, subprocess, json
@@ -170,8 +171,8 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
         is not necessary. Found via:
           DirectoryStructure.settings_path_crawl
 
-      POS:
-        The CASM-generated POS file giving the initial structure to be calculated.
+      structurefile:
+        The CASM structure.json or VASP POSCAR file giving the initial structure to be calculated.
 
       SPECIES:
         The SPECIES file specifying Vasp settings for each species in the structure.
@@ -193,7 +194,7 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
     Returns
     -------
 
-      filepaths: tuple(INCAR, KPOINTS, KPOINTS_REF, POS, SPECIES)
+      filepaths: tuple(INCAR, KPOINTS, KPOINTS_REF, structurefile, SPECIES)
         A tuple containing the paths to the vaspwrapper input files
 
 
@@ -204,9 +205,9 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
     """
     # Find required input files in CASM project directory tree
     incarfile = dir.settings_path_crawl("INCAR", configname, clex)
-    prim_kpointsfile = dir.settings_path_crawl("KPOINTS", configname, clex)
-    prim_poscarfile = dir.settings_path_crawl("POSCAR", configname, clex)
-    super_poscarfile = dir.POS(configname, calc_subdir)
+    ref_kpointsfile = dir.settings_path_crawl("KPOINTS", configname, clex)
+    ref_structurefile = dir.settings_path_crawl("POSCAR", configname, clex)
+    structurefile = dir.structure_json(configname, calc_subdir)
     speciesfile = dir.settings_path_crawl("SPECIES", configname, clex)
 
     # Verify that required input files exist
@@ -214,24 +215,24 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
         raise vasp.VaspError(
             "vasp_input_file_names failed. No INCAR file found in CASM project."
         )
-    if prim_kpointsfile is None:
+    if ref_kpointsfile is None:
         raise vasp.VaspError(
             "vasp_input_file_names failed. No KPOINTS file found in CASM project."
         )
-    if prim_poscarfile is None:
+    if ref_structurefile is None:
         warnings.warn(
             "No reference POSCAR file found in CASM project. I hope your KPOINTS mode is A/AUTO/Automatic or this will fail!",
             vasp.VaspWarning)
-    if super_poscarfile is None and not is_neb:
+    if structurefile is None and not is_neb:
         raise vasp.VaspError(
-            "vasp_input_file_names failed. No POS file found for this configuration."
+            "vasp_input_file_names failed. No structure.json file found for this configuration."
         )
     if speciesfile is None:
         raise vasp.VaspError(
             "vasp_input_file_names failed. No SPECIES file found in CASM project."
         )
 
-    return (incarfile, prim_kpointsfile, prim_poscarfile, super_poscarfile,
+    return (incarfile, ref_kpointsfile, ref_structurefile, structurefile,
             speciesfile)
 
 

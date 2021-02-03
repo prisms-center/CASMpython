@@ -534,7 +534,7 @@ class Converge(object):
             Uses the following files from the most local .../settings/calctype.name directory:
                 INCAR: VASP input settings
                 KPOINTS: VASP kpoints settings
-                POSCAR: reference for KPOINTS if KPOINTS mode is not A/AUTO/Automatic
+                structure.json: reference for KPOINTS if KPOINTS mode is not A/AUTO/Automatic
                 SPECIES: info for each species such as which POTCAR files to use, MAGMOM, GGA+U, etc.
 
             Uses the following files from the .../config directory:
@@ -544,7 +544,7 @@ class Converge(object):
         # Find required input files in CASM project directory tree
         vaspfiles = vasp_input_file_names(self.casm_directories,
                                           self.configname, self.clex)
-        incarfile, kpointsfile, _, poscarfile, speciesfile = vaspfiles
+        incarfile, kpointsfile, _, structurefile, speciesfile = vaspfiles
 
         # Verify that required input files exist
         if incarfile is None:
@@ -554,7 +554,7 @@ class Converge(object):
             raise vasp.VaspError(
                 "Converge.setup failed. No KPOINTS file found in CASM project."
             )
-        if poscarfile is None:
+        if structurefile is None:
             raise vasp.VaspError(
                 "Converge.setup failed. No POS file found for this configuration."
             )
@@ -595,15 +595,15 @@ class Converge(object):
 
         print("Setting up VASP input files:", self.propdir)
 
-        # read prim and prim kpoints
-        print("  Reading KPOINTS:", kpointsfile)
+        # read kpoints
+        print("  Reading reference KPOINTS:", kpointsfile)
         kpoints = vasp.io.Kpoints(kpointsfile)
 
-        # read species, super poscar, incar, and generate super kpoints
+        # read species, structure, incar, and generate kpoints
         print("  Reading SPECIES:", speciesfile)
         species_settings = vasp.io.species_settings(speciesfile)
-        print("  Reading supercell POS:", poscarfile)
-        poscar = vasp.io.Poscar(poscarfile, species_settings)
+        print("  Reading POS/structure.json:", structurefile)
+        poscar = vasp.io.Poscar(structurefile, species_settings)
         print("  Reading INCAR:", incarfile)
         incar = vasp.io.Incar(incarfile, species_settings, poscar, True)
 
@@ -649,13 +649,11 @@ class Converge(object):
                 % (self.settings["prop"], VALID_PROP_TYPES))
 
         # write main input files
-        print("  Writing supercell POSCAR:",
-              os.path.join(self.propdir, 'POSCAR'))
+        print("  Writing POSCAR:", os.path.join(self.propdir, 'POSCAR'))
         poscar.write(os.path.join(self.propdir, 'POSCAR'), True)
         print("  Writing INCAR:", os.path.join(self.propdir, 'INCAR'))
         incar.write(os.path.join(self.propdir, 'INCAR'))
-        print("  Writing supercell KPOINTS:",
-              os.path.join(self.propdir, 'KPOINTS'))
+        print("  Writing KPOINTS:", os.path.join(self.propdir, 'KPOINTS'))
         kpoints.write(os.path.join(self.propdir, 'KPOINTS'))
         print("  Writing POTCAR:", os.path.join(self.propdir, 'POTCAR'))
         vasp.io.write_potcar(os.path.join(self.propdir, 'POTCAR'), poscar,
@@ -998,10 +996,10 @@ class Converge(object):
         if self.is_converged():
             # write properties.calc.json
             vaspdir = os.path.join(self.propdir, "run.final")
-            super_poscarfile = os.path.join(self.configdir, "POS")
+            structurefile = os.path.join(self.configdir, "POS")
             speciesfile = self.casm_directories.settings_path_crawl(
                 "SPECIES", self.configname, self.clex)
-            output = self.properties(vaspdir, super_poscarfile, speciesfile)
+            output = self.properties(vaspdir, structurefile, speciesfile)
             prop_file_name = "properties.calc.json"
             outputfile = os.path.join(self.propdir, prop_file_name)
             with open(outputfile, 'wb') as my_file:
@@ -1225,7 +1223,7 @@ class Converge(object):
         return self.casm_directories.configuration_dir(self.configname)
 
     @staticmethod
-    def properties(vaspdir, super_poscarfile=None, speciesfile=None):
+    def properties(vaspdir, initial_structurefile=None, speciesfile=None):
         """Report results to properties.calc.json file in configuration directory, after checking for electronic convergence."""
 
         output = dict()
@@ -1233,15 +1231,16 @@ class Converge(object):
 
         # the calculation is run on the 'sorted' POSCAR, need to report results 'unsorted'
 
-        if (super_poscarfile is not None) and (speciesfile is not None):
+        if (initial_structurefile is not None) and (speciesfile is not None):
             species_settings = vasp.io.species_settings(speciesfile)
-            super_poscar = vasp.io.Poscar(super_poscarfile, species_settings)
-            unsort_dict = super_poscar.unsort_dict()
+            initial_structure = vasp.io.Poscar(initial_structurefile,
+                                               species_settings)
+            unsort_dict = initial_structure.unsort_dict()
         else:
             # fake unsort_dict (unsort_dict[i] == i)
             unsort_dict = dict(
                 zip(range(0, len(vrun.basis)), range(0, len(vrun.basis))))
-        super_poscar = vasp.io.Poscar(os.path.join(vaspdir, "POSCAR"))
+        structure = vasp.io.Poscar(os.path.join(vaspdir, "POSCAR"))
 
         # unsort_dict:
         #   Returns 'unsort_dict', for which: unsorted_dict[orig_index] == sorted_index;
@@ -1249,8 +1248,8 @@ class Converge(object):
         #   For example:
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
 
-        output["atom_type"] = super_poscar.type_atoms
-        output["atoms_per_type"] = super_poscar.num_atoms
+        output["atom_type"] = structure.type_atoms
+        output["atoms_per_type"] = structure.num_atoms
         output["coord_mode"] = vrun.coord_mode
 
         # as lists

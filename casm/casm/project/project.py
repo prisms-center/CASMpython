@@ -356,6 +356,16 @@ class DirectoryStructure(object):
         """Return path to POS file"""
         return join(self.configuration_dir(configname, calc_subdir), "POS")
 
+    def config_json(self, configname, calc_subdir=""):
+        """Return path to structure.json file"""
+        return join(self.configuration_dir(configname, calc_subdir),
+                    "structure.json")
+
+    def structure_json(self, configname, calc_subdir=""):
+        """Return path to structure.json file"""
+        return join(self.configuration_dir(configname, calc_subdir),
+                    "structure.json")
+
     def calctype_dir(self, configname, clex, calc_subdir=""):
         """Return calctype directory path (e.g. training_data/$(calc_subdir)/SCEL_...../0/calctype.default"""
         return join(self.configuration_dir(configname, calc_subdir),
