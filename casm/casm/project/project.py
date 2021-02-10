@@ -520,6 +520,15 @@ class Project(object):
       verbose: bool
         How much to print to stdout
 
+      out: str or None
+        Contains last output of Project.command calls if capturing output. Use Project.command_options to set options.
+
+      err: str or None
+        Contains last error output of Project.command calls if capturing output. Use Project.command_options to set options.
+
+      code: int or None
+        Contains last return code of Project.command calls.
+
     """
     def __init__(self, path=None, verbose=True):
         """
@@ -556,6 +565,12 @@ class Project(object):
         self.verbose = verbose
         self._streamptr = None
         self._errstreamptr = None
+
+        # set default command output options
+        self.out = None
+        self.err = None
+        self.code = None
+        self.command_options()
 
     def __del__(self):
         self.__unload()
@@ -648,6 +663,29 @@ class Project(object):
         self.__load()
         return self._ptr
 
+    def command_options(self,
+                        capture=True,
+                        print_output=True,
+                        combine_output=True):
+        """
+        Set options for Project.command
+
+        Arguments
+        ---------
+        capture: bool
+            If True, capture stdout, stderr, and return code in self.out and self.err, and self.code. If False, will print to stdout and stderr directrly (if self.verbose==True), or to nullstream (if self.verbose==False).
+
+        print_ouput: bool
+            If print_output==True and capture==True, then print self.out after executing.
+
+        combine_output: bool
+            If combine_output==true, err stream is set equal to out stream.
+
+        """
+        self._capture = capture
+        self._print_output = print_output
+        self._combine_output = combine_output
+
     def command(self, args):
         """
         Execute a command via the c api, writing output to stdout/stderr.
@@ -663,10 +701,17 @@ class Project(object):
         # this also ensures self._api is not None
         data = self.data()
 
-        returncode = self._api.capi_call(args, self.data(), self.path,
-                                         self._streamptr, self._errstreamptr)
-        self.__refresh()
-        return returncode
+        if self._capture:
+            if self._combine_output:
+                self.out, self.code = self.capture(args, combine_output=True)
+            else:
+                self.out, self.err, self.code = self.capture(args)
+            if self._print_output:
+                print(self.out)
+        else:
+            self.code = self._api.capi(args, self.data(), self.path,
+                                       self._streamptr, self._errstreamptr)
+            self.__refresh()
 
     def capture(self, args, combine_output=False):
         """
