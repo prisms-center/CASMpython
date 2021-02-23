@@ -155,7 +155,6 @@ class Poscar:
                 Site(cart, np.array(pos), '', atom_name, atom_name))
         self.type_atoms_alias = list(self.type_atoms)
 
-        #-------------------------------------------------------
         # set type alias
         if species != None:
             self.update(species)
