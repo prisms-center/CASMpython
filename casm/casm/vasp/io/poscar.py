@@ -116,7 +116,6 @@ class Poscar:
     def read_structure_json(self, filename, species=None):
         """
             Reads a structure from structure.json file 'filename'
-            Assumes that the basis sites are grouped by atom label
         """
         self.header = ""
         try:
@@ -138,8 +137,16 @@ class Poscar:
         cart = self.coord_mode[0].lower() == 'c'
         self.num_atoms = []
         self.type_atoms = []
-        for i, pos in enumerate(config_data['atom_coords']):
-            atom_name = config_data['atom_type'][i]
+
+        # sort atom_coords and atom_types based on atom_types
+        zip_list = list(
+            zip(config_data['atom_coords'], config_data['atom_type']))
+        zip_list.sort(key=lambda x: x[1])
+        sorted_atom_types = [x[1] for x in zip_list]
+        sorted_atom_coords = [x[0] for x in zip_list]
+
+        for i, pos in enumerate(sorted_atom_coords):
+            atom_name = sorted_atom_types[i]
             if not atom_name in self.type_atoms:
                 self.type_atoms.append(atom_name)
                 self.num_atoms.append(0)
@@ -148,12 +155,13 @@ class Poscar:
                 Site(cart, np.array(pos), '', atom_name, atom_name))
         self.type_atoms_alias = list(self.type_atoms)
 
+        #-------------------------------------------------------
         # set type alias
         if species != None:
             self.update(species)
 
         # Storing the atom_type as listed in structure.json which can be used while printing out
-        self.atom_type = config_data['atom_type']
+        self.atom_type = sorted_atom_types
 
     def write(self, filename, sort=True):
         """ Write Poscar to 'filename'.
