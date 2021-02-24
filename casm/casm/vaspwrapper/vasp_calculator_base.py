@@ -713,21 +713,21 @@ class VaspCalculatorBase(object):
                 list(ba.position))
 
         output["atom_dofs"] = {}
-        output["atom_dofs"]["forces"] = {}
-        output["atom_dofs"]["forces"]["value"] = [
+        output["atom_dofs"]["force"] = {}
+        output["atom_dofs"]["force"]["value"] = [
             None for i in range(len(ocar.forces))
         ]
         for i, force in enumerate(ocar.forces):
-            output["atom_dofs"]["forces"]["value"][
+            output["atom_dofs"]["force"]["value"][
                 unsort_dict[i]] = noindent.NoIndent(force)
 
         output["global_dofs"] = {}
         output["global_dofs"]["energy"] = {}
         output["global_dofs"]["energy"]["value"] = zcar.E[-1]
-        output["global_dofs"]["Cmagmom"] = {}
 
         if dof_info.atom_dofs is not None:
             if "Cmagspin" in list(dof_info.atom_dofs.keys()):
+                output["global_dofs"]["Cmagmom"] = {}
                 cmagspin_specific_output = attribute_classes.CmagspinAttr(
                     dof_info).vasp_output_dictionary(ocar)
                 output["atom_dofs"].update(cmagspin_specific_output)
@@ -738,6 +738,7 @@ class VaspCalculatorBase(object):
             #TODO: Need a better way of doing this. Some code duplication here.
             else:
                 if ocar.ispin == 2:
+                    output["global_dofs"]["Cmagmom"] = {}
                     output["global_dofs"]["Cmagmom"]["value"] = zcar.mag[-1]
                     if ocar.lorbit in [1, 2, 11, 12]:
                         output["atom_dofs"]["Cmagmom"] = {}
