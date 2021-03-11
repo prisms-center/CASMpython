@@ -722,8 +722,8 @@ class VaspCalculatorBase(object):
                 unsort_dict[i]] = noindent.NoIndent(force)
 
         output["global_dofs"] = {}
-        output["global_dofs"]["relaxed_energy"] = {}
-        output["global_dofs"]["relaxed_energy"]["value"] = zcar.E[-1]
+        output["global_dofs"]["energy"] = {}
+        output["global_dofs"]["energy"]["value"] = zcar.E[-1]
 
         if dof_info.atom_dofs is not None:
             if "Cmagspin" in list(dof_info.atom_dofs.keys()):
