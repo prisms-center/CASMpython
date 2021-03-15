@@ -16,30 +16,30 @@ import deap.algorithms
 import numpy as np
 import six
 from sklearn.base import BaseEstimator
-from sklearn.feature_selection.base import SelectorMixin
+from sklearn.feature_selection import SelectorMixin
 
 import casm.learn
 
 
 def initNRandomOn(container, n_features, n_features_init):
-    """ 
+    """
   Initialize a random container of bool.
-  
+
   Arguments
   ---------
-    
+
     container: Type
       The type of container to return. Expects container(List) to be valid.
-    
+
     n_features: int
       The total length of the container
-    
+
     n_features_init: int
       The number of True elements in the container
-  
+
   Returns
   -------
-    
+
     result: container
       A container of the specified type with 'n_features' True and the rest False.
   """
@@ -50,46 +50,46 @@ def initNRandomOn(container, n_features, n_features_init):
 
 
 class Constraints(object):
-    """ 
+    """
   Holds constraints on individuals in evolutionary algorithms.
-  
+
   Attributes
   ----------
-    
+
     n_features_min: int
       The minimum allowed number of selected features. Must be >=1.
-    
+
     n_features_max: int or str
       The maximum allowed number of selected features. String "all" for no limit.
-    
+
     fix_on: 1d array-like of int
       The indices of features to fix on
-    
+
     fix_off: 1d array-like of int
       The indices of features to fix off
-  
+
   """
     def __init__(self,
                  n_features_min=1,
                  n_features_max="all",
                  fix_on=np.array([], dtype=int),
                  fix_off=np.array([], dtype=int)):
-        """ 
+        """
     Arguments
     ---------
-      
-      n_features_min: int, optional, default=1 
+
+      n_features_min: int, optional, default=1
         The minimum allowed number of selected features. Must be >=1.
-      
+
       n_features_max: int or str, optional, default "all".
         The maximum allowed number of selected features. String "all" for no limit.
-      
+
       fix_on: 1d array-like of int, optional, default=np.array([], dtype=int)
         The indices of features to fix on
-      
+
       fix_off: 1d array-like of int, optional, default=np.array([], dtype=int)
         The indices of features to fix off
-    
+
     """
         if n_features_min < 1:
             raise ValueError("n_features_min must be >= 1")
@@ -122,22 +122,22 @@ class Constraints(object):
 def restrict_constraints(constraints):
     """
   Returns a decorator that removes offspring that don't obey constraints.
-  
+
   The decorator does:
     offspring = func(*args, **kargs)
     return [child for child in offspring if constraints.check(child)]
-  
+
   Arguments
   ---------
     constraints: casm.learn.evolve.Constraints
       A Constraints object containing the requested constraints
-  
-  
+
+
   Returns
   -------
-    
+
     decorator: function
-      A decorator that can be used to wrap evolutionary algorithm methods that 
+      A decorator that can be used to wrap evolutionary algorithm methods that
       return a population to ensure that constraints remain satisfied.
   """
     def decorator(func):
@@ -151,26 +151,26 @@ def restrict_constraints(constraints):
 
 
 def enforce_constraints(constraints):
-    """ 
+    """
   Returns a decorator that ensures that individuals obey constraints.
-  
+
   The decorator will first select on/off any features that are constrained by
   'fix_on' or 'fix_off'. Then, if the number of features selected is less than
   'n_features_min', features will be randomly turned on. Finally, if the number
   of features selected is less than 'n_features_max', features will be randomly
   turned off.
-  
+
   Arguments
   ---------
     constraints: casm.learn.evolve.Constraints
       A Constraints object containing the requested constraints
-  
-  
+
+
   Returns
   -------
-    
+
     decorator: function
-      A decorator that can be used to wrap evolutionary algorithm methods that 
+      A decorator that can be used to wrap evolutionary algorithm methods that
       return a population to ensure that constraints remain satisfied.
   """
     def decorator(func):
@@ -278,26 +278,26 @@ def save_halloffame(hall, filename, verbose=False):
 def evaluate_all(pop, toolbox):
     """
   Evaluate and set fitness of all individual's with invalid fitness.
-  
+
   Arguments
   ---------
-    
+
     pop: iterable of individual
       Population to be evaluated
-    
+
     toolbox: deap.base.Toolbox
       Contains methods used by deap during evolution. Expected to contain:
-        
+
         toolbox.evaluate(indiv): To evaluate an individual's fitness
-        
+
         toolbox.map(func, List[individual]): To map function executions
-  
+
   Returns
   -------
-    
+
     nevals: int
       Number of evaluations performed
-  
+
   """
     # evaluate initial fitness
     invalid_ind = [ind for ind in pop if not ind.fitness.valid]
@@ -310,32 +310,32 @@ def evaluate_all(pop, toolbox):
 class EvolutionaryParams(object):
     """
   Holds parameters used by evolutionary algorithms.
-  
+
   Attributes
   ----------
-    
+
     n_population: int
       Population size.
-    
+
     n_generation: int
       Number of generations to for each repitition. Results are saved between
       repetitions.
-    
+
     n_repetition: int
       Number of repititions to perform.
-    
+
     n_features_init: int
       Number of randomly selected features to initialize each individual with.
-  
+
     pop_begin_filename: string
       Filename where the initial population is read from, if it exists.
-    
+
     pop_end_filename: string
       Filename where the final population is saved.
-    
+
     halloffame_filename: string
       Filename where a hall of fame is saved.
-    
+
     n_halloffame: int
       Number of individuals to save in the hall of fame
   """
@@ -352,36 +352,36 @@ class EvolutionaryParams(object):
         """
     Arguments
     ---------
-    
+
       n_population: integer, optional, default=100
         Population size.
-      
+
       n_generation: integer, optional, default=10
         Number of generations to for each repitition. Results are saved between
         repetitions.
-      
+
       n_repetition: integer, optional, default=100
         Number of repititions to perform.
-      
+
       n_features_init: int, optional, default=5
         Number of randomly selected features to initialize each individual with.
-      
+
       pop_begin_filename: string, optional, default="population_begin.pkl"
         Filename where the initial population is read from, if it exists.
-      
+
       pop_end_filename: string, optional, default="population_end.pkl"
         Filename where the final population is saved.
-      
+
       halloffame_filename: string, optional, default="halloffame.pkl"
         Filename where a hall of fame is saved.
-      
+
       filename_prefix: string
-        Prefix for filenames, typically taken from input file filename excluding 
+        Prefix for filenames, typically taken from input file filename excluding
         extension.
-    
+
       n_halloffame: int, optional, default=25
         Number of individuals to save in the hall of fame
-  
+
     """
         self.n_population = n_population
         self.n_generation = n_generation
@@ -402,27 +402,27 @@ class EvolutionaryParams(object):
 def default_stats(funcs=None):
     """
   Returns default deap.tools.Statistics object logging 'avg', 'std', 'min', 'max'.
-  
+
   Arguments
   ---------
-    
+
     funcs: dict, optional, default=(see below)
-      A dict of functions to include in the deap.tools.Statistics object. 
-      
-      Default:  
+      A dict of functions to include in the deap.tools.Statistics object.
+
+      Default:
         {
-          "avg":np.mean, 
-          "std":np.std, 
-          "min":np.min, 
+          "avg":np.mean,
+          "std":np.std,
+          "min":np.min,
           "max":np.max
         }
-        
-  
+
+
   Returns
   -------
     stats: deap.tools.Statistics
       The statistics to be logged.
-  
+
   """
     if funcs is None:
         funcs = {"avg": np.mean, "std": np.std, "min": np.min, "max": np.max}
@@ -436,18 +436,18 @@ class Log(object):
     """
   Attributes
   ----------
-    
+
     stats: deap.tools.Statistics
         The statistics to be logged.
-    
+
     logbook: deap.tools.Logbook
-    
+
   """
     def __init__(self, stats=default_stats()):
         """
     Arguments
     ---------
-      
+
       stats: deap.tools.Statistics, optional, default=default_stats()
         The statistics to be logged.
     """
@@ -459,19 +459,19 @@ class Log(object):
     def record(self, pop, gen, nevals, verbose=False):
         """
     Record stats for generation in logbook.
-    
+
     Arguments
     ---------
-      
+
       pop: iterable of individual
         Population to be minimized
-      
+
       gen: integer
         Current generation index
-      
+
       nevals: integer
         Number of times 'evaluate' has been called
-      
+
       verbose: boolean
         Print information to stdout. If true, will print logbook.stream.
     """
@@ -484,21 +484,21 @@ class Log(object):
 def single_flip_children(parent):
     """
   Return all children of parent that differ by one feature on/off.
-  
+
   Arguments
   ---------
-    
+
     parent: List[bool] of length n_features
-      This is a boolean list of shape [n_features], in which an element is True 
+      This is a boolean list of shape [n_features], in which an element is True
       iff its corresponding feature is selected for retention.
-  
-      
+
+
   Returns
   -------
-    
+
     offspring: iterable of individual
       Population to be evaluated
-   
+
   """
     offspring = []
     for index in range(len(parent)):
@@ -512,31 +512,31 @@ def single_flip_children(parent):
 def best_child(indiv, toolbox):
     """
   Return best child of a particular individual.
-  
+
   Arguments
   ---------
-    
+
     indiv: List[bool] of length n_features
-      This is a boolean list of shape [n_features], in which an element is True 
+      This is a boolean list of shape [n_features], in which an element is True
       iff its corresponding feature is selected for retention.
-    
+
     toolbox: deap.base.Toolbox
       Contains methods used by deap during evolution. Expected to contain:
-      
+
         toolbox.children(parent): Returns offspring (List[individual]) of parent
-        
+
         toolbox.evaluate(indiv): To evaluate an individual's fitness
-        
+
         toolbox.map(func, List[individual]): To map function executions
-  
+
   Returns
   -------
-    
+
     (best, nevals)
-    
+
     best: List[bool] of length n_features
       The child with best fitness value
-    
+
     nevals: integer
         Number of times 'evaluate' has been called
   """
@@ -555,44 +555,44 @@ def eaIndividualBestFirst(pop,
     """
   Evolutionary algorithm that minimizes each individual in isolation by proposing
   children and replacing with the most fit child.
-  
+
   Arguments
   ---------
-    
+
     pop: iterable of individual
       Population to be minimized
-    
+
     toolbox: deap.base.Toolbox
       Contains methods used during evolution. Expected to contain:
-        
+
         toolbox.children(parent): Returns offspring (List[individual]) of parent
-        
+
         toolbox.evaluate(indiv): To evaluate an individual's fitness
-        
+
         toolbox.map(func, List[individual]): To map function executions
-    
+
     n_generation: int, optional, default=10
       Number of generations to run.
-    
+
     halloffame: deap.tools.HallOfFame, optional, default=None
       A Hall Of Fame containing the optimal solutions, as judged by CV score.
-    
+
     stats: deap.tools.Statistics, optional, default=default_stats()
       The statistics to be logged.
-    
+
     verbose: boolean
       Print information to stdout.
-    
-  
+
+
   Returns
   -------
-    
+
     (pop, logbook)
-    
+
     pop: iterable of individual
       The final population
-    
-    logbook: deap.tools.Logbook 
+
+    logbook: deap.tools.Logbook
       Logbook with the statistics of the evolution
   """
     remaining = len(pop)
@@ -657,46 +657,46 @@ def eaPopulationBestFirst(pop,
   Evolutionary algorithm that minimizes a population by selecting the most fit
   non-parent, generating children, and updating the population with the most
   fit individuals until the entire population has been a parent.
-  
+
   Arguments
   ---------
-    
+
     pop: iterable of individual
       Population to be minimized
-    
+
     toolbox: deap.base.Toolbox
       Contains methods used during evolution. Expected to contain:
-        
+
         toolbox.children(parent): Returns offspring (List[individual]) of parent
-        
+
         toolbox.evaluate(indiv): To evaluate an individual's fitness
-        
+
         toolbox.map(func, List[individual]): To map function executions
-    
+
     n_generation: int, optional, default=10
       Number of generations between saving the hall of fame. Note, this only
       controls how often the hall of fame is saved. Minimization continues until
       all individuals in the population have had children.
-    
+
     halloffame: deap.tools.HallOfFame, optional, default=None
       A Hall Of Fame containing the optimal solutions, as judged by CV score.
-    
+
     stats: deap.tools.Statistics, optional, default=default_stats()
       The statistics to be logged.
-    
+
     verbose: boolean
       Print information to stdout.
-    
-  
+
+
   Returns
   -------
-    
+
     (pop, logbook)
-    
+
     pop: iterable of individual
       The final population
-    
-    logbook: deap.tools.Logbook 
+
+    logbook: deap.tools.Logbook
       Logbook with the statistics of the evolution
   """
 
@@ -795,45 +795,45 @@ class EvolutionaryFeatureSelection(BaseEstimator, SelectorMixin):
     def _run(self):
         """
     Run the specified evolutionary algorithm.
-    
+
     Arguments
     ---------
-      
+
       algorithm: func,
         The evolutionary algorithm to perform
-      
+
       alg_args: List[func]
         A list of functions used to generate positional arguments for 'algorithm'
         by calling f(self).
-      
+
       alg_kwargs: dict
         A dict of key:function pairs used to generate keyword arguments for 'algorithm'.
-        
-          Example: 
-            
+
+          Example:
+
             alg_args = [
-              operator.attrgetter("pop"), 
+              operator.attrgetter("pop"),
               operatot.attrgetter("toolbox")]
-              
+
             alg_kwargs = {
               "stats":operator.attrgetter("stats"),
               "halloffame":operatot.attrgetter("halloffame")
             }
-          
+
           Then:
-            
+
             in_args = [f(self) for f in alg_args]
-            
+
             in_kwargs = dict()
             for key, f in six.iteritems(alg_kwargs):
               in_kwargs[key] = f(self)
-            
+
             self.pop, self.logbook = algorithm(*in_args, **in_kwargs)
-    
-    
+
+
     Returns
     -------
-    
+
       self: returns an instance of self.
     """
         ## read or construct hall of fame
@@ -896,27 +896,27 @@ class EvolutionaryFeatureSelection(BaseEstimator, SelectorMixin):
     def _get_support_mask(self):
         """
     Return most fit inidividual found.
-    
+
     Returns
     -------
-      
+
       support: List[bool] of length n_features
-        This is a boolean list of shape [n_features], in which an element is True 
+        This is a boolean list of shape [n_features], in which an element is True
         iff its corresponding feature is selected for retention.
-    
+
     """
         return self.halloffame[0]
 
     def get_halloffame(self):
         """
     Returns the hall of fame of most fit individuals generated by 'fit'.
-    
+
     Returns
     -------
-      
+
       hall: deap.tools.HallOfFame
         A Hall Of Fame containing the optimal solutions, as judged by CV score.
-    
+
     """
         return self.halloffame
 
@@ -924,72 +924,72 @@ class EvolutionaryFeatureSelection(BaseEstimator, SelectorMixin):
 class GeneticAlgorithm(EvolutionaryFeatureSelection):
     """
   Genetic algorithm for regression by optimizing a CV score.
-  
-  Implements deap.algorithms.eaSimple, using selTournament, for selection, 
-  cxUniform for mating, and mutFlipBit for mutation. The probability of mating 
-  and mutating is set to 1.0. 
-  
+
+  Implements deap.algorithms.eaSimple, using selTournament, for selection,
+  cxUniform for mating, and mutFlipBit for mutation. The probability of mating
+  and mutating is set to 1.0.
+
   The population of solutions is saved
-  
+
   For more details see: http://deap.gel.ulaval.ca/doc/0.8/api/algo.html#complete-algorithms
-  
+
   Attributes
   ---------
-    
+
     estimator:  estimator object implementing 'fit'
       The estimator specified by the input settings.
-    
+
     scoring: string
-      A string or a scorer callable object / function with signature 
+      A string or a scorer callable object / function with signature
       scorer(estimator, X, y). The parameter for sklearn.model_selection.cross_val_score,
       default = None, uses estimator.score().
-    
+
     cv: cross-validation generator or an iterable
       Provides train/test splits
-    
+
     penalty: float
       The CV score is increased by 'penalty*(number of selected basis function)'
-    
+
     evolve_params: casm.learn.evolve.EvolutionaryParams
-      A EvolutionaryParams object containing parameters. 
-    
+      A EvolutionaryParams object containing parameters.
+
     constraints: casm.learn.evolve.Constraints
       A Constraints object containing constraints on allowed individuals.
-    
+
     selTournamentSize: int
-      Tournament size. A larger tournament size weeds out less fit 
-      individuals more quickly, while a smaller tournament size weeds out 
+      Tournament size. A larger tournament size weeds out less fit
+      individuals more quickly, while a smaller tournament size weeds out
       less fit individuals more gradually.
 
     cxUniformProb: float
       Probability of swapping bits during mating.
 
-    mutFlipBitProb: float 
+    mutFlipBitProb: float
       Probability of mutating bits "constraints".
-    
+
     CrossOverProb: 1.0
       Probability of performing mating.
 
     MutateProb: 1.9
       Probability of performing mutation.
-    
+
     toolbox: deap.base.Toolbox
       Contains methods used by deap during evolution.
-      
+
     verbose: boolean
       Print information to stdout.
-    
+
     hall: deap.tools.HallOfFame
       A Hall Of Fame containing the optimal solutions, as judged by CV score.
-    
+
     pop_begin: iterable of individuals
       The initial population of individual solutions.
-    
+
     pop_end: iterable of individuals
       The final population of individual solutions.
-    
-    
-  
+
+
+
   """
     def __init__(self,
                  estimator,
@@ -1005,45 +1005,45 @@ class GeneticAlgorithm(EvolutionaryFeatureSelection):
         """
     Arguments
     ---------
-      
+
       estimator:  estimator object implementing 'fit'
         The estimator specified by the input settings.
-      
+
       scoring: string, callable or None, optional, default=None
-        A string or a scorer callable object / function with signature 
+        A string or a scorer callable object / function with signature
         scorer(estimator, X, y). The parameter is passed to sklearn.model_selection.cross_val_score,
         has a default=None which uses estimator.score().
-      
+
       cv: cross-validation generator or an iterable, optional, default=None
         Provides train/test splits. The parameter is passed to sklearn.model_selection.cross_val_score,
         has a default=None which uses KFold cross-validation with k=3.
-      
+
       penalty: float, optional, default=0.0
         The CV score is increased by 'penalty*(number of selected basis function)'
-      
+
       evolve_params_kwargs: dict, optional, default=dict()
         Keyword arguments for construction of EvolutionaryParams object containing
         parameters. See casm.learn.evolve.EvolutionaryParams for possibilities.
-      
+
       constraints_kwargs: dict, optional, default=dict()
         Keyword arguments for construction of Constraints object containing
-        constraints on allowed individuals. See casm.learn.evolve.Constraints for 
+        constraints on allowed individuals. See casm.learn.evolve.Constraints for
         possibilities.
-      
+
       selTournamentSize: int, optional, default=3
-        Tournament size. A larger tournament size weeds out less fit 
-        individuals more quickly, while a smaller tournament size weeds out 
+        Tournament size. A larger tournament size weeds out less fit
+        individuals more quickly, while a smaller tournament size weeds out
         less fit individuals more gradually.
-  
+
       cxUniformProb: float, optional, default=0.5
         Probability of swapping bits during mating.
-  
-      mutFlipBitProb: float, optional, default=0.01 
+
+      mutFlipBitProb: float, optional, default=0.01
         Probability of mutating bits "constraints".
-      
+
       verbose: boolean, optional, default=True
         Print information to stdout.
-    
+
     """
         super(GeneticAlgorithm,
               self).__init__(deap.algorithms.eaSimple,
@@ -1095,22 +1095,22 @@ class GeneticAlgorithm(EvolutionaryFeatureSelection):
     def fit(self, X, y):
         """
     Run genetic algorithm to generate optimal solutions for X*b = y.
-    
+
     The best solutions generated are stored in self.halloffame.
-    
+
     Arguments
     ---------
-    
+
       X: array-like of shape (n_samples, n_features)
         The input data
-      
+
       y: array-like of shape (n_samples, 1)
         The values
-    
-    
+
+
     Returns
     -------
-      
+
       self: returns an instance of self.
     """
 
@@ -1135,54 +1135,54 @@ class GeneticAlgorithm(EvolutionaryFeatureSelection):
 class IndividualBestFirst(EvolutionaryFeatureSelection):
     """
   Individual best first algorithm for regression by optimizing a CV score.
-  
-  Implements a best first search optimization for each individual in the initial 
-  population. Each individual in the population is minimized by repeatedly begin 
+
+  Implements a best first search optimization for each individual in the initial
+  population. Each individual in the population is minimized by repeatedly begin
   replaced by its most fit child.
-  
+
   By default, children are generated by generating all the individual that differ
   from the parent by +/- 1 selected feature. But any generating function may be
   given that generates offspring from a single parent individual.
-  
-  
+
+
   Attributes
   ---------
-    
+
     estimator:  estimator object implementing 'fit'
       The estimator specified by the input settings.
-    
+
     scoring: string
-      A string or a scorer callable object / function with signature 
+      A string or a scorer callable object / function with signature
       scorer(estimator, X, y). The parameter for sklearn.model_selection.cross_val_score,
       default = None, uses estimator.score().
-    
+
     cv: cross-validation generator or an iterable
       Provides train/test splits
-    
+
     penalty: float
       The CV score is increased by 'penalty*(number of selected basis function)'
-    
+
     evolve_params: casm.learn.evolve.EvolutionaryParams
-      A EvolutionaryParams object containing parameters. 
-    
+      A EvolutionaryParams object containing parameters.
+
     constraints: casm.learn.evolve.Constraints
       A Constraints object containing constraints on allowed individuals.
-    
+
     children: func
-      A function with signature 'offspring = func(indiv)'. 
-    
+      A function with signature 'offspring = func(indiv)'.
+
     toolbox: deap.base.Toolbox
       Contains methods used by deap during evolution.
-      
+
     verbose: boolean
       Print information to stdout.
-    
+
     hall: deap.tools.HallOfFame
       A Hall Of Fame containing the optimal solutions, as judged by CV score.
-    
+
     pop_begin: iterable of individuals
       The initial population of individual solutions.
-    
+
     pop_end: iterable of individuals
       The final population of individual solutions.
   """
@@ -1198,37 +1198,37 @@ class IndividualBestFirst(EvolutionaryFeatureSelection):
         """
     Arguments
     ---------
-      
+
       estimator:  estimator object implementing 'fit'
         The estimator specified by the input settings.
-      
+
       scoring: string, callable or None, optional, default=None
-        A string or a scorer callable object / function with signature 
+        A string or a scorer callable object / function with signature
         scorer(estimator, X, y). The parameter is passed to sklearn.model_selection.cross_val_score,
         has a default=None which uses estimator.score().
-      
+
       cv: cross-validation generator or an iterable, optional, default=None
         Provides train/test splits. The parameter is passed to sklearn.model_selection.cross_val_score,
         has a default=None which uses KFold cross-validation with k=3.
-      
+
       penalty: float, optional, default=0.0
         The CV score is increased by 'penalty*(number of selected basis function)'
-      
+
       evolve_params_kwargs: dict, optional, default=dict()
         Keyword arguments for construction of EvolutionaryParams object containing
         parameters. See casm.learn.evolve.EvolutionaryParams for possibilities.
-      
+
       constraints_kwargs: dict, optional, default=dict()
         Keyword arguments for construction of Constraints object containing
-        constraints on allowed individuals. See casm.learn.evolve.Constraints for 
+        constraints on allowed individuals. See casm.learn.evolve.Constraints for
         possibilities.
-      
+
       children: func, optional, default=single_flip_children
-        A function with signature 'offspring = func(indiv)'. 
-    
+        A function with signature 'offspring = func(indiv)'.
+
       verbose: boolean, optional, default=True
         Print information to stdout.
-    
+
     """
 
         # add a count of the number of individuals fully optimized
@@ -1268,22 +1268,22 @@ class IndividualBestFirst(EvolutionaryFeatureSelection):
     def fit(self, X, y):
         """
     Run individual best first algorithm to generate optimal solutions for X*b = y.
-    
+
     The best solutions generated are stored in self.halloffame.
-    
+
     Arguments
     ---------
-    
+
       X: array-like of shape (n_samples, n_features)
         The input data
-      
+
       y: array-like of shape (n_samples, 1)
         The values
-    
-    
+
+
     Returns
     -------
-      
+
       self: returns an instance of self.
     """
         ## Register toolbox functions that depend on X,y
@@ -1307,57 +1307,57 @@ class IndividualBestFirst(EvolutionaryFeatureSelection):
 class PopulationBestFirst(EvolutionaryFeatureSelection):
     """
   Population best first algorithm for regression by optimizing a CV score.
-  
+
   Implements a best first search optimization for a population of individual
   solutions. Each individual is associated with a 'status' that indicates
   whether it has had children yet or not. At each step, the most fit individual
   that hasn't had children has children and the population is updated to keep
-  only the 'n_population' most fit individuals. The algorithm stops when all 
+  only the 'n_population' most fit individuals. The algorithm stops when all
   individuals in the population have had children.
-  
+
   By default, children are generated by generating all the individual that differ
   from the parent by +/- 1 selected feature. But any generating function may be
   given that generates offspring from a single parent individual.
-  
-  
+
+
   Attributes
   ----------
-    
+
     estimator:  estimator object implementing 'fit'
       The estimator specified by the input settings.
-    
+
     scoring: string
-      A string or a scorer callable object / function with signature 
+      A string or a scorer callable object / function with signature
       scorer(estimator, X, y). The parameter for sklearn.model_selection.cross_val_score,
       default = None, uses estimator.score().
-    
+
     cv: cross-validation generator or an iterable
       Provides train/test splits
-    
+
     penalty: float
       The CV score is increased by 'penalty*(number of selected basis function)'
-    
+
     evolve_params: casm.learn.evolve.EvolutionaryParams
-      A EvolutionaryParams object containing parameters. 
-    
+      A EvolutionaryParams object containing parameters.
+
     constraints: casm.learn.evolve.Constraints
       A Constraints object containing constraints on allowed individuals.
-    
+
     children: func
-      A function with signature 'offspring = func(indiv)'. 
-    
+      A function with signature 'offspring = func(indiv)'.
+
     toolbox: deap.base.Toolbox
       Contains methods used by deap during evolution.
-      
+
     verbose: boolean
       Print information to stdout.
-    
+
     hall: deap.tools.HallOfFame
       A Hall Of Fame containing the optimal solutions, as judged by CV score.
-    
+
     pop_begin: iterable of individuals
       The initial population of individual solutions.
-    
+
     pop_end: iterable of individuals
       The final population of individual solutions.
   """
@@ -1373,37 +1373,37 @@ class PopulationBestFirst(EvolutionaryFeatureSelection):
         """
     Arguments
     ---------
-      
+
       estimator:  estimator object implementing 'fit'
         The estimator specified by the input settings.
-      
+
       scoring: string, callable or None, optional, default=None
-        A string or a scorer callable object / function with signature 
+        A string or a scorer callable object / function with signature
         scorer(estimator, X, y). The parameter is passed to sklearn.model_selection.cross_val_score,
         has a default=None which uses estimator.score().
-      
+
       cv: cross-validation generator or an iterable, optional, default=None
         Provides train/test splits. The parameter is passed to sklearn.model_selection.cross_val_score,
         has a default=None which uses KFold cross-validation with k=3.
-      
+
       penalty: float, optional, default=0.0
         The CV score is increased by 'penalty*(number of selected basis function)'
-      
+
       evolve_params_kwargs: dict, optional, default=dict()
         Keyword arguments for construction of EvolutionaryParams object containing
         parameters. See casm.learn.evolve.EvolutionaryParams for possibilities.
-      
+
       constraints_kwargs: dict, optional, default=dict()
         Keyword arguments for construction of Constraints object containing
-        constraints on allowed individuals. See casm.learn.evolve.Constraints for 
+        constraints on allowed individuals. See casm.learn.evolve.Constraints for
         possibilities.
-      
+
       children: func, optional, default=single_flip_children
-        A function with signature 'offspring = func(indiv)'. 
-    
+        A function with signature 'offspring = func(indiv)'.
+
       verbose: boolean, optional, default=True
         Print information to stdout.
-    
+
     """
         # add a count of the number of individuals fully optimized
         stats = default_stats()
@@ -1442,22 +1442,22 @@ class PopulationBestFirst(EvolutionaryFeatureSelection):
     def fit(self, X, y):
         """
     Run population best first algorithm to generate optimal solutions for X*b = y.
-    
+
     The best solutions generated are stored in self.halloffame.
-    
+
     Arguments
     ---------
-    
+
       X: array-like of shape (n_samples, n_features)
         The input data
-      
+
       y: array-like of shape (n_samples, 1)
         The values
-    
-    
+
+
     Returns
     -------
-      
+
       self: returns an instance of self.
     """
         ## Register toolbox functions that depend on X,y

@@ -7,7 +7,7 @@ from casm import __version__
 # get console_scripts
 def script_str(file):
     name = os.path.splitext(os.path.split(file)[1])[0]
-    if name in ['casm_calc', 'casm_learn', 'casm_plot']:
+    if name in ['casm_calc', 'casm_learn']:
         return name.replace('_', '-') + '=casm.scripts.' + name + ':main'
     else:
         return name.replace('_', '.') + '=casm.scripts.' + name + ':main'

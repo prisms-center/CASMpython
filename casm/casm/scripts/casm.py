@@ -16,7 +16,6 @@ import sys
 
 import casm.scripts.casm_calc
 import casm.scripts.casm_learn
-import casm.scripts.casm_plot
 from casm.api import command_list, casm_command
 
 
@@ -43,7 +42,6 @@ def main(argv=None):
     python_commands = {
         'calc': casm.scripts.casm_calc.main,
         'learn': casm.scripts.casm_learn.main,
-        'plot': casm.scripts.casm_plot.main,
         'shell': _shell,
         'exec': _exec
     }

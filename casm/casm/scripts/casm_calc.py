@@ -8,7 +8,7 @@ from os import getcwd
 from os.path import join, abspath
 import sys
 
-from casm import qewrapper, questwrapper, vaspwrapper
+from casm import vaspwrapper
 from casm.misc import compat, noindent
 from casm.project import Project, Selection
 
@@ -36,10 +36,6 @@ Path to CASM project. Default=current working directory.
 run_help = """
 Run calculation for all selected configurations.
 """
-method_help = """
-Choose what method to use to calculate training data options are vasp or quantumespresso (default="").
-Overrides the calculator tag in relax.json. If calculator tag in relax.json is empty then VASP will be used.
-"""
 
 submit_help = """
 Submit calculation for all selected configurations.
@@ -56,12 +52,6 @@ Report calculation results (print calc.properties.json file) for all selected co
 available_calculators = {
     "vasp": {
         "relax": vaspwrapper.Relax
-    },
-    "quantumexpresso": {
-        "relax": qewrapper.Relax
-    },
-    "seqquest": {
-        "relax": questwrapper.Relax
     }
 }
 
