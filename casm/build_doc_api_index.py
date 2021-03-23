@@ -23,11 +23,11 @@ def write_index(f, package):
 
 
 def main():
-    with open('doc/source/python/index.rst', 'w') as f:
-        f.write('.. python/index.rst\n\n')
+    with open('doc/source/reference/index.rst', 'w') as f:
+        f.write('.. reference/index.rst\n\n')
 
-        f.write('CASM Python packages documentation\n')
-        f.write('==================================\n\n')
+        f.write('Reference\n')
+        f.write('=========\n\n')
 
         packages = sorted(setuptools.find_packages('casm'))
         for packagename in packages:

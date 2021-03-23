@@ -30,14 +30,13 @@ setup(
     packages=find_packages(),
     entry_points={'console_scripts': console_scripts},
     install_requires=[
-        'bokeh', 'deap', 'mock', 'pandas', 'prisms-jobs', 'scikit-learn',
-        'scipy', 'sh', 'tornado'
+        'deap', 'mock', 'pandas', 'prisms-jobs', 'scikit-learn',
+        'scipy', 'sh'
     ],
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering'
     ],

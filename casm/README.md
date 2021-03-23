@@ -3,14 +3,14 @@ The CASM Python packages
 
 The `casm-python` Python packages provide a Python interface to the CASM libraries, implement wrappers to fitting methods and DFT software, and provide other tools for plotting and analysis.
 
-This version of `casm-python` is compatible with version 1.0 of [`CASM`](https://prisms-center.github.io/CASMcode_docs/).
+This version of `casm-python` is compatible with version 1.X of [`CASM`](https://prisms-center.github.io/CASMcode_docs/).
 
 Development and testing:
 ------------------------
 
-Install the latest tagged version of CASM 1.0. You may install CASM from source or to install the CASM conda distribution use:
+Install the latest tagged version of CASM 1.X. You may install CASM from source or to install the CASM conda distribution use:
 
-    conda create -n casmpython_1.0.X --override-channels -c prisms-center/label/dev -c prisms-center -c defaults -c conda-forge python=3 casm-cpp=1.0
+    conda create -n casmpython_1.X --override-channels -c prisms-center -c defaults -c conda-forge python=3 casm-cpp=1
 
 To install `casm-python` requirements:
     pip install -r requirements.txt
@@ -48,7 +48,6 @@ The primary dependencies are:
 - **SciPy** ([https://www.scipy.org](https://www.scipy.org)), which can be obtained using one of the methods described on their website:  [http://www.scipy.org/install.html](http://www.scipy.org/install.html). The particular SciPy packages needed are:
 	- **numpy**  ([http://www.numpy.org](http://www.numpy.org))
 	- **pandas** ([http://pandas.pydata.org](http://pandas.pydata.org))
-	- **bokeh** ([https://bokeh.pydata.org/en/latest/](https://bokeh.pydata.org/en/latest/))
 
 - **scikit-learn** ([http://scikit-learn.org](http://scikit-learn.org))
 

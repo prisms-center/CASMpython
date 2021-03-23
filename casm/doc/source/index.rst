@@ -10,10 +10,9 @@ Welcome to CASM's Python documentation!
     :maxdepth: 2
     :caption: Contents:
 
-    python/index
     about
-    
-CASM is available on GitHub_.  
+    reference/index
+
+CASM is available on GitHub_.
 
 .. _GitHub: https://github.com/prisms-center/CASMcode
-

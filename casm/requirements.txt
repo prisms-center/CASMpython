@@ -1,4 +1,3 @@
-bokeh
 deap
 mock
 pandas
@@ -7,4 +6,3 @@ scikit-learn
 scipy
 sh
 six
-tornado
