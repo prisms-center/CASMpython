@@ -19,11 +19,16 @@ console_scripts = [
 ]
 print(console_scripts)
 
+with open(os.path.join('..', 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='casm-python',
     version=__version__,
-    url='https://github.com/prisms-center/CASMcode',
+    url='https://github.com/prisms-center/CASMpython',
     description='CASM Python interface, tools, and wrappers.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='CASM developers',
     author_email='casm-developers@lists.engr.ucsb.edu',
     license='LGPL2.1+',
