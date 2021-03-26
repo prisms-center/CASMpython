@@ -42,13 +42,31 @@ def write_eci(proj, eci, fit_details=None, clex=None, verbose=False):
     # edit to add fitting settings
     j["fit"] = fit_details
 
+    # make linear_function_index: (linear_orbit_index, cluster_function_index)
+    function_keys = {}
+    try:
+        linear_orbit_index = 0
+        for orbit in j["orbits"]:
+            cluster_function_index = 0
+            for cluster_function in orbit["cluster_functions"]:
+                linear_function_index = cluster_function["linear_function_index"]
+                function_keys[linear_function_index] = (linear_orbit_index, cluster_function_index)
+                cluster_function_index += 1
+            linear_orbit_index += 1
+    except:
+        raise Exception("Formatting error in basis.json")
+
     # edit to add eci
     for index, value in eci:
-        if j["orbits"][index]["linear_orbit_index"] != index:
+        linear_orbit_index = function_keys[index][0]
+        cluster_function_index = function_keys[index][1]
+        orbit = j["orbits"][linear_orbit_index]
+        cluster_function = orbit["cluster_functions"][cluster_function_index]
+        if cluster_function["linear_function_index"] != index:
             msg = "Formatting error in '" + str(filename) + "': "
-            msg += " linear_orbit_index mismatch"
+            msg += " linear_function_index mismatch"
             raise Exception(msg)
-        j["orbits"][index]["eci"] = value
+        cluster_function["eci"] = value
 
     # pretty printing -- could be improved
     cspecs_params = j["bspecs"]["cluster_specs"]["params"]

@@ -103,3 +103,21 @@ def ZrO_project_with_basis_functions(ZrO_project_ConfigEnumAllOccupations_max4,
     shutil.copyfile(shared_datadir / "ZrO_bspecs.json", bspecs_path)
     check(*proj.capture("bset -uf"))
     return proj
+
+@pytest.fixture
+def FCC_ternary_project_with_basis_functions(shared_datadir, tmpdir):
+    """Return a casm.Project for a FCC_ternary project with basis functions."""
+    project_path = tmpdir
+    prim_path = project_path.join("prim.json")
+    shutil.copyfile(shared_datadir / "FCC_ternary_prim.json", prim_path)
+
+    args = "init --path=" + str(project_path) + " --prim=" + str(prim_path)
+    check(*casm.api.casm_capture(args, root=None))
+    proj = casm.project.Project(project_path, verbose=False)
+    check(*proj.capture("enum -m ConfigEnumAllOccupations --max 4"))
+
+    bspecs_path = os.path.join(proj.path, "basis_sets", "bset.default",
+                               "bspecs.json")
+    shutil.copyfile(shared_datadir / "FCC_ternary_bspecs.json", bspecs_path)
+    check(*proj.capture("bset -uf"))
+    return proj
