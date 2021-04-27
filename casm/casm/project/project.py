@@ -14,6 +14,7 @@ import six
 
 from casm.project import syminfo
 from casm.api import API, casm_command, casm_capture
+from casm.api.api import _project_path as _api_project_path
 
 
 def project_path(dir=None):
@@ -24,23 +25,7 @@ def project_path(dir=None):
     Args:
     If dir == None, set to os.getcwd()
     """
-    if dir == None:
-        dir = os.getcwd()
-    else:
-        dir = os.path.abspath(dir)
-    if not os.path.isdir(dir):
-        raise Exception("Error, no directory named: " + dir)
-    curr = dir
-    cont = True
-    while cont == True:
-        test_path = os.path.join(curr, ".casm")
-        if os.path.isdir(test_path):
-            return curr
-        elif curr == os.path.dirname(curr):
-            return None
-        else:
-            curr = os.path.dirname(curr)
-    return None
+    return _api_project_path(dir=dir)
 
 
 class ClexDescription(object):
