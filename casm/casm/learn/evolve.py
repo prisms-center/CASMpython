@@ -860,7 +860,7 @@ class EvolutionaryFeatureSelection(BaseEstimator, SelectorMixin):
 
             if self.verbose:
                 print("Begin", self.evolve_params.n_generation, "generations")
-                t = time.clock()
+                t = time.perf_counter()
 
             in_args = [f(self) for f in self.alg_args]
             in_kwargs = dict()
@@ -871,7 +871,7 @@ class EvolutionaryFeatureSelection(BaseEstimator, SelectorMixin):
             self.pop_end = copy.deepcopy(self.pop)
 
             if self.verbose:
-                print("Runtime:", time.clock() - t, "(s)\n")
+                print("Runtime:", time.perf_counter() - t, "(s)\n")
 
             ## Print end population
             if self.verbose:
