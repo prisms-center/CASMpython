@@ -5,6 +5,7 @@ from builtins import *
 import json
 import os
 import math
+import tempfile
 import warnings
 from os.path import join
 from string import ascii_lowercase
@@ -741,20 +742,69 @@ class Project(object):
         return res
 
     @classmethod
-    def init(cls, root=None, prim_path=None, verbose=True):
+    def init(cls,
+             root=None,
+             prim_path=None,
+             prim_str=None,
+             verbose=True,
+             subproject=False,
+             config_selection_path=None,
+             confignames=None,
+             dofs=None,
+             relaxed=False,
+             include_va=False,
+             as_molecules=False):
         """ Calls `casm init` to create a new CASM project in the given directory
 
         Arguments
         ---------
 
           root: str (optional, default=os.getcwd())
-            A string giving the path to the root directory of the new CASM project.
+            A string giving the path to the root directory of the new CASM
+            project. Raises if a project already exists at this location.
 
           prim_path: str (optional, default="prim.json")
-            A string giving the path to a `prim.json` file to initialize the CASM project with.
+            A string giving the path to a `prim.json` file to initialize the
+            CASM project with.
+
+          prim_str: str (optional, default=None)
+            A string with the `prim.json` file contents used to initialize the
+            CASM project with.
 
           verbose: bool (optional, default=True)
-            Passed to casm.project.Project constructor. How much to print to stdout.
+            Passed to casm.project.Project constructor. How much to print to
+            stdout.
+
+          subproject: bool (optional, default=False)
+            Initialize a project in sub-directory of an existing project. After
+            initialization, commands executed below the sub-directory will act
+            on the sub-directory project; commmands executed above the sub-
+            directory act on the original project.
+
+          config_selection_path: str (optional, default=None)
+            If not None, initialize subprojects using existing configurations
+            from the given selection file. Options are: {'<filename>', 'MASTER'
+            (default), 'ALL', 'NONE', 'EMPTY', 'CALCULATED'}.
+
+          confignames: list of str (optional, default=None)
+            If not None, initialize subprojects using the configurations
+            specified by name.
+
+          dofs: list of str (optional, deafult=None)
+            One or more DoF types to use casm init with, such as 'disp' or
+            'EAstrain'.
+
+          relaxed: bool (optional, default=False)
+            Utilize relaxed coordinates for writing configuration-specific
+            prim.json files.
+
+          include_va: bool (optional, default=False)
+            Print sites that can only be vacancies; otherwise these sites are
+            excluded.
+
+          as_molecules: bool (optional, default=False)
+            Keep multi-atom species as molecules. By default, multi-atom
+            species are split into constituent atoms.
 
         Returns
         -------
@@ -767,15 +817,49 @@ class Project(object):
         """
         if root is None:
             root = os.getcwd()
-        if prim_path is None:
-            prim_path = "prim.json"
+        root = str(root)
+
+        if os.path.exists(root) and subproject is False:
+            if project_path(root) is not None:
+                raise Exception("A CASM project already exists at " + root)
+
+        os.makedirs(root, exist_ok=True)
+
+        tmpdir = None
+
+        if prim_path is not None:
+            prim_path = str(prim_path)
+        elif prim_path is None and prim_str is not None:
+            # write "prim.json" file
+            tmpdir = tempfile.TemporaryDirectory()
+            prim_path = os.path.join(tmpdir.name, "prim.json")
+            with open(prim_path, 'w') as f:
+                f.write(prim_str)
 
         def raise_on_fail(output, returncode):
             if returncode != 0:
                 print(output)
                 raise Exception("Could not initialize the project")
 
-        args = "init --path=" + str(root) + " --prim=" + str(prim_path)
+        args = "init --path=" + str(root)
+        if prim_path is not None:
+            args += " --prim=" + str(prim_path)
+        if subproject:
+            args += " --sub"
+        if config_selection_path is not None or confignames is not None:
+            args += " --write-prim"
+            if config_selection_path is not None:
+                args += " -c " + str(config_selection_path)
+            if confignames is not None:
+                args += " --confignames " + " ".join(confignames)
+        if dofs is not None:
+            args += " --dofs " + " ".join(dofs)
+        if relaxed is True:
+            args += " --relaxed"
+        if include_va is True:
+            args += " --include_va"
+        if as_molecules is True:
+            args += " --as-molecules"
         raise_on_fail(*casm_capture(args, combine_output=True))
         proj = Project(root, verbose=verbose)
         raise_on_fail(*proj.capture("composition --calc", combine_output=True))
