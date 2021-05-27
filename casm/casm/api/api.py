@@ -439,6 +439,33 @@ class API(object):
                                              six.b(root), log, err_log)
 
 
+def _project_path(dir=None):
+    """
+    Crawl up from dir to find '.casm'. If found returns the directory containing the '.casm' directory.
+    If not found, return None.
+
+    Args:
+    If dir == None, set to os.getcwd()
+    """
+    if dir == None:
+        dir = os.getcwd()
+    else:
+        dir = os.path.abspath(dir)
+    if not os.path.isdir(dir):
+        raise Exception("Error, no directory named: " + dir)
+    curr = dir
+    cont = True
+    while cont == True:
+        test_path = os.path.join(curr, ".casm")
+        if os.path.isdir(test_path):
+            return curr
+        elif curr == os.path.dirname(curr):
+            return None
+        else:
+            curr = os.path.dirname(curr)
+    return None
+
+
 def command_list():
     """
     Get list of recognized casm commands implemented at the libcasm level
@@ -468,9 +495,11 @@ def casm_command(args, root=None, combine_output=False):
           Ex: "select --set-on -o /abspath/to/my_selection"
           Ex: "query -k 'configname selected' -v -o STDOUT"
 
-      root: str (optional, default=os.getcwd())
-        A string giving the path to a root directory of a CASM project, typically
-        casm.project.Project.path
+      root: str (optional)
+        A string giving the path to a root directory of a CASM project,
+        typically casm.project.Project.path. If None given, a `'.casm'`
+        directory is searched for starting at the current working directory,
+        and if not found the empty string is used.
 
       combine_output: bool (optional, default=False)
         If True, print stdout and stderr to same str and only ret
@@ -484,7 +513,9 @@ def casm_command(args, root=None, combine_output=False):
 
     # set default root
     if root is None:
-        root = os.getcwd()
+        root = _project_path()
+        if root is None:
+            root = ""
 
     # construct stringstream objects to capture stdout, stderr
     ss = _api.stdout()
@@ -513,9 +544,11 @@ def casm_capture(args, root=None, combine_output=False):
           Ex: "select --set-on -o /abspath/to/my_selection"
           Ex: "query -k 'configname selected' -v -o STDOUT"
 
-      root: str (optional, default=os.getcwd())
-        A string giving the path to a root directory of a CASM project, typically
-        casm.project.Project.path
+      root: str (optional)
+        A string giving the path to a root directory of a CASM project,
+        typically casm.project.Project.path. If None given, a `'.casm'`
+        directory is searched for starting at the current working directory,
+        and if not found the empty string is used.
 
       combine_output: bool (optional, default=False)
         If True, print stdout and stderr to same str and only ret
@@ -538,7 +571,9 @@ def casm_capture(args, root=None, combine_output=False):
 
     # set default root
     if root is None:
-        root = os.getcwd()
+        root = _project_path()
+        if root is None:
+            root = ""
 
     # construct stringstream objects to capture stdout, stderr
     ss = _api.ostringstream_new()

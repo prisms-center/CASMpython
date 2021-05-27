@@ -48,7 +48,7 @@ def example_input_Lasso():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
@@ -97,7 +97,7 @@ def example_input_LassoCV():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
@@ -147,7 +147,7 @@ def example_input_RFE():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
@@ -194,7 +194,7 @@ def example_input_GeneticAlgorithm():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
@@ -258,7 +258,7 @@ def example_input_IndividualBestFirst():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
@@ -319,7 +319,7 @@ def example_input_PopulationBestFirst():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
@@ -380,7 +380,7 @@ def example_input_DirectSelection():
     # data
     specs["data"] = dict()
     specs["data"]["filename"] = "train"
-    specs["data"]["type"] = "selection"
+    specs["data"]["filetype"] = "selection"
     specs["data"]["X"] = "corr"
     specs["data"]["y"] = "formation_energy"
     specs["data"]["kwargs"] = None
