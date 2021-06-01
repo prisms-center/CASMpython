@@ -306,7 +306,7 @@ class VaspCalculatorBase(object):
     def submit(self):
         """ submit jobs for a selection"""
         self.pre_setup()
-        db = pbs.JobDB()
+        db = JobDB()
         for index, config_data in self.selection.data.iterrows():
             print("Submitting...")
             print("Configuration:", config_data["name"])
@@ -398,21 +398,21 @@ class VaspCalculatorBase(object):
 
             print("Constructing a PBS job")
             sys.stdout.flush()
-            # construct a pbs.Job
-            job = pbs.Job(name=casm.jobname(config_data["configdir"]),
-                          account=settings["account"],
-                          nodes=nodes,
-                          ppn=ppn,
-                          walltime=settings["walltime"],
-                          pmem=settings["pmem"],
-                          qos=settings["qos"],
-                          queue=settings["queue"],
-                          message=settings["message"],
-                          email=settings["email"],
-                          priority=settings["priority"],
-                          command=cmd,
-                          auto=self.auto,
-                          software=db.config["software"])
+            # construct a Job
+            job = Job(name=casm.jobname(config_data["configdir"]),
+                      account=settings["account"],
+                      nodes=nodes,
+                      ppn=ppn,
+                      walltime=settings["walltime"],
+                      pmem=settings["pmem"],
+                      qos=settings["qos"],
+                      queue=settings["queue"],
+                      message=settings["message"],
+                      email=settings["email"],
+                      priority=settings["priority"],
+                      command=cmd,
+                      auto=self.auto,
+                      software=db.config["software"])
 
             print("Submitting")
             sys.stdout.flush()
