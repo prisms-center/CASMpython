@@ -1042,10 +1042,10 @@ class CompositionAxes(object):
         self._end_members = {}
         for c in ascii_lowercase:
             if c in self._data:
-                self.end_members[c] = np.array(self._data[c])[:, 0]
+                self.end_members[c] = np.ravel(self._data[c])
             else:
                 break
-        self._end_members['origin'] = np.array(self._data['origin'])[:, 0]
+        self._end_members['origin'] = np.ravel(self._data['origin'])
 
     @property
     def name(self):

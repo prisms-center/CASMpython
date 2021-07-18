@@ -704,7 +704,7 @@ class VaspCalculatorBase(object):
         output["coord_mode"] = contcar.coord_mode
 
         # as lists
-        output["lattice"] = [
+        output["lattice_vectors"] = [
             noindent.NoIndent(list(v)) for v in contcar.lattice()
         ]
         output["atom_coords"] = [None for i in range(len(contcar.basis))]
