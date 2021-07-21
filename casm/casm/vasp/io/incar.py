@@ -61,16 +61,16 @@ class Incar(object):
                  species=None,
                  poscar=None,
                  sort=True,
-                 dof_info=None):
+                 structure_info=None):
         """ Construct an Incar object from 'filename'"""
-        self.read(filename, species, poscar, sort, dof_info)
+        self.read(filename, species, poscar, sort, structure_info)
 
     def read(self,
              filename,
              species=None,
              poscar=None,
              sort=True,
-             dof_info=None):
+             structure_info=None):
         """ Read an INCAR file """
         self.tags = dict()
         try:
@@ -87,7 +87,7 @@ class Incar(object):
         self._make_natural_type()
 
         if species != None:
-            self.update(species, poscar, sort, dof_info)
+            self.update(species, poscar, sort, structure_info)
 
         file.close()
 
@@ -172,16 +172,16 @@ class Incar(object):
                 print(("Warning: unknown INCAR tag '" + tag +
                        "' with value '" + str(self.tags[tag]) + "'"))
 
-    def update(self, species, poscar, sort=True, dof_info=None):
+    def update(self, species, poscar, sort=True, structure_info=None):
         """ Update Incar object to reflect Species settings """
 
         #TODO: Need a way to deal with conflicting dof setups. There won't be an issue if user isn't stupid.
         #TODO: Need a better update function, it's very construed and difficult to understand. Apologies!
 
-        if dof_info is not None and dof_info.atom_dofs is not None:
-            if "Cmagspin" in list(dof_info.atom_dofs.keys()):
+        if structure_info is not None and structure_info.atom_properties is not None:
+            if "Cmagspin" in list(structure_info.atom_properties.keys()):
                 vasp_input_tags_to_append = attribute_classes.CmagspinAttr(
-                    dof_info).vasp_input_tags()
+                    structure_info).vasp_input_tags()
                 self.tags.update(vasp_input_tags_to_append)
 
         if sort == False:

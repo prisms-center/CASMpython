@@ -17,7 +17,7 @@ except ImportError:
     from pbs import Job, JobDB, error_job, complete_job, JobDBError, EligibilityError
     from pbs import PBSError as JobsError
 
-from casm.project import Project, Selection, attribute_info
+from casm.project import Project, Selection, structure
 from casm.vasp.io import attribute_classes
 from casm import vasp
 from casm.misc import noindent
@@ -673,7 +673,7 @@ class VaspCalculatorBase(object):
     @staticmethod
     def properties(vaspdir, initial_structurefile=None, speciesfile=None):
         """ return a dict of output form a vasp directory"""
-        dof_info = attribute_info.AttributeInfo(initial_structurefile)
+        structure_info = structure.StructureInfo(initial_structurefile)
         output = dict()
         # load the OSZICAR and OUTCAR
         zcar = vasp.io.Oszicar(os.path.join(vaspdir, "OSZICAR"))
@@ -712,42 +712,42 @@ class VaspCalculatorBase(object):
             output["atom_coords"][unsort_dict[i]] = noindent.NoIndent(
                 list(ba.position))
 
-        output["atom_dofs"] = {}
-        output["atom_dofs"]["force"] = {}
-        output["atom_dofs"]["force"]["value"] = [
+        output["atom_properties"] = {}
+        output["atom_properties"]["force"] = {}
+        output["atom_properties"]["force"]["value"] = [
             None for i in range(len(ocar.forces))
         ]
         for i, force in enumerate(ocar.forces):
-            output["atom_dofs"]["force"]["value"][
+            output["atom_properties"]["force"]["value"][
                 unsort_dict[i]] = noindent.NoIndent(force)
 
-        output["global_dofs"] = {}
-        output["global_dofs"]["energy"] = {}
-        output["global_dofs"]["energy"]["value"] = zcar.E[-1]
+        output["global_properties"] = {}
+        output["global_properties"]["energy"] = {}
+        output["global_properties"]["energy"]["value"] = zcar.E[-1]
 
-        if dof_info.atom_dofs is not None:
-            if "Cmagspin" in list(dof_info.atom_dofs.keys()):
-                output["global_dofs"]["Cmagspin"] = {}
+        if structure_info.atom_properties is not None:
+            if "Cmagspin" in list(structure_info.atom_properties.keys()):
+                output["global_properties"]["Cmagspin"] = {}
                 cmagspin_specific_output = attribute_classes.CmagspinAttr(
-                    dof_info).vasp_output_dictionary(ocar)
-                output["atom_dofs"].update(cmagspin_specific_output)
+                    structure_info).vasp_output_dictionary(ocar)
+                output["atom_properties"].update(cmagspin_specific_output)
                 #TODO: Need a better way to write global magmom. I don't like what I did here
-                output["global_dofs"]["Cmagspin"]["value"] = zcar.mag[-1]
+                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
 
             #TODO: When you don't have Cmagspin but have magnetic calculations. This part can be removed if you runall magnetic calculations as Cmagspin calculations.
             #TODO: Need a better way of doing this. Some code duplication here.
             else:
                 if ocar.ispin == 2:
-                    output["global_dofs"]["Cmagspin"] = {}
-                    output["global_dofs"]["Cmagspin"]["value"] = zcar.mag[-1]
+                    output["global_properties"]["Cmagspin"] = {}
+                    output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
                     if ocar.lorbit in [1, 2, 11, 12]:
-                        output["atom_dofs"]["Cmagspin"] = {}
-                        output["atom_dofs"]["Cmagspin"]["value"] = [
+                        output["atom_properties"]["Cmagspin"] = {}
+                        output["atom_properties"]["Cmagspin"]["value"] = [
                             None for i in range(len(contcar.basis))
                         ]
 
                         for i, v in enumerate(contcar.basis):
-                            output["atom_dofs"]["Cmagspin"]["value"][
+                            output["atom_properties"]["Cmagspin"]["value"][
                                 unsort_dict[i]] = [
                                     noindent.NoIndent(ocar.mag[i])
                                 ]
@@ -756,15 +756,15 @@ class VaspCalculatorBase(object):
         #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
         else:
             if ocar.ispin == 2:
-                output["global_dofs"]["Cmagspin"]["value"] = zcar.mag[-1]
+                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
                 if ocar.lorbit in [1, 2, 11, 12]:
-                    output["atom_dofs"]["Cmagspin"] = {}
-                    output["atom_dofs"]["Cmagspin"]["value"] = [
+                    output["atom_properties"]["Cmagspin"] = {}
+                    output["atom_properties"]["Cmagspin"]["value"] = [
                         None for i in range(len(contcar.basis))
                     ]
 
                     for i, v in enumerate(contcar.basis):
-                        output["atom_dofs"]["Cmagspin"]["value"][
+                        output["atom_properties"]["Cmagspin"]["value"][
                             unsort_dict[i]] = [noindent.NoIndent(ocar.mag[i])]
         return output
 

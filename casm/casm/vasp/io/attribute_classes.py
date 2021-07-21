@@ -16,7 +16,7 @@ class DofClassError(Exception):
 
 class CmagspinAttr:
     """Class containing information specific to Cmagspin dof.
-       This object will be constructed from casm.project.attribute_info.AttributeInfo class
+       This object will be constructed from casm.project.structure.StructureInfo class
        which digests its information.
 
        self.atom_props: List[Dict] - Contains the list of atom properites (with atom name and it's value)
@@ -24,12 +24,12 @@ class CmagspinAttr:
 
        Consider the example of NaFeO2 with Fe having a +5 magnetic moment and rest all being 0
        self.atom_props: [{"site_index":0, "atom": "Na", "value":0},{"site_index":1,"atom":"Fe", "value":5},{"site_index":2, "atom":"O","value":0},{"site_index":3, "atom":"O","value":0}]"""
-    def __init__(self, dof_info):
-        """Constructs the CmagspinAttr object from AttributeInfo object
+    def __init__(self, structure_info):
+        """Constructs the CmagspinAttr object from StructureInfo object
 
         Parameters
         ----------
-        dof_info : casm.project.attribute_info.AttributeInfo
+        structure_info : casm.project.structure.StructureInfo
 
         """
         try:
@@ -37,10 +37,10 @@ class CmagspinAttr:
                 "site_index":
                 x,
                 "atom":
-                dof_info.atom_type[x],
+                structure_info.atom_type[x],
                 "value":
-                dof_info.atom_dofs["Cmagspin"]["value"][x]
-            } for x in range(0, len(dof_info.atom_type))]
+                structure_info.atom_properties["Cmagspin"]["value"][x]
+            } for x in range(0, len(structure_info.atom_type))]
         except:
             raise DofClassError(
                 "Could not construct CmagspinAttr class!! Check if you're dealing with Cmagspin dof calculations"
@@ -49,7 +49,7 @@ class CmagspinAttr:
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of VASP input tags specific to collinear magnetic spin calculations.
         The collinear magnetic spin specific tags are as follows:
-            
+
         MAGMOM, ISPIN
 
         Parameters

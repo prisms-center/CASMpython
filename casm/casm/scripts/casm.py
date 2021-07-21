@@ -15,6 +15,7 @@ import subprocess
 import sys
 
 import casm.scripts.casm_calc
+import casm.scripts.casm_convert
 import casm.scripts.casm_learn
 from casm.api import command_list, casm_command
 
@@ -41,6 +42,7 @@ def main(argv=None):
 
     python_commands = {
         'calc': casm.scripts.casm_calc.main,
+        'convert': casm.scripts.casm_convert.main,
         'learn': casm.scripts.casm_learn.main,
         'shell': _shell,
         'exec': _exec

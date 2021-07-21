@@ -35,5 +35,55 @@ class NoIndentEncoder(json.JSONEncoder):
             result = result.replace('"@@%s@@"' % (k, ), v)
         return result
 
+def singleline_arrays_json_printable(input):
+    """Makes a copy of a list or dict ready nicer JSON printing
+
+    Usage:
+        from casm.misc import noindent
+        with open(filename, 'w') as f:
+            data = singleline_arrays_json_printable(input)
+            f.write(json.dumps(data, cls=noindent.NoIndentEncoder, indent=2, sort_keys=True))
+
+    Arguments
+    ---------
+      input: dict or list
+        Input data, as from JSON
+
+      property_type: str
+        One of "atom", "mol", or "global"
+
+    Returns
+    -------
+        data:
+            A copy of input that prints without indenting innermost arrays.
+    """
+
+    def _recurs_list(data):
+        subobjects = False
+        for i in range(len(data)):
+            if isinstance(data[i], dict):
+                subobjects = True
+                _recurs_dict(data[i])
+            elif isinstance(data[i], list):
+                subobjects = True
+                if not _recurs_list(data[i]):
+                    data[i] = NoIndent(data[i])
+        return subobjects
+
+    def _recurs_dict(data):
+        for key in data:
+            if isinstance(data[key], dict):
+                _recurs_dict(data[key])
+            if isinstance(data[key], list):
+                if not _recurs_list(data[key]):
+                    data[key] = NoIndent(data[key])
+
+    import copy
+    data = copy.deepcopy(input)
+    if isinstance(input, dict):
+        _recurs_dict(data)
+    elif isinstance(input, list):
+        _recurs_list(data)
+    return data
 
 # ---------------------------------------------------
