@@ -60,7 +60,9 @@ class ASEIntermediary(object):
 
     def __init__(self, casm_to_ase_chemical_symbols={}):
         self.casm_to_ase_chemical_symbols=casm_to_ase_chemical_symbols
-        self.ase_to_casm_chemical_symbols={casm_to_ase_chemical_symbols[value]:key for key in casm_to_ase_chemical_symbols}
+        self.ase_to_casm_chemical_symbols={}
+        for key, value in casm_to_ase_chemical_symbols.items():
+            self.ase_to_casm_chemical_symbols[value] = key
 
     def make_structure(self, casm_structure):
         """Convert a CASM structure to an ase.Atoms instance
@@ -106,10 +108,10 @@ class ASEIntermediary(object):
             print("chemical_symbols:", symbols)
             raise Exception("Error setting ase chemical symbols. Any CASM atom_type that is not an chemical symbol understood by ase must have a conversion listed in a dict given by --chemical_symbols") from e
 
-        # required - "coord_mode","atom_coords" -> "positions"
-        coord_mode = casm_structure["coord_mode"]
+        # required - "coordinate_mode","atom_coords" -> "positions"
+        coordinate_mode = casm_structure["coordinate_mode"]
         casm_coords_are_frac = False
-        if coord_mode.lower() == "direct" or coord_mode.lower() == "fractional":
+        if coordinate_mode.lower() == "direct" or coordinate_mode.lower() == "fractional":
             casm_coords_are_frac = True
 
         atom_coords = np.array(casm_structure["atom_coords"])
@@ -172,7 +174,7 @@ class ASEIntermediary(object):
         """
         casm_structure = dict()
         casm_structure["lattice_vectors"] = ase_structure.cell.tolist()
-        casm_structure["coord_mode"] = "Fractional"
+        casm_structure["coordinate_mode"] = "Fractional"
         casm_structure["atom_coords"] = ase_structure.get_scaled_positions().tolist()
         casm_structure["atom_types"] = [self.ase_to_casm_chemical_symbols.get(x, x) for x in ase_structure.get_chemical_symbols()]
         return casm_structure
@@ -302,17 +304,20 @@ def main(argv=None):
     parser = make_parser()
     args = parser.parse_args(argv)
 
-    # could imagine an input option to select package used for conversion, then perform check here to see if it is available
-    try:
-        import ase
-        import ase.io
+    intermediary = "ase"
+
+    # I imagine an input option to select package used for conversion, then perform check here to see if it is available and load settings specific to that method
+    if intermediary == "ase":
+        try:
+            import ase
+            import ase.io
+        except Exception as e:
+            raise Exception("`casm convert` requires installation of ASE,\nthe Atomic Simulation Environment: https://wiki.fysik.dtu.dk/ase/about.html.\nInstallation may be as simple as `pip install ase`.") from e
         casm_to_ase_chemical_symbols={}
         if args.chemical_symbols:
             with open(args.chemical_symbols,'r') as f:
                 casm_to_ase_chemical_symbols=json.load(f)
         intermediary = ASEIntermediary(casm_to_ase_chemical_symbols)
-    except Exception as e:
-        raise Exception("`casm convert` requires installation of ASE,\nthe Atomic Simulation Environment: https://wiki.fysik.dtu.dk/ase/about.html.\nInstallation may be as simple as `pip install ase`.") from e
 
 
     # if single CASM structure file to convert

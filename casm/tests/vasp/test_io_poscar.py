@@ -15,7 +15,7 @@ def test_POSCAR_init_from_POSCAR(shared_datadir):
     expected_lattice = np.array([[2.97587164, 0.00000000, 0.00000000],
                                  [1.48793582, 2.57718044, 0.00000000],
                                  [1.48793582, 0.85906015, 5.25081268]])
-    expected_coord_mode = 'Direct'
+    expected_coordinate_mode = 'Direct'
     expected_scaling = 1.0
     expected_type_atoms = ['Na', 'Ni', 'O']
     expected_num_atoms = [1, 1, 2]
@@ -28,7 +28,7 @@ def test_POSCAR_init_from_POSCAR(shared_datadir):
     ]
 
     assert np.allclose(structure.lattice(), expected_lattice)
-    assert structure.coord_mode == expected_coord_mode
+    assert structure.coordinate_mode == expected_coordinate_mode
     assert structure.scaling == expected_scaling
     assert structure.type_atoms == expected_type_atoms
     assert structure.num_atoms == expected_num_atoms
@@ -49,7 +49,7 @@ def test_POSCAR_init_from_CASM_structure(shared_datadir):
         [[2.975871643531, 0.000000000000, 0.000000000000],
          [1.487935821766, 2.577180437492, 0.000000000000],
          [1.487935821766, 0.859060145831, 5.250812683906]])
-    expected_coord_mode = 'Cartesian'
+    expected_coordinate_mode = 'Cartesian'
     expected_scaling = 1.0
     expected_type_atoms = ['Na', 'Ni', 'O']
     expected_num_atoms = [1, 1, 2]
@@ -62,7 +62,7 @@ def test_POSCAR_init_from_CASM_structure(shared_datadir):
     ]
 
     assert np.allclose(structure.lattice(), expected_lattice)
-    assert structure.coord_mode == expected_coord_mode
+    assert structure.coordinate_mode == expected_coordinate_mode
     assert structure.scaling == expected_scaling
     assert structure.type_atoms == expected_type_atoms
     assert structure.num_atoms == expected_num_atoms

@@ -239,7 +239,7 @@ def vasp_input_file_names(dir, configname, clex, calc_subdir="", is_neb=False):
 def read_properties(filename):
     """ Read a properties.calc.json"""
     required = [
-        "atom_type", "atoms_per_type", "coord_mode", "relaxed_basis",
+        "atom_type", "atoms_per_type", "coordinate_mode", "relaxed_basis",
         "relaxed_energy", "relaxed_forces", "relaxed_lattice"
     ]
     optional = ["relaxed_magmom", "relaxed_mag_basis"]

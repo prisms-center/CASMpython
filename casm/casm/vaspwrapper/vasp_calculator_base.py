@@ -701,7 +701,7 @@ class VaspCalculatorBase(object):
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
         output["atom_type"] = initial_structure.atom_type
         #output["atoms_per_type"] = initial_structure.num_atoms
-        output["coord_mode"] = contcar.coord_mode
+        output["coordinate_mode"] = contcar.coordinate_mode
 
         # as lists
         output["lattice_vectors"] = [

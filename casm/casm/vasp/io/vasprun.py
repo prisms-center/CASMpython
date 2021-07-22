@@ -26,7 +26,7 @@ class Vasprun:
             self.lattice:  final lattice (2d list of double)
             self.rec_lat: final reciprocal lattice (2d list of double)
             self.basis: final basis (2d list of double)
-            self.coord_mode: coordinate mode for basis (always 'direct')
+            self.coordinate_mode: coordinate mode for basis (always 'direct')
             self.is_complete: did the VASP calculation run to completion? (bool)
             self.dos: Basic DOS output (3d list of double or bool)
             self.dos_efermi: Fermi level for DOS use (double)
@@ -65,7 +65,7 @@ class Vasprun:
         self.basis = None
 
         # coordinate mode for basis
-        self.coord_mode = 'direct'
+        self.coordinate_mode = 'direct'
 
         # did the VASP calculation run to completion?
         self.is_complete = False

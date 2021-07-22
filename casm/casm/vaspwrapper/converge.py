@@ -1250,7 +1250,7 @@ class Converge(object):
 
         output["atom_type"] = structure.type_atoms
         output["atoms_per_type"] = structure.num_atoms
-        output["coord_mode"] = vrun.coord_mode
+        output["coordinate_mode"] = vrun.coordinate_mode
 
         # as lists
         output["relaxed_forces"] = [None for i in range(len(vrun.forces))]

@@ -57,7 +57,7 @@ class Poscar:
         self.type_atoms: lists the specie names as in the POS (ex. [Mn3 Mn4])
         self.type_atoms_alias: lists the POTCAR names for the species
         self.num_atoms: lists the atoms as in the POS (ex. [1 1])
-        self.coord_mode: Contains the coordinate mode text from POSCAR, with whitespace stripped from beginning and end
+        self.coordinate_mode: Contains the coordinate mode text from POSCAR, with whitespace stripped from beginning and end
         self.basis: a list of Site objects
 
     """
@@ -78,7 +78,7 @@ class Poscar:
         self.basis = []
         self._lattice = np.zeros((3, 3))
         self._reciprocal_lattice = np.zeros((3, 3))
-        self.coord_mode = ''
+        self.coordinate_mode = ''
         self.SD_FLAG = False
         self.num_atoms = []
         self.type_atoms = []
@@ -132,9 +132,9 @@ class Poscar:
 
         # read basis
         self.SD_FLAG = False
-        self.coord_mode = config_data['coord_mode']
+        self.coordinate_mode = config_data['coordinate_mode']
         self.basis = []
-        cart = self.coord_mode[0].lower() == 'c'
+        cart = self.coordinate_mode[0].lower() == 'c'
         self.num_atoms = []
         self.type_atoms = []
 
@@ -186,7 +186,7 @@ class Poscar:
                 file.write('Selective Dynamics\n')
             file.write(type_line + '\n')
             file.write(num_line + '\n')
-            file.write(self.coord_mode + '\n')
+            file.write(self.coordinate_mode + '\n')
             for atom in sorted(d.keys()):
                 for tb in d[atom]:
                     tb.write(file)
@@ -195,7 +195,7 @@ class Poscar:
             file.write(' '.join([str(x) for x in self.num_atoms]) + '\n')
             if (self.SD_FLAG):
                 file.write('Selective Dynamics\n')
-            file.write(self.coord_mode + '\n')
+            file.write(self.coordinate_mode + '\n')
             for s in self.basis:
                 s.write(file)
 
@@ -358,7 +358,7 @@ class Poscar:
                 file: an open POSCAR being read from
 
             self.SD_FLAG = True/False if selective dynamics on
-            self.coord_mode = Contains the coordinate mode text, with whitespace stripped from beginning and end
+            self.coordinate_mode = Contains the coordinate mode text, with whitespace stripped from beginning and end
         """
         line = file.readline().strip()
         if len(line) == 0:
@@ -366,16 +366,16 @@ class Poscar:
                 "Could not read Select Dynamics or Coord Mode line")
         if (line[0].lower() == 's'):
             self.SD_FLAG = True
-            self.coord_mode = file.readline()
+            self.coordinate_mode = file.readline()
             if len(line) == 0:
                 raise PoscarError(
                     "Read Select Dynamics, but could not read Coord Mode line")
         else:
             self.SD_FLAG = False
-            self.coord_mode = line
+            self.coordinate_mode = line
 
-        if self.coord_mode[0].lower() not in ['c', 'd', 'k']:
-            raise PoscarError("Read invalid coord mode: '" + self.coord_mode +
+        if self.coordinate_mode[0].lower() not in ['c', 'd', 'k']:
+            raise PoscarError("Read invalid coord mode: '" + self.coordinate_mode +
                               "'")
 
     def _read_basis(self, file):
@@ -387,7 +387,7 @@ class Poscar:
             self.basis is a list of Site objects
         """
         self.basis = []
-        cart = not (self.coord_mode[0].lower() == 'd')
+        cart = not (self.coordinate_mode[0].lower() == 'd')
         for i in range(len(self.num_atoms)):
             for j in range(self.num_atoms[i]):
                 line = file.readline().strip()
@@ -422,7 +422,7 @@ class Poscar:
             self.basis is a list of Site objects
         """
         self.basis = []
-        cart = not (self.coord_mode[0].lower() == 'd')
+        cart = not (self.coordinate_mode[0].lower() == 'd')
         for i in range(len(self.num_atoms)):
             for j in range(self.num_atoms[i]):
                 line = file.readline().strip()
