@@ -4,8 +4,6 @@ def get_casm_structure_property(casm_structure, property_type, property_name):
 
     A CASM property name to find from the structure's atom, mol, or global properties. For example, property_name "disp", "magspin", or "strain" will find "<qualifier>_disp", "<qualifier>_<flavor>magspin", or "<qualifier>_<metric>strain", respectively. Finding multiple matches raises.
 
-    Will check aliases "<property_type>_properties", "<property_type>_dofs", "<property_type>_vals", and "<property_type>_values"
-
     Arguments
     ---------
       casm_structure: dict
@@ -19,67 +17,27 @@ def get_casm_structure_property(casm_structure, property_type, property_name):
 
     Returns
     -------
-        value: casm_structure[alias]["value"] or None
+      value: Any or None
+        Returns "value" for a found property with `property_name` as the suffix, else None.
+
+    Raises
+    ------
+      Exception:
+        If >1 matching property is found
     """
-    aliases = [
-        property_type + "_properties",
-        property_type + "_dofs",
-        property_type + "_vals",
-        property_type + "_values"]
+    key = property_type + "_properties"
     matching = []
-    for alias in aliases:
-        if alias not in casm_structure:
-            continue
-        for name in casm_structure[alias]:
+    if key in casm_structure:
+        for name in casm_structure[key]:
             if name.split('_')[-1][-len(property_name):] == property_name:
-                matching.append((alias,name))
+                matching.append(name)
     if len(matching) > 1:
         raise Exception("Error getting atom properties from a CASM structure: Found multiple matches for '" + property_name + "': " + str(matching))
     elif len(matching) == 1:
-        alias = matching[0][0]
-        name = matching[0][1]
-        return casm_structure[alias][name]["value"]
+        name = matching[0]
+        return casm_structure[key][name]["value"]
     else:
         result = None
-
-def get_all_casm_structure_properties(casm_structure, property_type):
-    """Get properties from a CASM structure object
-
-    Will check aliases "<property_type>_properties", "<property_type>_dofs", "<property_type>_vals", and "<property_type>_values" and collect all properties.
-
-    Arguments
-    ---------
-      casm_structure: dict
-        A CASM structure, as from JSON
-
-      property_type: str
-        One of "atom", "mol", or "global"
-
-    Returns
-    -------
-        properties: dict
-            Properties from all aliases collected in one dict of format:
-
-            {
-                <name>: {
-                    "value": [... values ...]
-                },
-                ...
-            }
-    """
-    aliases = [
-        property_type + "_properties",
-        property_type + "_dofs",
-        property_type + "_vals",
-        property_type + "_values"]
-    properties = {}
-    for alias in aliases:
-        if alias not in casm_structure:
-            continue
-        for name in casm_structure[alias]:
-            properties[name] = casm_structure[alias][name]
-    return properties
-
 
 class StructureInfoError(Exception):
     """Exception handling"""
@@ -145,9 +103,9 @@ class StructureInfo:
                 casm_structure = json.load(f)
 
             self.atom_type = casm_structure["atom_type"]
-            self.atom_properties = get_all_casm_structure_properties(casm_structure, "atom")
+            self.atom_properties = casm_structure.get("atom_properties", {})
             self.mol_type = casm_structure["mol_type"]
-            self.mol_properties = get_all_casm_structure_properties(casm_structure, "mol")
+            self.mol_properties = casm_structure.get("mol_properties", {})
 
 
         except:

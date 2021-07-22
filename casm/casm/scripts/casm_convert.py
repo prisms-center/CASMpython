@@ -79,7 +79,6 @@ class ASEIntermediary(object):
         - Set ase `positions`/`scaled_positions` from casm `atom_coords` (required)
         - Set ase `FixScaled` or `FixAtoms` from casm `atom_properties/selectivedynamics/value` (optional)
         - Set ase `initial_magnetic_moments` from casm `atom_properties/<flavor>magspin/value` (optional)
-        - Recognizes `atom_properties`, `atom_dofs`, `atom_vals` or `atom_values` as aliases
 
         Returns
         -------
