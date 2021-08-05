@@ -127,7 +127,7 @@ class Poscar:
 
         # read lattice
         self.scaling = 1.0
-        self._lattice = np.array(config_data['lattice'])
+        self._lattice = np.array(config_data['lattice_vectors'])
         self._compute_reciprocal_lattice()
 
         # read basis

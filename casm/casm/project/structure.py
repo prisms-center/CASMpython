@@ -1,3 +1,4 @@
+import json
 
 def get_casm_structure_property(casm_structure, property_type, property_name):
     """Get the value of a property from a CASM structure
@@ -98,19 +99,10 @@ class StructureInfo:
         filename : string (structure.json file)
 
         """
-        try:
-            with open(filename, 'r') as f:
-                casm_structure = json.load(f)
+        with open(filename, 'r') as f:
+            casm_structure = json.load(f)
 
-            self.atom_type = casm_structure["atom_type"]
-            self.atom_properties = casm_structure.get("atom_properties", {})
-            self.mol_type = casm_structure["mol_type"]
-            self.mol_properties = casm_structure.get("mol_properties", {})
-
-
-        except:
-            self.atom_properties = None
-            self.atom_type = None
-            self.mol_properties = None
-            self.mol_type = None
-            print("No dof information found in " + filename)
+        self.atom_type = casm_structure["atom_type"]
+        self.atom_properties = casm_structure.get("atom_properties", {})
+        self.mol_type = casm_structure["mol_type"]
+        self.mol_properties = casm_structure.get("mol_properties", {})

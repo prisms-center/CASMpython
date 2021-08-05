@@ -690,8 +690,8 @@ class VaspCalculatorBase(object):
             # fake unsort_dict (unsort_dict[i] == i)
             initial_structure = vasp.io.Poscar(os.path.join(vaspdir, "POSCAR"))
             unsort_dict = dict(
-                zip(range(0, len(structure.basis)),
-                    range(0, len(structure.basis))))
+                zip(range(0, len(initial_structure.basis)),
+                    range(0, len(initial_structure.basis))))
         contcar = vasp.io.Poscar(os.path.join(vaspdir, "CONTCAR"))
 
         # unsort_dict:

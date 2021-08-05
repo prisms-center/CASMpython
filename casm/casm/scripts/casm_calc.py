@@ -127,8 +127,9 @@ def main(argv=None):
             calculator.report()
 
     except Exception as e:
-        print(e)
-        sys.exit(1)
+        raise e
+        #print(e)
+        #sys.exit(1)
 
 
 if __name__ == "__main__":
