@@ -77,7 +77,7 @@ class ASEIntermediary(object):
 
         Currently supports:
         - Set ase `cell` from casm `lattice_vectors`/`lattice` (required)
-        - Set ase `chemical_symbols` from casm `atom_types` (required)
+        - Set ase `chemical_symbols` from casm `atom_type` (required)
         - Set ase `positions`/`scaled_positions` from casm `atom_coords` (required)
         - Set ase `FixScaled` or `FixAtoms` from casm `atom_properties/selectivedynamics/value` (optional)
         - Set ase `initial_magnetic_moments` from casm `atom_properties/<flavor>magspin/value` (optional)
@@ -159,7 +159,7 @@ class ASEIntermediary(object):
 
         Currently supports:
         - Use ase `cell` for casm `lattice_vectors` (required)
-        - Use ase `chemical_symbols` for casm `atom_types` (required)
+        - Use ase `chemical_symbols` for casm `atom_type` (required)
         - Use ase `scaled_positions`/`positions` for casm `atom_coords` (required)
         - Uses `atom_properties` for storing atom properties
 
@@ -176,7 +176,7 @@ class ASEIntermediary(object):
         casm_structure["lattice_vectors"] = ase_structure.cell.tolist()
         casm_structure["coordinate_mode"] = "Fractional"
         casm_structure["atom_coords"] = ase_structure.get_scaled_positions().tolist()
-        casm_structure["atom_types"] = [self.ase_to_casm_chemical_symbols.get(x, x) for x in ase_structure.get_chemical_symbols()]
+        casm_structure["atom_type"] = [self.ase_to_casm_chemical_symbols.get(x, x) for x in ase_structure.get_chemical_symbols()]
         return casm_structure
 
     def read_structure(self, filename, format):
@@ -260,9 +260,101 @@ class ASEIntermediary(object):
         output_filename = self.write_structure(ase_structure, output_format, output_dir, force=force)
         return output_filename
 
+convert_desc = """
+
+DESCRIPTION
+
+Convert to and from CASM formats and other structure file formats.
+
+### Converting from CASM project configurations
+
+The `--config-selection` and `--config-names` options allow output of
+configurations in the current project (or the project specified by `--path`).
+
+Conversions are performed using ASE, the Atomic Simulation Environment, as an
+intermediary. More information about ASE can be found at:
+
+    https://wiki.fysik.dtu.dk/ase/about.html.
+
+The formats supported by ASE, which can be specified using `--input-format` or
+`--output-format`, are listed here:
+
+    https://wiki.fysik.dtu.dk/ase/ase/io/io.html
+
+The format string `casm` specifies the CASM structure JSON file format.
+
+CASM projects may be created using occupant names such as "A", "B", "C", that
+do not actually mean a particular element. ASE requires the use of real element
+names. Converting between the two may be done by specifying a JSON file
+containing a dictionary of CASM occupant name to ASE `chemical_symbol` using
+the `--chemical-symbols` option. An example file looks like:
+
+    {
+        "A": "Al",
+        "B": "Cu"
+    }
+
+When writing configurations from a CASM project, the default output location is
+the training_data directory for each configuration. Each structure is written
+as a file named `structure.<fmt>`, where `<fmt>` is the format specified by
+`--output-format`. As an example, using `--output-format cif` would write
+structures in the Crystallographic Information File (CIF) format at the
+following locations:
+
+    <root>/training_data/<configname>/structure.cif
+
+Exceptions:
+    - The CASM JSON format (`casm`) is written as `structure.casm.json`
+    - The ASE JSON format (`json`) is written as `structure.ase.json`
+
+### Converting existing structure files
+
+The `--input` option allows specifying an existing structure file, with format
+specified by `--input-format` to convert to a different format, specified by
+`--output-format <output_format>`. The converted structure file is named
+`structure.<output_format>` and placed in the same directory as the input file.
+
+### Notes
+
+Note that not all structures can be converted between all formats and if the
+conversion does occur, it is up to the user to check that all necessary
+attributes of the structure have been converted accurately. Atom type,
+location, lattice vectors, and strain are most widely supported. Other features
+such magnetic moments, partial occupancies, or selective dynamics are less
+widely supported.
+
+CASM structures are distinct from CASM configurations. CASM structures are
+independent of a CASM project because they do not directly reference any
+project primitive crystal structure and degrees of freedom (DoF) (the "prim").
+Importing structures as configurations requires mapping performed via
+`casm import` and is not currently done automatically by `casm convert` because
+there is more than one way to perform any non-trivial mapping.
+
+
+EXAMPLES
+
+Example 1) Output CASM configurations from a selection in the current project
+as VASP POSCAR files:
+
+    casm convert --config-selection MASTER --output-format vasp
+
+    casm convert --config-selection /path/to/selection_file \\
+        --output-format cif
+
+
+Example 2) Convert a VASP POSCAR file to a CASM structure file:
+
+    casm convert --input /path/to/POSCAR --input-format vasp \\
+        --output-format casm
+
+"""
+
 def make_parser():
     parser = argparse.ArgumentParser(
         description='Convert between CASM structures and other formats')
+    parser.add_argument('--desc',
+                        help='Print extended usage description',
+                        action="store_true")
     parser.add_argument('--config-selection',
                         help="Selection of configurations to convert",
                         type=str,
@@ -272,7 +364,7 @@ def make_parser():
                         nargs='*',
                         default=None)
     parser.add_argument('--input',
-                        help="CASM structure files to convert",
+                        help="A structure file to convert",
                         nargs='*',
                         default=None)
     parser.add_argument('--input-format',
@@ -283,7 +375,7 @@ def make_parser():
                         help="Output format",
                         type=str,
                         default="")
-    parser.add_argument('--force',
+    parser.add_argument('-f', '--force',
                         help="Force write",
                         action="store_true",
                         default=False)
@@ -303,6 +395,11 @@ def main(argv=None):
         argv = sys.argv[1:]
     parser = make_parser()
     args = parser.parse_args(argv)
+
+    if args.desc:
+        parser.print_help()
+        print(convert_desc)
+        return
 
     intermediary = "ase"
 
