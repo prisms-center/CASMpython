@@ -84,13 +84,11 @@ class Relax(VaspCalculatorBase):
         self.calculator = calculator
 
     def pre_setup(self):
-        """Setus up folders and writes POS files"""
-        self.selection.write_pos()
+        """Setus up folders and writes structure files"""
+        args = "query -c " + self.selection.path + " --write-structure"
+        self.selection.proj.capture(args)
         for index, config_data in self.selection.data.iterrows():
-            try:
-                os.makedirs(config_data["calcdir"])
-            except:
-                pass
+            os.makedirs(config_data["calcdir"], exist_ok=True)
 
     def config_setup(self, config_data):
         """ Setup initial relaxation run for a configuration
@@ -133,11 +131,9 @@ class Relax(VaspCalculatorBase):
         return "python -c \"import casm.vaspwrapper; obj = casm.vaspwrapper.Relax.from_configuration_dir('{0}', '{1}'); obj.run()\"\n".format(
             configdir, calctype)
 
-    def finalize(self, config_data, super_poscarfile=None):
+    def finalize(self, config_data):
         """Checks convergnce and write a properties file for the selection"""
-        if super_poscarfile is None:
-            super_poscarfile = os.path.join(config_data["configdir"], "POS")
-        super(Relax, self).finalize(config_data, super_poscarfile)
+        super(Relax, self).finalize(config_data)
         sys.stdout.flush()
 
     def properties(self, calcdir, super_poscarfile=None, speciesfile=None):

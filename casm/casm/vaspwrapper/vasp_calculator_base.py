@@ -647,7 +647,7 @@ class VaspCalculatorBase(object):
                     .format(config_data["configdir"]))
                 raise
 
-    def finalize(self, config_data, structurefile=None):
+    def finalize(self, config_data):
         # write properties.calc.json
         vaspdir = os.path.join(config_data["calcdir"], "run.final")
         speciesfile = self.casm_directories.settings_path_crawl(
