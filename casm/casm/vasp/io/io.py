@@ -10,7 +10,7 @@ import sys
 from casm.vasp.io import oszicar, outcar, species, poscar
 from casm.vasp.io import kpoints as kp
 from casm.vasp.io import incar as inc
-from casm.project import structure
+from casm.project.structure import StructureInfo
 
 VASP_INPUT_FILE_LIST = [
     "INCAR", "STOPCAR", "POTCAR", "KPOINTS", "POSCAR", "EXHCAR", "CHGCAR",
@@ -192,7 +192,7 @@ def write_vasp_input(dirpath,
     ## Examples include: Cmagspin, NCmagspin, SOmagspin, etc
     ## Also contains information about atom types, and mol types
     print(" Reading DOF information from structure: ", structurefile)
-    structure_info = structure.StructureInfo(structurefile)
+    structure_info = StructureInfo(structurefile)
 
     print("  Reading INCAR:", incarfile)
     incar = inc.Incar(incarfile, species_settings, structure, sort, structure_info)

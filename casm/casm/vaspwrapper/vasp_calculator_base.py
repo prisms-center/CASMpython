@@ -103,14 +103,13 @@ class VaspCalculatorBase(object):
         config_dicts = []
         for index, config_data in self.selection.data.iterrows():
             config_dicts.append(self.config_properties(config_data))
-        properites_dict = {}
         for key in config_dicts[0].keys():
             if key in self.selection.data.columns:
                 continue
-            properites_dict[key] = []
+            values = []
             for config_dict in config_dicts:
-                properites_dict[key].append([config_dict[key]])
-            self.selection.add_data(key, properites_dict[key])
+                values.append(config_dict[key])
+            self.selection.add_data(key, values)
 
     def pre_setup(self):
         """has to be overloaded in the child class"""
