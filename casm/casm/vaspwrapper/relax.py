@@ -30,7 +30,7 @@ class Relax(VaspCalculatorBase):
     selection : casm.project.Selection
         selection of configuration
     calctype : string
-        calctype to setup and run the neb calculations
+        calctype to setup and run the calculation
     auto : bool
     sort : bool
 
@@ -47,11 +47,11 @@ class Relax(VaspCalculatorBase):
     config_setup
         sets up the input vasp files for a single configuration
     get_vasp_input_files(config_data=dict/Pandas.DataFrame, settings=dict)
-        returns filenames of a vasp neb calculation
+        returns filenames of a vasp calculation
     submit
         submit a job for each configuration
     run
-        runs the neb calcutation on the selection
+        runs the calcutation on the selection
     report
         reports results for the selection
     run_cmd(configdir='string', calctype='string')
@@ -78,7 +78,7 @@ class Relax(VaspCalculatorBase):
 
     """
     def __init__(self, selection, calctype=None, auto=True, sort=True):
-        """Construct a VASP neb job object"""
+        """Construct a VASP job object"""
         print("Construct a casm.vaspwrapper.Relax instance:")
         VaspCalculatorBase.__init__(self, selection, calctype, auto, sort)
         self.calculator = calculator
@@ -118,7 +118,7 @@ class Relax(VaspCalculatorBase):
         super(Relax, self).submit()
 
     def run(self):
-        """Runs the neb calcutation on the selection"""
+        """Runs the calcutation on the selection"""
         super(Relax, self).run()
 
     def report(self):

@@ -10,20 +10,33 @@ import os
 import pandas
 import sys
 
-try:
-    from prisms_jobs import Job, JobDB, error_job, complete_job, JobsError, JobDBError, EligibilityError
-except ImportError:
-    # use of the pbs module is deprecated after CASM v0.2.1
-    from pbs import Job, JobDB, error_job, complete_job, JobDBError, EligibilityError
-    from pbs import PBSError as JobsError
-
 from casm.project import Project, Selection, structure
 from casm.vasp.io import attribute_classes
 from casm import vasp
 from casm.misc import noindent
 from casm.vaspwrapper import VaspWrapperError, read_settings, write_settings, \
     vasp_input_file_names
+from casm.wrapper.misc import jobname
 
+
+def error_job(message):
+    import prisms_jobs as jobs
+    from prisms_jobs import JobsError, JobDBError
+    try:
+        jobs.error_job(message)
+    except (JobsError, JobDBError) as e:
+        print(str(e))
+        sys.stdout.flush()
+
+def complete_job(jobid=None):
+    """Complete job by given ID, or detect ID from environment"""
+    import prisms_jobs as jobs
+    from prisms_jobs import JobsError, JobDBError, EligibilityError
+    try:
+        jobs.complete_job(jobid)
+    except (JobsError, JobDBError, EligibilityError) as e:
+        print(str(e))
+        sys.stdout.flush()
 
 class VaspCalculatorBase(object):
     """
@@ -304,8 +317,12 @@ class VaspCalculatorBase(object):
 
     def submit(self):
         """ submit jobs for a selection"""
+
+        import prisms_jobs as jobs
+        print("queue software:", jobs.config.software().NAME)
+
         self.pre_setup()
-        db = JobDB()
+        db = jobs.JobDB()
         for index, config_data in self.selection.data.iterrows():
             print("Submitting...")
             print("Configuration:", config_data["name"])
@@ -342,18 +359,13 @@ class VaspCalculatorBase(object):
                     for j in id:
                         job = db.select_job(j)
                         if job["taskstatus"] == "Incomplete":
-                            try:
-                                complete_job(jobid=j)
-                            except (JobsError, JobDBError,
-                                    EligibilityError) as e:
-                                print(str(e))
-                                sys.stdout.flush()
+                            complete_job(jobid=j)
 
                 # ensure results report written
                 if not os.path.isfile(
                         os.path.join(config_data["calcdir"],
                                      "properties.calc.json")):
-                    if (is_converged(calculation)):
+                    if self.is_converged(calculation):
                         self.finalize(config_data)
 
                 continue
@@ -398,7 +410,7 @@ class VaspCalculatorBase(object):
             print("Constructing a PBS job")
             sys.stdout.flush()
             # construct a Job
-            job = Job(name=casm.jobname(config_data["configdir"]),
+            job = jobs.Job(name=jobname(config_data["name"]),
                       account=settings["account"],
                       nodes=nodes,
                       ppn=ppn,
@@ -410,8 +422,7 @@ class VaspCalculatorBase(object):
                       email=settings["email"],
                       priority=settings["priority"],
                       command=cmd,
-                      auto=self.auto,
-                      software=db.config["software"])
+                      auto=self.auto)
 
             print("Submitting")
             sys.stdout.flush()
@@ -510,14 +521,10 @@ class VaspCalculatorBase(object):
 
                 # mark job as complete in db
                 if self.auto:
-                    try:
-                        complete_job()
-                    except (JobsError, JobDBError, EligibilityError) as e:
-                        print(str(e))
-                        sys.stdout.flush()
+                    complete_job()
 
                 # write results to properties.calc.json
-                if (is_converged(calculation)):
+                if self.is_converged(calculation):
                     self.finalize(config_data)
                 continue
 
@@ -546,11 +553,7 @@ class VaspCalculatorBase(object):
 
                 # mark error
                 if self.auto:
-                    try:
-                        error_job("Not converging")
-                    except (JobsError, JobDBError) as e:
-                        print(str(e))
-                        sys.stdout.flush()
+                    error_job("Not converging")
 
                 print("Not Converging!")
                 sys.stdout.flush()
@@ -579,14 +582,10 @@ class VaspCalculatorBase(object):
 
                 # mark job as complete in db
                 if self.auto:
-                    try:
-                        complete_job()
-                    except (JobsError, JobDBError, EligibilityError) as e:
-                        print(str(e))
-                        sys.stdout.flush()
+                    complete_job()
 
                 # write results to properties.calc.json
-                if is_converged(calculation):
+                if self.is_converged(calculation):
                     self.finalize(config_data)
 
             else:

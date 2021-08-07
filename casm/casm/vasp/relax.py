@@ -248,8 +248,8 @@ class Relax(object):
 
             elif task == "relax":
                 self.add_rundir()
-                vasp.continue_job(self.rundir[-2], self.rundir[-1],
-                                  self.settings)
+                casm.vasp.continue_job(self.rundir[-2], self.rundir[-1],
+                                       self.settings)
                 shutil.copyfile(os.path.join(self.calcdir, "INCAR.base"),
                                 os.path.join(self.rundir[-1], "INCAR"))
 
