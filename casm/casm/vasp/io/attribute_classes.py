@@ -84,6 +84,13 @@ class CmagspinAttr:
                     + " "
                 )
                 number_of_same_magmoms = 1
+            if i == len(self.atom_props) - 1:
+                magmom_value += (
+                    str(number_of_same_magmoms)
+                    + "*"
+                    + str(self.atom_props[i]["value"][0])
+                    + " "
+                )
 
         return dict(MAGMOM=magmom_value, ISPIN=2)
 
