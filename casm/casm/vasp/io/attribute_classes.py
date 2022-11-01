@@ -27,19 +27,24 @@ class CmagspinAttr:
         structure_info : casm.project.structure.StructureInfo
 
         """
-        if "Cmagspin" not in list(structure_info.atom_properties.keys()):
+        if "Cmagspin" in list(structure_info.atom_properties.keys()):
+            self.magspin = "Cmagspin"
+        elif "Cunitmagspin" in list(structure_info.atom_properties.keys()):
+            self.magspin = "Cunitmagspin"
+        else:
             raise RuntimeError(
                 "Could not construct CmagspinAttr class. "
-                "Check if you're dealing with Cmagspin dof calculations.")
-        self.atom_props = [{
-            "site_index": site_index,
-            "atom": atom_type,
-            "value": magmom_value
-        } for site_index, (atom_type, magmom_value) in enumerate(
-            zip(
-                structure_info.atom_type,
-                structure_info.atom_properties["Cmagspin"]["value"],
-            ))]
+                "Check if you're dealing with Cmagspin dof calculations."
+            )
+        self.atom_props = [
+            {"site_index": site_index, "atom": atom_type, "value": magmom_value}
+            for site_index, (atom_type, magmom_value) in enumerate(
+                zip(
+                    structure_info.atom_type,
+                    structure_info.atom_properties[self.magspin]["value"],
+                )
+            )
+        ]
 
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of MAGMOM, ISPIN input tags
@@ -67,18 +72,23 @@ class CmagspinAttr:
         for i, atom_props in enumerate(self.atom_props):
             if i == 0:
                 number_of_same_magmoms = 1
-            elif math.isclose(atom_props["value"][0],
-                              self.atom_props[i - 1]["value"][0]):
+            elif math.isclose(
+                atom_props["value"][0], self.atom_props[i - 1]["value"][0]
+            ):
                 number_of_same_magmoms += 1
             else:
-                magmom_value += (str(number_of_same_magmoms) + "*" +
-                                 str(self.atom_props[i - 1]["value"][0]) + " ")
+                magmom_value += (
+                    str(number_of_same_magmoms)
+                    + "*"
+                    + str(self.atom_props[i - 1]["value"][0])
+                    + " "
+                )
                 number_of_same_magmoms = 1
 
         return dict(MAGMOM=magmom_value, ISPIN=2)
 
     @staticmethod
-    def vasp_output_dictionary(outcar, unsort_dict):
+    def vasp_output_dictionary(outcar, unsort_dict, magspin_type="Cmagspin"):
         """Returns the attribute specific vasp output
         dictionary which can be updated to the whole output
         dictionary which will be printed as properties.calc.json.
@@ -102,8 +112,8 @@ class CmagspinAttr:
             }
 
         """
-        output = dict(Cmagspin={})
+        output = {magspin_type: {}}
         for i in range(len(outcar.mag)):
-            output["Cmagspin"]["value"][unsort_dict[i]] = [outcar.mag[i]]
+            output[magspin_type]["value"][unsort_dict[i]] = [outcar.mag[i]]
 
         return output

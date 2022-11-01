@@ -726,23 +726,24 @@ class VaspCalculatorBase(object):
         output["global_properties"]["energy"] = {}
         output["global_properties"]["energy"]["value"] = zcar.E[-1]
 
+        if ocar.ispin == 2:
+            output["global_properties"]["Cmagspin"] = {}
+            output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
+
         if structure_info.atom_properties is not None:
             # if you have cmagspin sitedofs
             if "Cmagspin" in list(structure_info.atom_properties.keys()):
                 cmagspin_specific_output = attribute_classes.CmagspinAttr.vasp_output_dictionary(
                     ocar, unsort_dict)
                 output["atom_properties"].update(cmagspin_specific_output)
-
-                output["global_properties"]["Cmagspin"] = {}
-                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
+            elif "Cunitmagspin" in list(structure_info.atom_properties.keys()):
+                cmagspin_specific_output = attribute_classes.CmagspinAttr.vasp_output_dictionary(
+                    ocar, unsort_dict, "Cunitmagspin")
+                output["atom_properties"].update(cmagspin_specific_output)
 
             # if you don't have cmagspin but have other sitedofs with ispin 2
             else:
                 if ocar.ispin == 2:
-                    output["global_properties"]["Cmagspin"] = {}
-                    output["global_properties"]["Cmagspin"][
-                        "value"] = zcar.mag[-1]
-
                     if ocar.lorbit in [1, 2, 11, 12]:
                         cmagspin_specific_output = attribute_classes.CmagspinAttr.vasp_output_dictionary(
                             ocar, unsort_dict)
@@ -752,7 +753,6 @@ class VaspCalculatorBase(object):
         # if you don't have any sitedofs
         else:
             if ocar.ispin == 2:
-                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
                 if ocar.lorbit in [1, 2, 11, 12]:
                     cmagspin_specific_output = attribute_classes.CmagspinAttr.vasp_output_dictionary(
                         ocar, unsort_dict)
