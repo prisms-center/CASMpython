@@ -121,7 +121,7 @@ class CmagspinAttr:
         """
         output = {}
         output[magspin_type] = {}
-        output[magspin_type]["value"] = {}
+        output[magspin_type]["value"] = [None] * len(unsort_dict)
         for i in range(len(outcar.mag)):
             output[magspin_type]["value"][unsort_dict[i]] = [outcar.mag[i]]
 
