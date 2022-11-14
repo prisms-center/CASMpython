@@ -63,6 +63,15 @@ class ClexDescription(object):
         self.bset = bset
         self.eci = eci
 
+    def to_dict(self):
+        return {
+            "bset" : self.bset,
+            "calctype" : self.calctype,
+            "eci" : self.eci,
+            "name" : self.name,
+            "property" : self.property,
+            "ref" : self.ref}
+
 
 class ProjectSettings(object):
     """
@@ -194,7 +203,7 @@ class DirectoryStructure(object):
 
     def casmdb_dir(self):
         """Return .casm/jsonDB path"""
-        return join(self.casm_dir, self.__casmdb_dir)
+        return join(self.casm_dir(), self.__casmdb_dir)
 
     def project_settings(self):
         """Return project_settings.json path"""
@@ -216,7 +225,7 @@ class DirectoryStructure(object):
         type: str
             One of "config" or "scel"
         """
-        querydir = join(self.casmdb_dir(), "query")
+        querydir = join(self.casm_dir(), "query")
         if type == "config":
             return join(querydir, "Configuration", "master_selection")
         elif type == "scel":
@@ -672,13 +681,17 @@ class Project(object):
         self._print_output = print_output
         self._combine_output = combine_output
 
-    def command(self, args):
+    def command(self, args, out=None, err=None):
         """
         Execute a command via the c api, writing output to stdout/stderr.
 
         Args:
           args: A string containing the command to be executed.
             Ex: "select --set-on -o /abspath/to/my_selection"
+
+          out: Path to output file for standard out
+
+          err: Path to file for standard error.
 
         Returns:
           returncode: The returncode of the command via the CASM C API.
@@ -687,7 +700,20 @@ class Project(object):
         # this also ensures self._api is not None
         data = self.data()
 
-        if self._capture:
+        if out is not None:
+            fs = self._api.fstream_new(out)
+            if out == err or err is None:
+                fs_err = fs
+            else:
+                fs_err = self._api.ostringstream_new(err)
+            self.code = self._api.capi(args, self.data(), self.path,
+                                       fs, fs_err)
+            self._api.fstream_delete(fs)
+            if out != err and err is not None:
+                self._api.fstream_delete(fs_err)
+            self.__refresh()
+
+        elif self._capture:
             if self._combine_output:
                 self.out, self.code = self.capture(args, combine_output=True)
             else:
@@ -698,6 +724,7 @@ class Project(object):
             self.code = self._api.capi(args, self.data(), self.path,
                                        self._streamptr, self._errstreamptr)
             self.__refresh()
+        return self.code
 
     def capture(self, args, combine_output=False):
         """
