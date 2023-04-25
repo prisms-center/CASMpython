@@ -139,6 +139,15 @@ class API(object):
             self.lib_ccasm.casm_ostringstream_strcpy.restype = ctypes.POINTER(
                 ctypes.c_char)
 
+            self.lib_ccasm.casm_fstream_new.argtypes = [
+                ctypes.c_char_p
+            ]
+            self.lib_ccasm.casm_fstream_new.restype = ctypes.c_void_p
+
+            self.lib_ccasm.casm_fstream_delete.argtypes = [
+                ctypes.c_void_p
+            ]
+
             self.lib_ccasm.casm_primclex_null.argtypes = None
             self.lib_ccasm.casm_primclex_null.restype = ctypes.c_void_p
 
@@ -247,6 +256,37 @@ class API(object):
 
         """
         API.__api.lib_ccasm.casm_ostringstream_delete(ptr)
+        return
+
+    def fstream_new(self, path):
+        """
+        Construct a CASM::FileLog that writes to a file.
+
+        Arguments
+        ---------
+
+          path: str
+            Path to file where log is written
+
+        Returns
+        -------
+          ptr: CASM::FileLog pointer
+            Used for capturing CASM output in a file.
+            This ptr needs to be deleted manually by using API.fstream_delete(ptr)
+        """
+        return API.__api.lib_ccasm.casm_fstream_new(six.b(path))
+
+    def fstream_delete(self, ptr):
+        """
+        Delete a CASM::FileLog
+
+        Arguments
+        ---------
+
+          ptr: CASM::FileLog pointer
+
+        """
+        API.__api.lib_ccasm.casm_fstream_delete(ptr)
         return
 
     def primclex_null(self):
