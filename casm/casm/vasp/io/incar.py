@@ -1,5 +1,4 @@
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import *
 
 import re
@@ -8,40 +7,101 @@ from casm.vasp.io import attribute_classes
 
 # List of tags in VASP sorted by the data type associated with it
 VASP_TAG_INT_LIST = [
-    'ialgo', 'ibrion', 'icharg', 'images', 'ismear', 'ispin', 'istart', 'isym',
-    'lorbit', 'nbands', 'ndav', 'ngx', 'ngxf', 'ngy', 'ngyf', 'ngz', 'ngzf',
-    'npar', 'ncore', 'spind', 'nsw', 'isif', 'kpar', 'voskown', 'nsim',
-    'nedos', 'lmaxfock', 'lmaxmix', 'nkred', 'ivdw', 'nelmin', 'nelm',
-    'nelmdl', 'ldautype', 'ldauprint', 'ldauprint', 'ichain'
+    "ialgo",
+    "ibrion",
+    "icharg",
+    "images",
+    "ismear",
+    "ispin",
+    "istart",
+    "isym",
+    "lorbit",
+    "nbands",
+    "ndav",
+    "ngx",
+    "ngxf",
+    "ngy",
+    "ngyf",
+    "ngz",
+    "ngzf",
+    "npar",
+    "ncore",
+    "spind",
+    "nsw",
+    "isif",
+    "kpar",
+    "voskown",
+    "nsim",
+    "nedos",
+    "lmaxfock",
+    "lmaxmix",
+    "nkred",
+    "ivdw",
+    "nelmin",
+    "nelm",
+    "nelmdl",
+    "ldautype",
+    "ldauprint",
+    "ldauprint",
+    "ichain",
 ]
 VASP_TAG_FLOAT_LIST = [
-    'ediff', 'ediffg', 'emax', 'emin', 'encut', 'potim', 'sigma', 'enmax',
-    'symprec', 'time', 'hfscreen', 'amix', 'bmix', 'amix_mag', 'bmix_mag',
-    'spring'
+    "ediff",
+    "ediffg",
+    "emax",
+    "emin",
+    "encut",
+    "potim",
+    "sigma",
+    "enmax",
+    "symprec",
+    "time",
+    "hfscreen",
+    "amix",
+    "bmix",
+    "amix_mag",
+    "bmix_mag",
+    "spring",
 ]
 VASP_TAG_BOOL_LIST = [
-    'lcharg', 'lsorbit', 'lwave', 'lscalapack', 'lscalu', 'lplane', 'lhfcalc',
-    'shiftred', 'evenonly', 'oddonly', 'addgrid', 'ldau', 'lasph', 'lclimb',
-    'ldneb', 'lnebcell', 'ltangentold'
+    "lcharg",
+    "lsorbit",
+    "lwave",
+    "lscalapack",
+    "lscalu",
+    "lplane",
+    "lhfcalc",
+    "shiftred",
+    "evenonly",
+    "oddonly",
+    "addgrid",
+    "ldau",
+    "lasph",
+    "lclimb",
+    "ldneb",
+    "lnebcell",
+    "ltangentold",
 ]
 # Site-wise list of arrays of FLOAT
-VASP_TAG_SITEF_LIST = ['magmom', 'rwigs']
+VASP_TAG_SITEF_LIST = ["magmom", "rwigs"]
 # Species-wise list of arrays of FLOAT
-VASP_TAG_SPECF_LIST = ['ldauu', 'ldauj']
+VASP_TAG_SPECF_LIST = ["ldauu", "ldauj"]
 # Site-wise list of arrays of INT
-VASP_TAG_SPECI_LIST = ['ldaul']
+VASP_TAG_SPECI_LIST = ["ldaul"]
 
 VASP_TAG_STRING_LIST = [
-    'algo', 'prec', 'system', 'precfock', 'lreal', 'metagga'
+    "algo", "prec", "system", "precfock", "lreal", "metagga"
 ]
 
 # The master list of VASP tags is a union of the above -> need to allow for 'miscellaneous' ?
-VASP_TAG_LIST = VASP_TAG_INT_LIST + VASP_TAG_SITEF_LIST + VASP_TAG_SPECI_LIST + \
-    VASP_TAG_BOOL_LIST + VASP_TAG_FLOAT_LIST + \
-    VASP_TAG_STRING_LIST + VASP_TAG_SPECF_LIST
+VASP_TAG_LIST = (VASP_TAG_INT_LIST + VASP_TAG_SITEF_LIST +
+                 VASP_TAG_SPECI_LIST + VASP_TAG_BOOL_LIST +
+                 VASP_TAG_FLOAT_LIST + VASP_TAG_STRING_LIST +
+                 VASP_TAG_SPECF_LIST)
 
 
 class IncarError(Exception):
+
     def __init__(self, msg):
         self.msg = msg
 
@@ -55,14 +115,15 @@ class Incar(object):
         tags: a dict of all INCAR settings
 
     All input tags and associated values are stored as key-value pairs in the dicionary called 'tags'.
-   """
+    """
+
     def __init__(self,
                  filename,
                  species=None,
                  poscar=None,
                  sort=True,
                  structure_info=None):
-        """ Construct an Incar object from 'filename'"""
+        """Construct an Incar object from 'filename'"""
         self.read(filename, species, poscar, sort, structure_info)
 
     def read(self,
@@ -71,16 +132,16 @@ class Incar(object):
              poscar=None,
              sort=True,
              structure_info=None):
-        """ Read an INCAR file """
+        """Read an INCAR file"""
         self.tags = dict()
         try:
-            file = open(filename, 'r')
+            file = open(filename, "r")
         except:
             raise IncarError("Could not open file: '" + filename + "'")
 
         # parse INCAR into self.tags
         for line in file:
-            line = re.split('=', re.split('#', line)[0])
+            line = re.split("=", re.split("#", line)[0])
             if len(line) == 2:
                 self.tags[line[0].strip()] = line[1].strip()
         self._verify_tags()
@@ -92,7 +153,7 @@ class Incar(object):
         file.close()
 
     def _make_natural_type(self):
-        """ Convert self.tags values from strings into their 'natural type' (int, float, etc.) """
+        """Convert self.tags values from strings into their 'natural type' (int, float, etc.)"""
         for tag in self.tags:
             if self.tags[tag] is None or str(self.tags[tag]).strip() == "":
                 self.tags[tag] = None
@@ -106,29 +167,29 @@ class Incar(object):
                 elif tag.lower() in VASP_TAG_FLOAT_LIST:
                     try:
                         self.tags[tag] = float(self.tags[tag].lower().replace(
-                            'd', 'e'))
+                            "d", "e"))
                     except ValueError:
                         raise IncarError("Could not convert '" + tag +
                                          "' : '" + self.tags[tag] +
                                          "' to float")
                 elif tag.lower() in VASP_TAG_BOOL_LIST:
-                    if not self.tags[tag].lower() in ['.true.', '.false.']:
+                    if not self.tags[tag].lower() in [".true.", ".false."]:
                         raise IncarError("Could not find '" + tag + "' : '" +
                                          self.tags[tag].lower() +
                                          "' in ['.true.','.false.']")
                     else:
-                        self.tags[tag] = (self.tags[tag].lower() == '.true.')
+                        self.tags[tag] = self.tags[tag].lower() == ".true."
                 elif tag.lower() in VASP_TAG_SITEF_LIST + VASP_TAG_SPECF_LIST:
                     temp = []
                     for value in self.tags[tag].split():
                         try:
-                            item = value.split('*')
+                            item = value.split("*")
                             if len(item) == 1:
                                 temp.append(float(value))
                             else:
                                 if item[0] != 0:
                                     temp.append(
-                                        str(item[0]) + '*' +
+                                        str(item[0]) + "*" +
                                         str(float(item[1])))
                         except ValueError:
                             raise IncarError("Could not convert '" + tag +
@@ -149,22 +210,39 @@ class Incar(object):
                     self._check_string_tag(tag, self.tags[tag])
 
     def _check_string_tag(self, tag, value):
-        """ Check that string-valued tags are allowed values """
-        if tag.lower() == 'prec':
+        """Check that string-valued tags are allowed values"""
+        if tag.lower() == "prec":
             if value.lower() not in [
-                    'low', 'medium', 'high', 'normal', 'single', 'accurate'
+                    "low",
+                    "medium",
+                    "high",
+                    "normal",
+                    "single",
+                    "accurate",
             ]:
                 raise IncarError("Unknown 'prec' value: '" + value)
-        elif tag.lower() == 'algo':
+        elif tag.lower() == "algo":
             if value.lower() not in [
-                    'normal', 'veryfast', 'fast', 'conjugate', 'all', 'damped',
-                    'subrot', 'eigenval', 'none', 'nothing', 'chi', 'gw0',
-                    'gw', 'scgw0', 'scgw'
+                    "normal",
+                    "veryfast",
+                    "fast",
+                    "conjugate",
+                    "all",
+                    "damped",
+                    "subrot",
+                    "eigenval",
+                    "none",
+                    "nothing",
+                    "chi",
+                    "gw0",
+                    "gw",
+                    "scgw0",
+                    "scgw",
             ]:
                 raise IncarError("Unknown 'algo' value: '" + value)
 
     def _verify_tags(self):
-        """ Check that only allowed INCAR tags are in self.tags """
+        """Check that only allowed INCAR tags are in self.tags"""
         for tag in self.tags:
             if tag.lower() in VASP_TAG_LIST:
                 continue
@@ -173,14 +251,24 @@ class Incar(object):
                        "' with value '" + str(self.tags[tag]) + "'"))
 
     def update(self, species, poscar, sort=True, structure_info=None):
-        """ Update Incar object to reflect Species settings """
+        """Update Incar object to reflect Species settings"""
 
-        #TODO: Need a way to deal with conflicting dof setups. There won't be an issue if user isn't stupid.
-        #TODO: Need a better update function, it's very construed and difficult to understand. Apologies!
+        # TODO: Need a way to deal with conflicting dof setups. There won't be an issue if user isn't stupid.
+        # TODO: Need a better update function, it's very construed and difficult to understand. Apologies!
 
         if structure_info is not None and structure_info.atom_properties is not None:
-            if "Cmagspin" or "Cunitmagspin" in list(structure_info.atom_properties.keys()):
+            if "Cmagspin" in list(structure_info.atom_properties.keys()):
                 vasp_input_tags_to_append = attribute_classes.CmagspinAttr(
+                    structure_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
+
+            if "Cunitmagspin" in list(structure_info.atom_properties.keys()):
+                vasp_input_tags_to_append = attribute_classes.CunitmagspinAttr(
+                    structure_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
+
+            if "SOunitmagspin" in list(structure_info.atom_properties.keys()):
+                vasp_input_tags_to_append = attribute_classes.SOunitmagspinAttr(
                     structure_info).vasp_input_tags()
                 self.tags.update(vasp_input_tags_to_append)
 
@@ -188,7 +276,7 @@ class Incar(object):
             # for each 'tag' in the IndividualSpecies, create a list in self.tags
             for key in list(species.values())[0].tags.keys():
                 if key.lower() in (VASP_TAG_INT_LIST + VASP_TAG_FLOAT_LIST):
-                    self.tags[key] = 0.
+                    self.tags[key] = 0.0
                     for site in poscar.basis:
                         self.tags[key] += float(
                             species[site.occupant].tags[key])
@@ -212,7 +300,7 @@ class Incar(object):
             for key in list(species.values())[0].tags.keys():
                 # for key in species[species.keys()[0]].tags.keys():
                 if key.lower() in (VASP_TAG_INT_LIST + VASP_TAG_FLOAT_LIST):
-                    self.tags[key] = 0.
+                    self.tags[key] = 0.0
                     for site in poscar.basis:
                         self.tags[key] += float(
                             species[site.occupant].tags[key])
@@ -227,8 +315,8 @@ class Incar(object):
                             # for species-specific tags, use the value specified for the
                             # species whose pseudopotential is being used for this alias
                             for name in species.keys():
-                                if species[name].alias == alias and species[
-                                        name].write_potcar:
+                                if (species[name].alias == alias
+                                        and species[name].write_potcar):
                                     self.tags[key].append(
                                         species[name].tags[key])
                                     break
@@ -246,7 +334,7 @@ class Incar(object):
 
     def write(self, filename):
         try:
-            incar_write = open(filename, 'w')
+            incar_write = open(filename, "w")
         except IOError as e:
             raise e
         for tag in self.tags:
@@ -254,17 +342,17 @@ class Incar(object):
                 pass
             else:
                 if tag.lower() in VASP_TAG_SITEF_LIST + VASP_TAG_SPECF_LIST:
-                    incar_write.write('{} = {}\n'.format(
+                    incar_write.write("{} = {}\n".format(
                         tag.upper(), remove_chars(self.tags[tag], "[\[\],']")))
                 elif tag.lower() in VASP_TAG_SPECI_LIST:
-                    incar_write.write('{} = {}\n'.format(
+                    incar_write.write("{} = {}\n".format(
                         tag.upper(), remove_chars(self.tags[tag], "[\[\],']")))
                 elif tag.lower() in VASP_TAG_BOOL_LIST:
                     if self.tags[tag] == True:
-                        incar_write.write('{} = .TRUE.\n'.format(tag.upper()))
+                        incar_write.write("{} = .TRUE.\n".format(tag.upper()))
                     else:
-                        incar_write.write('{} = .FALSE.\n'.format(tag.upper()))
+                        incar_write.write("{} = .FALSE.\n".format(tag.upper()))
                 else:
-                    incar_write.write('{} = {}\n'.format(
+                    incar_write.write("{} = {}\n".format(
                         tag.upper(), self.tags[tag]))
         incar_write.close()
