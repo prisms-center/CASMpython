@@ -22,7 +22,7 @@ VASP_TAG_FLOAT_LIST = [
 VASP_TAG_BOOL_LIST = [
     'lcharg', 'lsorbit', 'lwave', 'lscalapack', 'lscalu', 'lplane', 'lhfcalc',
     'shiftred', 'evenonly', 'oddonly', 'addgrid', 'ldau', 'lasph', 'lclimb',
-    'ldneb', 'lnebcell', 'ltangentold'
+    'ldneb', 'lnebcell', 'ltangentold', 'lnoncollinear'
 ]
 # Site-wise list of arrays of FLOAT
 VASP_TAG_SITEF_LIST = ['magmom', 'rwigs']

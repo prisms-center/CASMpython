@@ -104,8 +104,8 @@ class SOunitmagspinAttr:
 
         return dict(MAGMOM=incar_magmom_str,
                     ISPIN=2,
-                    LSORBIT=".TRUE.",
-                    LNONCOLLINEAR=".TRUE.")
+                    LSORBIT=True,
+                    LNONCOLLINEAR=True)
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
