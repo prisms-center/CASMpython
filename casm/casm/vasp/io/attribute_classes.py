@@ -1,38 +1,4 @@
-import math
 import numpy as np
-
-
-def get_incar_magmom_from_magmom_values(magmom_values):
-    """Returns an INCAR magmom string from a
-    list of magmom values. The magmom values should
-    be listed in the order of atoms in POSCAR
-
-    Parameters
-    ----------
-    magmom_values : np.ndarray
-
-    Returns
-    -------
-    str
-
-    """
-
-    magmom = ""
-    for i, value in enumerate(magmom_values):
-        if i == 0:
-            number_of_same_magmoms = 1
-        elif math.isclose(value, magmom_values[i - 1]):
-            number_of_same_magmoms += 1
-        else:
-            magmom += (str(number_of_same_magmoms) + "*" +
-                       str(magmom_values[i - 1]) + " ")
-            number_of_same_magmoms = 1
-        if i == len(magmom_values) - 1:
-            magmom += str(number_of_same_magmoms) + "*" + str(
-                magmom_values[i]) + " "
-
-    return magmom
-
 
 class SOunitmagspinAttr:
     """Class containing information specific to Cmagspin dof.
@@ -100,9 +66,7 @@ class SOunitmagspinAttr:
         magmom_values = np.ravel(
             np.array([atom_prop["value"] for atom_prop in self.atom_props]))
 
-        incar_magmom_str = get_incar_magmom_from_magmom_values(magmom_values)
-
-        return dict(MAGMOM=incar_magmom_str,
+        return dict(MAGMOM=magmom_values,
                     ISPIN=2,
                     LSORBIT=True,
                     LNONCOLLINEAR=True)
@@ -212,9 +176,7 @@ class CunitmagspinAttr:
         magmom_values = np.ravel(
             np.array([atom_prop["value"] for atom_prop in self.atom_props]))
 
-        incar_magmom_str = get_incar_magmom_from_magmom_values(magmom_values)
-
-        return dict(MAGMOM=incar_magmom_str, ISPIN=2)
+        return dict(MAGMOM=magmom_values, ISPIN=2)
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
@@ -319,9 +281,8 @@ class CmagspinAttr:
 
         magmom_values = np.ravel(
             np.array([atom_prop["value"] for atom_prop in self.atom_props]))
-        incar_magmom_str = get_incar_magmom_from_magmom_values(magmom_values)
 
-        return dict(MAGMOM=incar_magmom_str, ISPIN=2)
+        return dict(MAGMOM=magmom_values, ISPIN=2)
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
