@@ -212,7 +212,7 @@ class CunitmagspinAttr:
         output["Cunitmagspin"]["value"] = [None] * len(unsort_dict)
         for i in range(len(outcar.mag)):
             output["Cmagspin"]["value"][unsort_dict[i]] = [outcar.mag[i]]
-            if outcar.mag[i] < 1:
+            if abs(outcar.mag[i]) < 1:
                 output["Cunitmagspin"]["value"][unsort_dict[i]] = [0.0]
             else:
                 output["Cunitmagspin"]["value"][unsort_dict[i]] = [
