@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class SOunitmagspinAttr:
     """Class containing information specific to Cmagspin dof.
     This object will be constructed from casm.project.structure.StructureInfo class
@@ -29,17 +30,18 @@ class SOunitmagspinAttr:
         if "SOunitmagspin" not in list(structure_info.atom_properties.keys()):
             raise RuntimeError(
                 "Could not construct SOunitmagspinAttr class. "
-                "Check if you're dealing with Cmagspin dof calculations.")
+                "Check if you're dealing with Cmagspin dof calculations."
+            )
 
-        self.atom_props = [{
-            "site_index": site_index,
-            "atom": atom_type,
-            "value": magmom_value
-        } for site_index, (atom_type, magmom_value) in enumerate(
-            zip(
-                structure_info.atom_type,
-                structure_info.atom_properties["SOunitmagspin"]["value"],
-            ))]
+        self.atom_props = [
+            {"site_index": site_index, "atom": atom_type, "value": magmom_value}
+            for site_index, (atom_type, magmom_value) in enumerate(
+                zip(
+                    structure_info.atom_type,
+                    structure_info.atom_properties["SOunitmagspin"]["value"],
+                )
+            )
+        ]
 
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of MAGMOM, ISPIN input tags
@@ -64,12 +66,10 @@ class SOunitmagspinAttr:
             self.atom_props.sort(key=lambda x: x["atom"])
 
         magmom_values = np.ravel(
-            np.array([atom_prop["value"] for atom_prop in self.atom_props]))
+            np.array([atom_prop["value"] for atom_prop in self.atom_props])
+        )
 
-        return dict(MAGMOM=magmom_values,
-                    ISPIN=2,
-                    LSORBIT=True,
-                    LNONCOLLINEAR=True)
+        return dict(MAGMOM=magmom_values, ISPIN=2, LSORBIT=True, LNONCOLLINEAR=True)
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
@@ -139,17 +139,18 @@ class CunitmagspinAttr:
         if "Cunitmagspin" not in list(structure_info.atom_properties.keys()):
             raise RuntimeError(
                 "Could not construct CunitmagspinAttr class. "
-                "Check if you're dealing with Cmagspin dof calculations.")
+                "Check if you're dealing with Cmagspin dof calculations."
+            )
 
-        self.atom_props = [{
-            "site_index": site_index,
-            "atom": atom_type,
-            "value": magmom_value
-        } for site_index, (atom_type, magmom_value) in enumerate(
-            zip(
-                structure_info.atom_type,
-                structure_info.atom_properties["Cunitmagspin"]["value"],
-            ))]
+        self.atom_props = [
+            {"site_index": site_index, "atom": atom_type, "value": magmom_value}
+            for site_index, (atom_type, magmom_value) in enumerate(
+                zip(
+                    structure_info.atom_type,
+                    structure_info.atom_properties["Cunitmagspin"]["value"],
+                )
+            )
+        ]
 
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of MAGMOM, ISPIN input tags
@@ -174,7 +175,8 @@ class CunitmagspinAttr:
             self.atom_props.sort(key=lambda x: x["atom"])
 
         magmom_values = np.ravel(
-            np.array([atom_prop["value"] for atom_prop in self.atom_props]))
+            np.array([atom_prop["value"] for atom_prop in self.atom_props])
+        )
 
         return dict(MAGMOM=magmom_values, ISPIN=2)
 
@@ -210,9 +212,12 @@ class CunitmagspinAttr:
         output["Cunitmagspin"]["value"] = [None] * len(unsort_dict)
         for i in range(len(outcar.mag)):
             output["Cmagspin"]["value"][unsort_dict[i]] = [outcar.mag[i]]
-            output["Cunitmagspin"]["value"][unsort_dict[i]] = [
-                outcar.mag[i] / abs(outcar.mag[i])
-            ]
+            if outcar.mag[i] < 1:
+                output["Cunitmagspin"]["value"][unsort_dict[i]] = [0.0]
+            else:
+                output["Cunitmagspin"]["value"][unsort_dict[i]] = [
+                    outcar.mag[i] / abs(outcar.mag[i])
+                ]
 
         return output
 
@@ -246,16 +251,17 @@ class CmagspinAttr:
         if "Cmagspin" not in list(structure_info.atom_properties.keys()):
             raise RuntimeError(
                 "Could not construct CmagspinAttr class. "
-                "Check if you're dealing with Cmagspin dof calculations.")
-        self.atom_props = [{
-            "site_index": site_index,
-            "atom": atom_type,
-            "value": magmom_value
-        } for site_index, (atom_type, magmom_value) in enumerate(
-            zip(
-                structure_info.atom_type,
-                structure_info.atom_properties["Cmagspin"]["value"],
-            ))]
+                "Check if you're dealing with Cmagspin dof calculations."
+            )
+        self.atom_props = [
+            {"site_index": site_index, "atom": atom_type, "value": magmom_value}
+            for site_index, (atom_type, magmom_value) in enumerate(
+                zip(
+                    structure_info.atom_type,
+                    structure_info.atom_properties["Cmagspin"]["value"],
+                )
+            )
+        ]
 
     def vasp_input_tags(self, sort=True):
         """Returns a dictionary of MAGMOM, ISPIN input tags
@@ -280,7 +286,8 @@ class CmagspinAttr:
             self.atom_props.sort(key=lambda x: x["atom"])
 
         magmom_values = np.ravel(
-            np.array([atom_prop["value"] for atom_prop in self.atom_props]))
+            np.array([atom_prop["value"] for atom_prop in self.atom_props])
+        )
 
         return dict(MAGMOM=magmom_values, ISPIN=2)
 
