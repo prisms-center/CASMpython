@@ -5,6 +5,7 @@ from builtins import *
 # conda's current version of pandas raises these warnings, but they are safe
 # see: https://stackoverflow.com/questions/40845304
 import warnings
+
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
@@ -1245,6 +1246,7 @@ class FittingData(object):
         y or other parameters.
 
   """
+
     def __init__(self,
                  X,
                  y,
@@ -1366,6 +1368,7 @@ class TrainingData(object):
 
 
   """
+
     def __init__(self, input, verbose=True):
         """
     Arguments
@@ -1433,7 +1436,6 @@ class TrainingData(object):
         # columns of interest, as numpy arrays
         X = np.array([x for x in data.loc[:, self.X_name].values])
 
-        print(X)
         y = data.loc[:, self.y_name].values
         if specs["weight"]["method"] == "wHullDist":
             self.hull_dist_name = hull_dist_name
