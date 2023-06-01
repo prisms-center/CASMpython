@@ -1431,9 +1431,9 @@ class TrainingData(object):
             data = pandas.read_json(self.filename, **specs["data"]["kwargs"])
 
         # columns of interest, as numpy arrays
-        X = data.loc[:, [
-            x for x in data.columns if re.match(self.X_name + "\([0-9]*\)", x)
-        ]].values
+        X = np.array([x for x in data.loc[:, self.X_name].values])
+
+        print(X)
         y = data.loc[:, self.y_name].values
         if specs["weight"]["method"] == "wHullDist":
             self.hull_dist_name = hull_dist_name
