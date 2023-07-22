@@ -195,7 +195,7 @@ class Relax(object):
     def converged(self):
         """Check if configuration is relaxed.
 
-           This is called when self.rundir[-1] is complete and not a constant volume job.
+           This is called when self.rundir[-1] is complete.
 
            Convergence criteria is: at least 2 relaxation jobs are complete, and:
                                     1) the last job completed with <= 3 ionic steps
@@ -219,7 +219,7 @@ class Relax(object):
     def not_converging(self):
         """Check if configuration is not converging.
 
-           This is called when self.rundir[-1] is complete and not a constant volume job and self.converged() == False.
+           This is called when self.rundir[-1] is complete and self.converged() == False.
 
            Not converging criteria: >= 10 runs without completion
         """
@@ -415,16 +415,6 @@ class Relax(object):
                     #    io.get_incar_tag("NSW", self.rundir[-1]) == 0 and \
                     #    io.get_incar_tag("ISMEAR", self.rundir[-1]) == -5:
                     return ("complete", None)
-
-            # elif constant volume run (but not the final one)
-            if io.get_incar_tag("ISIF", self.rundir[-1]) in [0, 1, 2]:
-                if io.get_incar_tag("NSW", self.rundir[-1]) == len(
-                        io.Oszicar(os.path.join(self.rundir[-1],
-                                                "OSZICAR")).E):
-                    return ("incomplete", "relax"
-                            )  # static run hit NSW limit and so isn't "done"
-                else:
-                    return ("incomplete", "constant")
 
             # elif convergence criteria met
             if self.converged():
