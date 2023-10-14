@@ -5,6 +5,8 @@ from builtins import *
 import json
 import sys
 
+import six
+
 from casm.misc import compat, noindent
 import casm.vaspwrapper
 
@@ -26,13 +28,12 @@ def main():
             % configdir))
         raise
 
-    compat.dump(json,
-                output,
-                'properties.calc.json',
-                'w',
-                cls=noindent.NoIndentEncoder,
-                indent=4,
-                sort_keys=True)
+    with open('properties.calc.json', 'w') as f:
+        f.write(six.u(json.dumps(
+            output,
+            cls=noindent.NoIndentEncoder,
+            indent=4,
+            sort_keys=True)))
 
     print("Finish vasp.relax.report\n\n")
 
