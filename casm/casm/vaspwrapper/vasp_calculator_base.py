@@ -756,6 +756,7 @@ class VaspCalculatorBase(object):
         #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
         else:
             if ocar.ispin == 2:
+                output["global_properties"]["Cmagspin"] = {}
                 output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
                 if ocar.lorbit in [1, 2, 11, 12]:
                     output["atom_properties"]["Cmagspin"] = {}
