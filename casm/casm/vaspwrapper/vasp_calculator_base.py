@@ -421,6 +421,9 @@ class VaspCalculatorBase(object):
                       message=settings["message"],
                       email=settings["email"],
                       priority=settings["priority"],
+                      constraint=settings["constraint"],
+                      exclude=settings["exclude"],
+                      gpus=settings["gpus"],
                       command=cmd,
                       auto=self.auto)
 
