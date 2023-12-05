@@ -421,6 +421,9 @@ class VaspCalculatorBase(object):
                       message=settings["message"],
                       email=settings["email"],
                       priority=settings["priority"],
+                      constraint=settings["constraint"],
+                      exclude=settings["exclude"],
+                      gpus=settings["gpus"],
                       command=cmd,
                       auto=self.auto)
 
@@ -671,7 +674,6 @@ class VaspCalculatorBase(object):
     @staticmethod
     def properties(vaspdir, initial_structurefile=None, speciesfile=None):
         """ return a dict of output form a vasp directory"""
-        structure_info = structure.StructureInfo(initial_structurefile)
         output = dict()
         # load the OSZICAR and OUTCAR
         zcar = vasp.io.Oszicar(os.path.join(vaspdir, "OSZICAR"))
@@ -697,7 +699,7 @@ class VaspCalculatorBase(object):
         #   unsorted_dict[sorted_index] == orig_index
         #   For example:
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
-        output["atom_type"] = initial_structure.atom_type
+        output["atom_type"] = [i.occ_alias for i in initial_structure.basis]
         #output["atoms_per_type"] = initial_structure.num_atoms
         output["coordinate_mode"] = contcar.coordinate_mode
 
@@ -723,32 +725,34 @@ class VaspCalculatorBase(object):
         output["global_properties"]["energy"] = {}
         output["global_properties"]["energy"]["value"] = zcar.E[-1]
 
-        if structure_info.atom_properties is not None:
-            if "Cmagspin" in list(structure_info.atom_properties.keys()):
-                output["global_properties"]["Cmagspin"] = {}
-                cmagspin_specific_output = attribute_classes.CmagspinAttr(
-                    structure_info).vasp_output_dictionary(ocar)
-                output["atom_properties"].update(cmagspin_specific_output)
-                #TODO: Need a better way to write global magmom. I don't like what I did here
-                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
-
-            #TODO: When you don't have Cmagspin but have magnetic calculations. This part can be removed if you runall magnetic calculations as Cmagspin calculations.
-            #TODO: Need a better way of doing this. Some code duplication here.
-            else:
-                if ocar.ispin == 2:
+        if initial_structurefile is not None:
+            structure_info = structure.StructureInfo(initial_structurefile)
+            if structure_info.atom_properties is not None:
+                if "Cmagspin" in list(structure_info.atom_properties.keys()):
                     output["global_properties"]["Cmagspin"] = {}
+                    cmagspin_specific_output = attribute_classes.CmagspinAttr(
+                        structure_info).vasp_output_dictionary(ocar)
+                    output["atom_properties"].update(cmagspin_specific_output)
+                    #TODO: Need a better way to write global magmom. I don't like what I did here
                     output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
-                    if ocar.lorbit in [1, 2, 11, 12]:
-                        output["atom_properties"]["Cmagspin"] = {}
-                        output["atom_properties"]["Cmagspin"]["value"] = [
-                            None for i in range(len(contcar.basis))
-                        ]
 
-                        for i, v in enumerate(contcar.basis):
-                            output["atom_properties"]["Cmagspin"]["value"][
-                                unsort_dict[i]] = [
-                                    noindent.NoIndent(ocar.mag[i])
-                                ]
+                    #TODO: When you don't have Cmagspin but have magnetic calculations. This part can be removed if you runall magnetic calculations as Cmagspin calculations.
+                    #TODO: Need a better way of doing this. Some code duplication here.
+                else:
+                    if ocar.ispin == 2:
+                        output["global_properties"]["Cmagspin"] = {}
+                        output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
+                        if ocar.lorbit in [1, 2, 11, 12]:
+                            output["atom_properties"]["Cmagspin"] = {}
+                            output["atom_properties"]["Cmagspin"]["value"] = [
+                                None for i in range(len(contcar.basis))
+                            ]
+                            
+                            for i, v in enumerate(contcar.basis):
+                                output["atom_properties"]["Cmagspin"]["value"][
+                                    unsort_dict[i]] = [
+                                        noindent.NoIndent(ocar.mag[i])
+                                    ]
 
         #TODO: Code duplication here. If you have a magnetic calculation without dofs, you still need to write magmom values. This can be removed if you run all the magnetic calculations as Cmagspin dof calculations.
         #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.

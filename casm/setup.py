@@ -36,7 +36,7 @@ setup(
     entry_points={'console_scripts': console_scripts},
     install_requires=[
         'deap', 'mock', 'pandas', 'prisms-jobs', 'scikit-learn',
-        'scipy', 'sh'
+        'scipy', 'sh==1.14.2'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -724,32 +724,34 @@ class FreezeError(_FreezeError):
 
 def error_check(jobdir, stdoutfile, err_types):
     """ Check vasp stdout for errors """
+    if err_types is None: return None
     err = dict()
     err_objs = {}
+    check_once = ['FreezeError']
     for i_err in _RunError.__subclasses__():
         err_objs[i_err.__name__] = i_err()
-    if err_types is None:
-        possible = [SubSpaceMatrixError()]
-    else:
-        # err_objs = {'IbzkptError' : IbzkptError(), 'SubSpaceMatrixError' : SubSpaceMatrixError(), 'NbandsError' : NbandsError()}
-        for s in err_types:
-            if s not in err_objs.keys():
-                raise VaspError('Invalid err_type: %s' % s)
-        possible = [err_objs[s] for s in err_types]
+    for i_err in _FreezeError.__subclasses__():
+        err_objs[i_err.__name__] = i_err()
+    # err_objs = {'IbzkptError' : IbzkptError(), 'SubSpaceMatrixError' : SubSpaceMatrixError(),
+    #             'NbandsError' : NbandsError(), 'FreezeError' : FreezeError()}
+    for s in err_types:
+        if s not in err_objs.keys():
+            raise VaspError('Invalid err_type: %s' % s)
+    possible = [err_objs[s] for s in err_types]
 
     # Error to check line by line, only look for first of each type
     sout = open(stdoutfile, 'r')
     for line in sout:
         for p in possible:
-            if not p.__class__.__name__ in err:
+            if not p.__class__.__name__ in err and not p.__class__.__name__ in check_once:
                 if p.error(line=line, jobdir=jobdir):
                     err[p.__class__.__name__] = p
 
     # Error to check for once
-    possible = [i_err() for i_err in _FreezeError.__subclasses__()]
     for p in possible:
-        if p.error(line=None, jobdir=jobdir):
-            err[p.__class__.__name__] = p
+        if not p.__class__.__name__ in err and p.__class__.__name__ in check_once:
+            if p.error(line=None, jobdir=jobdir):
+                err[p.__class__.__name__] = p
 
     sout.close()
     if len(err) == 0:

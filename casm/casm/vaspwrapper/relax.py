@@ -136,8 +136,9 @@ class Relax(VaspCalculatorBase):
         super(Relax, self).finalize(config_data)
         sys.stdout.flush()
 
-    def properties(self, calcdir, super_poscarfile=None, speciesfile=None):
+    @staticmethod
+    def properties(calcdir, super_poscarfile=None, speciesfile=None):
         """Make properties output as a list of dict of each image properties"""
-        output = super(Relax, self).properties(calcdir, super_poscarfile,
-                                               speciesfile)
+        output = super(Relax, Relax).properties(
+            calcdir, super_poscarfile, speciesfile)
         return output

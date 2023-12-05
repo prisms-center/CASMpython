@@ -4,5 +4,5 @@ pandas
 prisms-jobs
 scikit-learn
 scipy
-sh
+sh==1.14.2
 six
