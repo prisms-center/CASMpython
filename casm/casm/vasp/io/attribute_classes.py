@@ -98,7 +98,12 @@ class NCunitmagspinAttr:
             np.array([atom_prop["value"] for atom_prop in self.atom_props])
         )
 
-        return dict(MAGMOM=magmom_values, ISPIN=2, LSORBIT=False, LNONCOLLINEAR=True)
+        return dict(
+            MAGMOM=get_incar_magmom_from_magmom_values(magmom_values),
+            ISPIN=2,
+            LSORBIT=False,
+            LNONCOLLINEAR=True,
+        )
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
@@ -207,7 +212,12 @@ class SOunitmagspinAttr:
             np.array([atom_prop["value"] for atom_prop in self.atom_props])
         )
 
-        return dict(MAGMOM=magmom_values, ISPIN=2, LSORBIT=True, LNONCOLLINEAR=True)
+        return dict(
+            MAGMOM=get_incar_magmom_from_magmom_values(magmom_values),
+            ISPIN=2,
+            LSORBIT=True,
+            LNONCOLLINEAR=True,
+        )
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
@@ -427,7 +437,7 @@ class CmagspinAttr:
             np.array([atom_prop["value"] for atom_prop in self.atom_props])
         )
 
-        return dict(MAGMOM=magmom_values, ISPIN=2)
+        return dict(MAGMOM=get_incar_magmom_from_magmom_values(magmom_values), ISPIN=2)
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
