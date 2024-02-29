@@ -190,6 +190,11 @@ class Incar(object):
                     structure_info).vasp_input_tags()
                 self.tags.update(vasp_input_tags_to_append)
 
+            if "NCunitmagspin" in list(structure_info.atom_properties.keys()):
+                vasp_input_tags_to_append = attribute_classes.NCunitmagspinAttr(
+                    structure_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
+
             if "SOunitmagspin" in list(structure_info.atom_properties.keys()):
                 vasp_input_tags_to_append = attribute_classes.SOunitmagspinAttr(
                     structure_info).vasp_input_tags()
