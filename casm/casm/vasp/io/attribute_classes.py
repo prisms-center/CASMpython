@@ -283,8 +283,11 @@ class CunitmagspinAttr:
         if sort is True:
             self.atom_props.sort(key=lambda x: x["atom"])
 
-        magmom_values = np.ravel(
-            np.array([atom_prop["value"] for atom_prop in self.atom_props])
+        magmom_values = "".join(
+            str(x)
+            for x in np.ravel(
+                np.array([atom_prop["value"] for atom_prop in self.atom_props])
+            )
         )
 
         return dict(MAGMOM=magmom_values, ISPIN=2)
