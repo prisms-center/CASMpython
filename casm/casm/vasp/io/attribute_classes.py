@@ -284,7 +284,7 @@ class CunitmagspinAttr:
             self.atom_props.sort(key=lambda x: x["atom"])
 
         magmom_values = "".join(
-            str(x)
+            str(x) + " "
             for x in np.ravel(
                 np.array([atom_prop["value"] for atom_prop in self.atom_props])
             )
