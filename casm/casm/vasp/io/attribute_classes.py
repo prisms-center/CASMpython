@@ -1,6 +1,35 @@
 import numpy as np
 
 
+def get_incar_magmom_from_magmom_values(magmom_values):
+    """Returns an INCAR magmom string from a
+    list of magmom values. The magmom values should
+    be listed in the order of atoms in POSCAR
+    Parameters
+    ----------
+    magmom_values : np.ndarray
+    Returns
+    -------
+    str
+    """
+
+    magmom = ""
+    for i, value in enumerate(magmom_values):
+        if i == 0:
+            number_of_same_magmoms = 1
+        elif np.isclose(value, magmom_values[i - 1]):
+            number_of_same_magmoms += 1
+        else:
+            magmom += (
+                str(number_of_same_magmoms) + "*" + str(magmom_values[i - 1]) + " "
+            )
+            number_of_same_magmoms = 1
+        if i == len(magmom_values) - 1:
+            magmom += str(number_of_same_magmoms) + "*" + str(magmom_values[i]) + " "
+
+    return magmom
+
+
 class NCunitmagspinAttr:
     """Class containing information specific to Cmagspin dof.
     This object will be constructed from casm.project.structure.StructureInfo class
@@ -283,14 +312,11 @@ class CunitmagspinAttr:
         if sort is True:
             self.atom_props.sort(key=lambda x: x["atom"])
 
-        magmom_values = "".join(
-            str(x) + " "
-            for x in np.ravel(
-                np.array([atom_prop["value"] for atom_prop in self.atom_props])
-            )
+        magmom_values = np.ravel(
+            np.array([atom_prop["value"] for atom_prop in self.atom_props])
         )
 
-        return dict(MAGMOM=magmom_values, ISPIN=2)
+        return dict(MAGMOM=get_incar_magmom_from_magmom_values(magmom_values), ISPIN=2)
 
     @staticmethod
     def vasp_output_dictionary(outcar, unsort_dict):
