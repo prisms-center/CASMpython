@@ -28,6 +28,7 @@ def error_job(message):
         print(str(e))
         sys.stdout.flush()
 
+
 def complete_job(jobid=None):
     """Complete job by given ID, or detect ID from environment"""
     import prisms_jobs as jobs
@@ -37,6 +38,7 @@ def complete_job(jobid=None):
     except (JobsError, JobDBError, EligibilityError) as e:
         print(str(e))
         sys.stdout.flush()
+
 
 class VaspCalculatorBase(object):
     """
@@ -52,6 +54,7 @@ class VaspCalculatorBase(object):
     sort : bool
 
     """
+
     def __init__(self, selection, calctype=None, auto=True, sort=True):
         """set up attributes for the base class"""
         self.selection = selection
@@ -411,18 +414,18 @@ class VaspCalculatorBase(object):
             sys.stdout.flush()
             # construct a Job
             job = jobs.Job(name=jobname(config_data["name"]),
-                      account=settings["account"],
-                      nodes=nodes,
-                      ppn=ppn,
-                      walltime=settings["walltime"],
-                      pmem=settings["pmem"],
-                      qos=settings["qos"],
-                      queue=settings["queue"],
-                      message=settings["message"],
-                      email=settings["email"],
-                      priority=settings["priority"],
-                      command=cmd,
-                      auto=self.auto)
+                           account=settings["account"],
+                           nodes=nodes,
+                           ppn=ppn,
+                           walltime=settings["walltime"],
+                           pmem=settings["pmem"],
+                           qos=settings["qos"],
+                           queue=settings["queue"],
+                           message=settings["message"],
+                           email=settings["email"],
+                           priority=settings["priority"],
+                           command=cmd,
+                           auto=self.auto)
 
             print("Submitting")
             sys.stdout.flush()
@@ -698,7 +701,7 @@ class VaspCalculatorBase(object):
         #   For example:
         #     'unsort_dict[0]' returns the index into the unsorted POSCAR of the first atom in the sorted POSCAR
         output["atom_type"] = initial_structure.atom_type
-        #output["atoms_per_type"] = initial_structure.num_atoms
+        # output["atoms_per_type"] = initial_structure.num_atoms
         output["coordinate_mode"] = contcar.coordinate_mode
 
         # as lists
@@ -723,47 +726,25 @@ class VaspCalculatorBase(object):
         output["global_properties"]["energy"] = {}
         output["global_properties"]["energy"]["value"] = zcar.E[-1]
 
-        if structure_info.atom_properties is not None:
-            if "Cmagspin" in list(structure_info.atom_properties.keys()):
-                output["global_properties"]["Cmagspin"] = {}
-                cmagspin_specific_output = attribute_classes.CmagspinAttr(
-                    structure_info).vasp_output_dictionary(ocar)
+        if ocar.ispin == 2:
+            output["global_properties"]["Cmagspin"] = {}
+            output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
+            if ocar.lorbit in [1, 2, 11, 12]:
+                cmagspin_specific_output = attribute_classes.CmagspinAttr.vasp_output_dictionary(
+                    ocar, unsort_dict)
                 output["atom_properties"].update(cmagspin_specific_output)
-                #TODO: Need a better way to write global magmom. I don't like what I did here
-                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
 
-            #TODO: When you don't have Cmagspin but have magnetic calculations. This part can be removed if you runall magnetic calculations as Cmagspin calculations.
-            #TODO: Need a better way of doing this. Some code duplication here.
-            else:
-                if ocar.ispin == 2:
-                    output["global_properties"]["Cmagspin"] = {}
-                    output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
-                    if ocar.lorbit in [1, 2, 11, 12]:
-                        output["atom_properties"]["Cmagspin"] = {}
-                        output["atom_properties"]["Cmagspin"]["value"] = [
-                            None for i in range(len(contcar.basis))
-                        ]
+        if structure_info.atom_properties is not None:
+            # if you have cmagspin sitedofs
+            if "Cmagspin" in list(structure_info.atom_properties.keys()):
+                cmagspin_specific_output = attribute_classes.CmagspinAttr.vasp_output_dictionary(
+                    ocar, unsort_dict)
+                output["atom_properties"].update(cmagspin_specific_output)
+            if "Cunitmagspin" in list(structure_info.atom_properties.keys()):
+                cunitmagspin_specific_output = attribute_classes.CunitmagspinAttr.vasp_output_dictionary(
+                    ocar, unsort_dict)
+                output["atom_properties"].update(cunitmagspin_specific_output)
 
-                        for i, v in enumerate(contcar.basis):
-                            output["atom_properties"]["Cmagspin"]["value"][
-                                unsort_dict[i]] = [
-                                    noindent.NoIndent(ocar.mag[i])
-                                ]
-
-        #TODO: Code duplication here. If you have a magnetic calculation without dofs, you still need to write magmom values. This can be removed if you run all the magnetic calculations as Cmagspin dof calculations.
-        #TODO: If you still want to have this particular functionality, wrap it up in a helper function to avoid code duplication.
-        else:
-            if ocar.ispin == 2:
-                output["global_properties"]["Cmagspin"]["value"] = zcar.mag[-1]
-                if ocar.lorbit in [1, 2, 11, 12]:
-                    output["atom_properties"]["Cmagspin"] = {}
-                    output["atom_properties"]["Cmagspin"]["value"] = [
-                        None for i in range(len(contcar.basis))
-                    ]
-
-                    for i, v in enumerate(contcar.basis):
-                        output["atom_properties"]["Cmagspin"]["value"][
-                            unsort_dict[i]] = [noindent.NoIndent(ocar.mag[i])]
         return output
 
 

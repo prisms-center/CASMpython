@@ -22,7 +22,7 @@ VASP_TAG_FLOAT_LIST = [
 VASP_TAG_BOOL_LIST = [
     'lcharg', 'lsorbit', 'lwave', 'lscalapack', 'lscalu', 'lplane', 'lhfcalc',
     'shiftred', 'evenonly', 'oddonly', 'addgrid', 'ldau', 'lasph', 'lclimb',
-    'ldneb', 'lnebcell', 'ltangentold'
+    'ldneb', 'lnebcell', 'ltangentold', 'lnoncollinear'
 ]
 # Site-wise list of arrays of FLOAT
 VASP_TAG_SITEF_LIST = ['magmom', 'rwigs']
@@ -42,6 +42,7 @@ VASP_TAG_LIST = VASP_TAG_INT_LIST + VASP_TAG_SITEF_LIST + VASP_TAG_SPECI_LIST + 
 
 
 class IncarError(Exception):
+
     def __init__(self, msg):
         self.msg = msg
 
@@ -56,6 +57,7 @@ class Incar(object):
 
     All input tags and associated values are stored as key-value pairs in the dicionary called 'tags'.
    """
+
     def __init__(self,
                  filename,
                  species=None,
@@ -181,6 +183,20 @@ class Incar(object):
         if structure_info is not None and structure_info.atom_properties is not None:
             if "Cmagspin" in list(structure_info.atom_properties.keys()):
                 vasp_input_tags_to_append = attribute_classes.CmagspinAttr(
+                    structure_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
+            if "Cunitmagspin" in list(structure_info.atom_properties.keys()):
+                vasp_input_tags_to_append = attribute_classes.CunitmagspinAttr(
+                    structure_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
+
+            if "NCunitmagspin" in list(structure_info.atom_properties.keys()):
+                vasp_input_tags_to_append = attribute_classes.NCunitmagspinAttr(
+                    structure_info).vasp_input_tags()
+                self.tags.update(vasp_input_tags_to_append)
+
+            if "SOunitmagspin" in list(structure_info.atom_properties.keys()):
+                vasp_input_tags_to_append = attribute_classes.SOunitmagspinAttr(
                     structure_info).vasp_input_tags()
                 self.tags.update(vasp_input_tags_to_append)
 
